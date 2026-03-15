@@ -7,6 +7,7 @@ import SkillSelect from "./components/SkillSelect";
 import { RESULT_GRADE_COLORS } from "./data/uiColors";
 import PlayerTypeToggle from "./components/PlayerTypeToggle";
 import { getGameDataSet } from "./data/gameData";
+import { Analytics } from "@vercel/analytics/react"
 
 const DEFAULT_PLAYER_TYPE: PlayerType = "hitter";
 const DEFAULT_CARD_TYPE: CardType = "signature";
@@ -261,6 +262,7 @@ function App() {
       >
         made by 우주
       </footer>
+      <Analytics />
     </div>
   );
 }
