@@ -5,12 +5,7 @@ import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS } from "./data/uiColors";
 import PlayerTypeToggle from "./components/PlayerTypeToggle";
 import SkillSelect from "./components/SkillSelect";
-import type {
-  CardType,
-  PitcherRole,
-  PlayerType,
-  SkillLevel,
-} from "./types";
+import type { CardType, PitcherRole, PlayerType, SkillLevel } from "./types";
 import { calculateSkillTotal } from "./utils/calculate";
 import { judgeSkillResult } from "./utils/judge";
 
@@ -100,206 +95,183 @@ function App() {
     setLevel3(DEFAULT_LEVEL_3);
   };
 
-  const pitcherSelectorSection =
-    playerType === "pitcher" ? (
-      <section style={{ marginTop: 16 }}>
-        <label htmlFor="pitcher-role">보직</label>
-        <br />
-        <select
-          id="pitcher-role"
-          value={pitcherRole}
-          onChange={(e) => setPitcherRole(e.target.value as PitcherRole)}
-        >
-          <option value="starter">선발</option>
-          <option value="middle">중계</option>
-          <option value="closer">마무리</option>
-        </select>
-      </section>
-    ) : null;
+  const totalScore = gameData
+    ? calculateSkillTotal({
+        cardType,
+        skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
+        skillLevels: [level1, level2, level3],
+        scoreTable: gameData.scoreTable,
+      })
+    : 0;
 
-  if (!gameData) {
-    return (
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
-        <h1>V26 Skill Calculator</h1>
+  const judgeResult = gameData
+    ? judgeSkillResult(gameData.thresholds, cardType, totalScore)
+    : null;
 
-        <PlayerTypeToggle value={playerType} onChange={setPlayerType} />
-        {pitcherSelectorSection}
-
-        <div
-          style={{
-            marginTop: 24,
-            padding: 16,
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            background: "white",
-          }}
-        >
-          {playerType === "hitter"
-            ? "데이터를 불러오지 못했습니다."
-            : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
-        </div>
-      </div>
-    );
-  }
-
-  const totalScore = calculateSkillTotal({
-    cardType,
-    skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
-    skillLevels: [level1, level2, level3],
-    scoreTable: gameData.scoreTable,
-  });
-
-  const judgeResult = judgeSkillResult(gameData.thresholds, cardType, totalScore);
-  const resultGradeColor = RESULT_GRADE_COLORS[judgeResult.grade];
-  const encouragementMessage = getEncouragementMessage(judgeResult.matchedPercent);
+  const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
+  const encouragementMessage = getEncouragementMessage(judgeResult?.matchedPercent ?? null);
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
-      <h1>V26 Skill Calculator</h1>
-
-      <PlayerTypeToggle value={playerType} onChange={setPlayerType} />
-      {pitcherSelectorSection}
-
-      <section style={{ marginTop: 24 }}>
-        <label>카드 종류</label>
-        <br />
-
-        <select value={cardType} onChange={(e) => setCardType(e.target.value as CardType)}>
-          {Object.entries(CARD_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-
-        <button
-          type="button"
-          onClick={handleReset}
-          style={{
-            marginLeft: 12,
-            padding: "8px 14px",
-            border: "1px solid #ccc",
-            borderRadius: 6,
-            background: "white",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
-        >
-          초기화
-        </button>
-      </section>
-
-      <section style={{ marginTop: 24 }}>
-        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <SkillSelect
-              label={cardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
-              value={resolvedSkill1}
-              options={filteredSkills}
-              excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
-              onChange={setSkill1}
-              disabled={cardType === "impact"}
-            />
-
-            <select
-              value={level1}
-              onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
-              disabled={cardType === "impact"}
-              style={{ marginTop: 10, width: "100%" }}
-            >
-              {[5, 6, 7, 8].map((level) => (
-                <option key={level} value={level}>
-                  {level} 레벨
-                </option>
-              ))}
-            </select>
+    <div className="app-bg">
+      <div className="app-shell">
+        <header className="hero">
+          <div>
+            <p className="eyebrow">V26 Toolbox</p>
+            <h1>스킬 계산기</h1>
           </div>
+        </header>
 
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <SkillSelect
-              label="스킬 2"
-              value={resolvedSkill2}
-              options={filteredSkills}
-              excludedSkillIds={[resolvedSkill1, resolvedSkill3]}
-              onChange={setSkill2}
-            />
+        <main className="layout-grid">
+          <section className="panel panel-main">
+            <div className="panel-head">
+              <h2>입력</h2>
+            </div>
 
-            <select
-              value={level2}
-              onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
-              style={{ marginTop: 10, width: "100%" }}
-            >
-              {[5, 6, 7, 8].map((level) => (
-                <option key={level} value={level}>
-                  {level} 레벨
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="control-row">
+              <div className="control-block">
+                <PlayerTypeToggle value={playerType} onChange={setPlayerType} />
+              </div>
 
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <SkillSelect
-              label="스킬 3"
-              value={resolvedSkill3}
-              options={filteredSkills}
-              excludedSkillIds={[resolvedSkill1, resolvedSkill2]}
-              onChange={setSkill3}
-            />
+              {playerType === "pitcher" && (
+                <div className="control-block">
+                  <label htmlFor="pitcher-role">보직</label>
+                  <select
+                    id="pitcher-role"
+                    value={pitcherRole}
+                    onChange={(e) => setPitcherRole(e.target.value as PitcherRole)}
+                  >
+                    <option value="starter">선발</option>
+                    <option value="middle">중계</option>
+                    <option value="closer">마무리</option>
+                  </select>
+                </div>
+              )}
 
-            <select
-              value={level3}
-              onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
-              style={{ marginTop: 10, width: "100%" }}
-            >
-              {[5, 6, 7, 8].map((level) => (
-                <option key={level} value={level}>
-                  {level} 레벨
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </section>
+              <div className="control-block">
+                <label htmlFor="card-type">카드 종류</label>
+                <div className="inline-actions">
+                  <select
+                    id="card-type"
+                    value={cardType}
+                    onChange={(e) => setCardType(e.target.value as CardType)}
+                  >
+                    {Object.entries(CARD_TYPE_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" className="ghost-btn" onClick={handleReset}>
+                    초기화
+                  </button>
+                </div>
+              </div>
+            </div>
 
-      <section
-        style={{
-          marginTop: 32,
-          padding: 16,
-          border: `2px solid ${resultGradeColor}`,
-          borderRadius: 8,
-          background: "white",
-        }}
-      >
-        <h2>결과</h2>
-        <p>총 스킬 점수: {totalScore}</p>
-        <p>
-          판정 등급: <strong style={{ color: resultGradeColor }}>{judgeResult.grade}</strong>
-        </p>
-        <p>
-          기준 확률: {formatMatchedPercent(judgeResult.matchedPercent)}
-        </p>
-        {encouragementMessage && (
-          <p style={{ color: "#16a34a", fontWeight: 700 }}>{encouragementMessage}</p>
-        )}
+            {!gameData ? (
+              <div className="empty-box">
+                {playerType === "hitter"
+                  ? "데이터를 불러오지 못했습니다."
+                  : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
+              </div>
+            ) : (
+              <div className="skill-grid">
+                <div className="skill-col">
+                  <SkillSelect
+                    label={cardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
+                    value={resolvedSkill1}
+                    options={filteredSkills}
+                    excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
+                    onChange={setSkill1}
+                    disabled={cardType === "impact"}
+                  />
+                  <select
+                    value={level1}
+                    onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
+                    disabled={cardType === "impact"}
+                  >
+                    {[5, 6, 7, 8].map((level) => (
+                      <option key={level} value={level}>
+                        {level} 레벨
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-        {cardType === "impact" && (
-          <p style={{ color: "crimson" }}>임팩트 카드는 1스킬 고정 + 2,3스킬만 합산합니다.</p>
-        )}
-      </section>
+                <div className="skill-col">
+                  <SkillSelect
+                    label="스킬 2"
+                    value={resolvedSkill2}
+                    options={filteredSkills}
+                    excludedSkillIds={[resolvedSkill1, resolvedSkill3]}
+                    onChange={setSkill2}
+                  />
+                  <select
+                    value={level2}
+                    onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
+                  >
+                    {[5, 6, 7, 8].map((level) => (
+                      <option key={level} value={level}>
+                        {level} 레벨
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-      <footer
-        style={{
-          marginTop: 40,
-          paddingTop: 16,
-          borderTop: "1px solid #ddd",
-          textAlign: "center",
-          color: "#666",
-          fontSize: 14,
-        }}
-      >
-        made by 우주
-      </footer>
-      <Analytics />
+                <div className="skill-col">
+                  <SkillSelect
+                    label="스킬 3"
+                    value={resolvedSkill3}
+                    options={filteredSkills}
+                    excludedSkillIds={[resolvedSkill1, resolvedSkill2]}
+                    onChange={setSkill3}
+                  />
+                  <select
+                    value={level3}
+                    onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
+                  >
+                    {[5, 6, 7, 8].map((level) => (
+                      <option key={level} value={level}>
+                        {level} 레벨
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <aside className="panel panel-result" style={{ borderColor: resultGradeColor }}>
+            <div className="panel-head">
+              <h2>결과</h2>
+            </div>
+
+            <div className="result-stat">
+              <span>총 스킬 점수</span>
+              <strong>{gameData ? totalScore : "-"}</strong>
+            </div>
+
+            <div className="result-stat">
+              <span>판정 등급</span>
+              <strong style={{ color: resultGradeColor }}>{judgeResult?.grade ?? "-"}</strong>
+            </div>
+
+            <div className="result-stat">
+              <span>기준 확률</span>
+              <strong>{formatMatchedPercent(judgeResult?.matchedPercent ?? null)}</strong>
+            </div>
+
+            {encouragementMessage && <div className="result-badge">{encouragementMessage}</div>}
+
+            {cardType === "impact" && (
+              <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>
+            )}
+          </aside>
+        </main>
+
+        <footer className="app-footer">made by 우주</footer>
+        <Analytics />
+      </div>
     </div>
   );
 }

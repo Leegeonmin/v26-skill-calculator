@@ -7,38 +7,20 @@ interface PlayerTypeToggleProps {
 
 function PlayerTypeToggle({ value, onChange }: PlayerTypeToggleProps) {
   return (
-    <div style={{ marginTop: 16 }}>
-      <div style={{ marginBottom: 8, fontWeight: 700 }}>선수 유형</div>
-
-      <div style={{ display: "flex", gap: 8 }}>
+    <div className="toggle-root">
+      <div className="toggle-label">선수 유형</div>
+      <div className="toggle-row">
         <button
           type="button"
+          className={`toggle-btn ${value === "hitter" ? "active" : ""}`}
           onClick={() => onChange("hitter")}
-          style={{
-            padding: "10px 16px",
-            borderRadius: 8,
-            border: value === "hitter" ? "2px solid #111827" : "1px solid #d1d5db",
-            background: value === "hitter" ? "#111827" : "white",
-            color: value === "hitter" ? "white" : "#111827",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
         >
           타자
         </button>
-
         <button
           type="button"
+          className={`toggle-btn ${value === "pitcher" ? "active" : ""}`}
           onClick={() => onChange("pitcher")}
-          style={{
-            padding: "10px 16px",
-            borderRadius: 8,
-            border: value === "pitcher" ? "2px solid #111827" : "1px solid #d1d5db",
-            background: value === "pitcher" ? "#111827" : "white",
-            color: value === "pitcher" ? "white" : "#111827",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
         >
           투수
         </button>

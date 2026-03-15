@@ -26,10 +26,8 @@ function SkillSelect({
 
     return options.filter((skill) => {
       const isExcluded = excludedSkillIds.includes(skill.id) && skill.id !== value;
-
       if (isExcluded) return false;
       if (!lowerKeyword) return true;
-
       return skill.name.toLowerCase().includes(lowerKeyword);
     });
   }, [options, excludedSkillIds, keyword, value]);
@@ -39,17 +37,8 @@ function SkillSelect({
   const selectedColor = selectedGrade ? SKILL_GRADE_COLORS[selectedGrade] : "#111827";
 
   return (
-    <div
-      style={{
-        flex: 1,
-        minWidth: 220,
-        padding: 12,
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        background: disabled ? "#f3f3f3" : "white",
-      }}
-    >
-      <h3 style={{ marginTop: 0, marginBottom: 12 }}>{label}</h3>
+    <div className={`skill-select ${disabled ? "disabled" : ""}`}>
+      <h3>{label}</h3>
 
       <input
         type="text"
@@ -57,33 +46,15 @@ function SkillSelect({
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         disabled={disabled}
-        style={{
-          width: "100%",
-          padding: "10px 12px",
-          marginBottom: 10,
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          fontSize: 16,
-        }}
       />
 
-      <div style={{ marginBottom: 8 }}>
-        현재 선택: <span style={{ fontWeight: 700, color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
+      <div className="selected-skill-row">
+        현재 선택: <span style={{ color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
       </div>
 
-      <div
-        style={{
-          minHeight: 260,
-          maxHeight: 260,
-          overflowY: "auto",
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          background: "white",
-          padding: 6,
-        }}
-      >
+      <div className="skill-result-list">
         {filteredOptions.length === 0 ? (
-          <div style={{ padding: 8, color: "#6b7280", fontSize: 14 }}>검색 결과가 없습니다.</div>
+          <div className="skill-empty">검색 결과가 없습니다.</div>
         ) : (
           filteredOptions.map((skill) => {
             const color = SKILL_GRADE_COLORS[skill.grade] ?? "#111827";
@@ -95,19 +66,8 @@ function SkillSelect({
                 type="button"
                 onClick={() => onChange(skill.id)}
                 disabled={disabled}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "10px 12px",
-                  marginBottom: 6,
-                  borderRadius: 8,
-                  border: isSelected ? `2px solid ${color}` : "1px solid #e5e7eb",
-                  background: isSelected ? "#f9fafb" : "white",
-                  color,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  cursor: disabled ? "not-allowed" : "pointer",
-                }}
+                className={`skill-option ${isSelected ? "selected" : ""}`}
+                style={{ color, borderColor: isSelected ? color : "#dde4f0" }}
               >
                 {skill.name}
               </button>
