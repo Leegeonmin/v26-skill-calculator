@@ -21,7 +21,7 @@ npm run lint
 
 ## 작업 기록
 
-### v0.4.1
+### v0.2.1
 
 - UI 2차 정리
   - 상단 부제목 제거
@@ -33,7 +33,7 @@ npm run lint
 - 스킬 검색 패널 스타일 보정
   - 리스트/토글/패널 톤을 통일해서 시각적 일관성 개선
 
-### v0.4.0
+### v0.2.0
 
 - 투수 데이터셋 구조 확장
   - `pitcher/starter`, `pitcher/middle`, `pitcher/closer` 분리
