@@ -1,4 +1,7 @@
-export type PlayerType = "hitter" | "pitcher";
+﻿export type PlayerType = "hitter" | "pitcher";
+
+export type PitcherRole = "starter" | "middle" | "closer";
+export type StarterHand = "right" | "left";
 
 export type CardType = "impact" | "signature" | "goldenGlove" | "national";
 
@@ -28,3 +31,8 @@ export interface SkillMeta {
   grade: SkillGrade;
   availableCardTypes: CardType[];
 }
+
+export type SkillOption = {
+  key: string;
+  label: string;
+};
