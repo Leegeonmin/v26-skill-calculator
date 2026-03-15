@@ -1,11 +1,10 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import type { SkillMeta } from "../types";
-import { SKILL_GRADE_BY_ID, SKILL_MAP_BY_ID } from "../data/skills";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
 
 interface SkillSelectProps {
   label: string;
-  value: string; // 선택된 skill id
+  value: string;
   options: SkillMeta[];
   excludedSkillIds?: string[];
   onChange: (skillId: string) => void;
@@ -26,22 +25,18 @@ function SkillSelect({
     const lowerKeyword = keyword.trim().toLowerCase();
 
     return options.filter((skill) => {
-      const isExcluded =
-        excludedSkillIds.includes(skill.id) && skill.id !== value;
+      const isExcluded = excludedSkillIds.includes(skill.id) && skill.id !== value;
 
       if (isExcluded) return false;
-
       if (!lowerKeyword) return true;
 
       return skill.name.toLowerCase().includes(lowerKeyword);
     });
   }, [options, excludedSkillIds, keyword, value]);
 
-  const selectedSkill = SKILL_MAP_BY_ID[value];
-  const selectedGrade = SKILL_GRADE_BY_ID[value];
-  const selectedColor = selectedGrade
-    ? SKILL_GRADE_COLORS[selectedGrade]
-    : "#111827";
+  const selectedSkill = options.find((skill) => skill.id === value);
+  const selectedGrade = selectedSkill?.grade;
+  const selectedColor = selectedGrade ? SKILL_GRADE_COLORS[selectedGrade] : "#111827";
 
   return (
     <div
@@ -64,53 +59,62 @@ function SkillSelect({
         disabled={disabled}
         style={{
           width: "100%",
-          padding: "8px 10px",
+          padding: "10px 12px",
           marginBottom: 10,
           border: "1px solid #ccc",
-          borderRadius: 6,
+          borderRadius: 8,
+          fontSize: 16,
         }}
       />
 
       <div style={{ marginBottom: 8 }}>
-        현재 선택:{" "}
-        <span
-          style={{
-            fontWeight: 700,
-            color: selectedColor,
-          }}
-        >
-          {selectedSkill?.name ?? "-"}
-        </span>
+        현재 선택: <span style={{ fontWeight: 700, color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
       </div>
 
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        size={10}
+      <div
         style={{
-          width: "100%",
-          padding: 8,
+          minHeight: 260,
+          maxHeight: 260,
+          overflowY: "auto",
           border: "1px solid #ccc",
-          borderRadius: 6,
+          borderRadius: 8,
           background: "white",
+          padding: 6,
         }}
       >
-        {filteredOptions.map((skill) => {
-          const grade = SKILL_GRADE_BY_ID[skill.id];
-          const color = grade ? SKILL_GRADE_COLORS[grade] : "#111827";
+        {filteredOptions.length === 0 ? (
+          <div style={{ padding: 8, color: "#6b7280", fontSize: 14 }}>검색 결과가 없습니다.</div>
+        ) : (
+          filteredOptions.map((skill) => {
+            const color = SKILL_GRADE_COLORS[skill.grade] ?? "#111827";
+            const isSelected = skill.id === value;
 
-          return (
-            <option
-              key={skill.id}
-              value={skill.id}
-              style={{ color, fontWeight: 600 }}
-            >
-              {skill.name}
-            </option>
-          );
-        })}
-      </select>
+            return (
+              <button
+                key={skill.id}
+                type="button"
+                onClick={() => onChange(skill.id)}
+                disabled={disabled}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "10px 12px",
+                  marginBottom: 6,
+                  borderRadius: 8,
+                  border: isSelected ? `2px solid ${color}` : "1px solid #e5e7eb",
+                  background: isSelected ? "#f9fafb" : "white",
+                  color,
+                  fontWeight: 700,
+                  fontSize: 15,
+                  cursor: disabled ? "not-allowed" : "pointer",
+                }}
+              >
+                {skill.name}
+              </button>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
