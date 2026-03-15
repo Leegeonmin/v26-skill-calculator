@@ -1,0 +1,27 @@
+:root {
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  background: #f7f7f8;
+  color: #111;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
