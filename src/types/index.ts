@@ -2,6 +2,7 @@
 
 export type PitcherRole = "starter" | "middle" | "closer";
 export type StarterHand = "right" | "left";
+export type CalculatorMode = "hitter" | "starter" | "middle" | "closer";
 
 export type CardType = "impact" | "signature" | "goldenGlove" | "national";
 

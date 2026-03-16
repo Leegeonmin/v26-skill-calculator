@@ -5,12 +5,11 @@ import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS } from "./data/uiColors";
 import PlayerTypeToggle from "./components/PlayerTypeToggle";
 import SkillSelect from "./components/SkillSelect";
-import type { CardType, PitcherRole, PlayerType, SkillLevel } from "./types";
+import type { CalculatorMode, CardType, PitcherRole, PlayerType, SkillLevel } from "./types";
 import { calculateSkillTotal } from "./utils/calculate";
 import { judgeSkillResult } from "./utils/judge";
 
-const DEFAULT_PLAYER_TYPE: PlayerType = "hitter";
-const DEFAULT_PITCHER_ROLE: PitcherRole = "starter";
+const DEFAULT_MODE: CalculatorMode = "hitter";
 const DEFAULT_CARD_TYPE: CardType = "signature";
 const DEFAULT_SKILL_1 = "hitter_precision_hit";
 const DEFAULT_SKILL_2 = "hitter_big_game_hunter";
@@ -47,31 +46,30 @@ function getEncouragementMessage(percent: number | null): string | null {
 
 function getResultSummaryMessage(percent: number | null): string {
   if (percent === null) {
-    return "기준표 최저점 미만 구간입니다. 실사용은 가능하지만 더 좋은 조합이 많이 남아 있어요.";
+    return "애매하다. 조금 더 돌려보는 걸 추천";
   }
 
   if (percent <= 0.5) {
-    return "이 정도면 종결권입니다. 오래 써도 만족할 만한 고점 조합이에요.";
+    return "극극종결. 사장님 아니면 안돌려도됨";
   }
 
   if (percent <= 1.5) {
-    return "상당히 좋은 편입니다. 실사용 기준으로도 충분히 강한 조합이에요.";
+    return "매우 잘 뜬 편. 웬만하면 만족하고 써도 됨";
   }
 
   if (percent <= 7) {
-    return "실사용 가능한 상급 조합입니다. 당장 써도 체감이 괜찮은 편이에요.";
+    return "실사용 가능";
   }
 
   if (percent <= 12) {
-    return "무난하게 굴릴 수 있는 조합입니다. 여유가 되면 한 단계 더 올려볼 만해요.";
+    return "쓰다가 여유 생기면 돌리길 추천";
   }
 
-  return "입문용으로는 괜찮지만 흔한 조합에 가까워요. 업그레이드 여지가 큽니다.";
+  return "흔한 편. 임시로 쓰고 갈아타는 쪽 추천";
 }
 
 function App() {
-  const [playerType, setPlayerType] = useState<PlayerType>(DEFAULT_PLAYER_TYPE);
-  const [pitcherRole, setPitcherRole] = useState<PitcherRole>(DEFAULT_PITCHER_ROLE);
+  const [mode, setMode] = useState<CalculatorMode>(DEFAULT_MODE);
 
   const [cardType, setCardType] = useState<CardType>(DEFAULT_CARD_TYPE);
   const [skill1, setSkill1] = useState(DEFAULT_SKILL_1);
@@ -81,6 +79,9 @@ function App() {
   const [level1, setLevel1] = useState<SkillLevel>(DEFAULT_LEVEL_1);
   const [level2, setLevel2] = useState<SkillLevel>(DEFAULT_LEVEL_2);
   const [level3, setLevel3] = useState<SkillLevel>(DEFAULT_LEVEL_3);
+
+  const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
+  const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
 
   const gameData = useMemo(
     () => getGameDataSet({ playerType, pitcherRole }),
@@ -154,23 +155,8 @@ function App() {
 
             <div className="control-row">
               <div className="control-block">
-                <PlayerTypeToggle value={playerType} onChange={setPlayerType} />
+                <PlayerTypeToggle value={mode} onChange={setMode} />
               </div>
-
-              {playerType === "pitcher" && (
-                <div className="control-block">
-                  <label htmlFor="pitcher-role">보직</label>
-                  <select
-                    id="pitcher-role"
-                    value={pitcherRole}
-                    onChange={(e) => setPitcherRole(e.target.value as PitcherRole)}
-                  >
-                    <option value="starter">선발</option>
-                    <option value="middle">중계</option>
-                    <option value="closer">마무리</option>
-                  </select>
-                </div>
-              )}
 
               <div className="control-block">
                 <label htmlFor="card-type">카드 종류</label>
@@ -195,7 +181,7 @@ function App() {
 
             {!gameData ? (
               <div className="empty-box">
-                {playerType === "hitter"
+                {mode === "hitter"
                   ? "데이터를 불러오지 못했습니다."
                   : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
               </div>
