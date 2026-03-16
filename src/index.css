@@ -318,6 +318,17 @@ input {
   text-align: center;
 }
 
+.result-summary {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f6f8fc;
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.55;
+  border: 1px solid var(--line);
+}
+
 .impact-note {
   margin: 10px 0 0;
   color: #b42318;

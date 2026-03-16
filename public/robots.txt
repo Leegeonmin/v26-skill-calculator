@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://v26-skill-calculator.vercel.app/sitemap.xml

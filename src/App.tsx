@@ -45,6 +45,30 @@ function getEncouragementMessage(percent: number | null): string | null {
   return null;
 }
 
+function getResultSummaryMessage(percent: number | null): string {
+  if (percent === null) {
+    return "기준표 최저점 미만 구간입니다. 실사용은 가능하지만 더 좋은 조합이 많이 남아 있어요.";
+  }
+
+  if (percent <= 0.5) {
+    return "이 정도면 종결권입니다. 오래 써도 만족할 만한 고점 조합이에요.";
+  }
+
+  if (percent <= 1.5) {
+    return "상당히 좋은 편입니다. 실사용 기준으로도 충분히 강한 조합이에요.";
+  }
+
+  if (percent <= 7) {
+    return "실사용 가능한 상급 조합입니다. 당장 써도 체감이 괜찮은 편이에요.";
+  }
+
+  if (percent <= 12) {
+    return "무난하게 굴릴 수 있는 조합입니다. 여유가 되면 한 단계 더 올려볼 만해요.";
+  }
+
+  return "입문용으로는 괜찮지만 흔한 조합에 가까워요. 업그레이드 여지가 큽니다.";
+}
+
 function App() {
   const [playerType, setPlayerType] = useState<PlayerType>(DEFAULT_PLAYER_TYPE);
   const [pitcherRole, setPitcherRole] = useState<PitcherRole>(DEFAULT_PITCHER_ROLE);
@@ -110,6 +134,7 @@ function App() {
 
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
   const encouragementMessage = getEncouragementMessage(judgeResult?.matchedPercent ?? null);
+  const summaryMessage = getResultSummaryMessage(judgeResult?.matchedPercent ?? null);
 
   return (
     <div className="app-bg">
@@ -260,6 +285,8 @@ function App() {
               <span>기준 확률</span>
               <strong>{formatMatchedPercent(judgeResult?.matchedPercent ?? null)}</strong>
             </div>
+
+            <p className="result-summary">{summaryMessage}</p>
 
             {encouragementMessage && <div className="result-badge">{encouragementMessage}</div>}
 
