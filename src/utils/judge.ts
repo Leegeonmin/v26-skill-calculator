@@ -1,11 +1,6 @@
 import type { CardType } from "../types";
 
-export type ResultGrade =
-  | "일반"
-  | "뉴비"
-  | "타협"
-  | "준종결"
-  | "찐종결";
+export type ResultGrade = "F" | "C" | "A" | "S" | "SSR+";
 
 export interface CardThresholdRow {
   score: number;
@@ -43,24 +38,24 @@ export function judgeSkillResult(
   const percent = getPercentByScore(thresholds, cardType, totalScore);
 
   if (percent === null) {
-    return { matchedPercent: null, grade: "일반" };
+    return { matchedPercent: null, grade: "F" };
   }
 
   if (percent <= 0.5) {
-    return { matchedPercent: percent, grade: "찐종결" };
+    return { matchedPercent: percent, grade: "SSR+" };
   }
 
   if (percent <= 1.5) {
-    return { matchedPercent: percent, grade: "준종결" };
+    return { matchedPercent: percent, grade: "S" };
   }
 
   if (percent <= 7) {
-    return { matchedPercent: percent, grade: "타협" };
+    return { matchedPercent: percent, grade: "A" };
   }
 
   if (percent <= 12) {
-    return { matchedPercent: percent, grade: "뉴비" };
+    return { matchedPercent: percent, grade: "C" };
   }
 
-  return { matchedPercent: percent, grade: "일반" };
+  return { matchedPercent: percent, grade: "F" };
 }

@@ -1,15 +1,26 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
-import { CARD_TYPE_LABELS } from "./data/cardTypes";
-import { getGameDataSet } from "./data/gameData";
-import { RESULT_GRADE_COLORS } from "./data/uiColors";
 import PlayerTypeToggle from "./components/PlayerTypeToggle";
 import SkillSelect from "./components/SkillSelect";
-import type { CalculatorMode, CardType, PitcherRole, PlayerType, SkillLevel } from "./types";
+import { CARD_TYPE_LABELS } from "./data/cardTypes";
+import { getGameDataSet } from "./data/gameData";
+import { RESULT_GRADE_COLORS, SKILL_GRADE_COLORS } from "./data/uiColors";
+import type {
+  CalculatorMode,
+  CardType,
+  HitterPositionGroup,
+  PitcherRole,
+  PlayerType,
+  SkillLevel,
+  ToolView,
+} from "./types";
 import { calculateSkillTotal } from "./utils/calculate";
-import { judgeSkillResult } from "./utils/judge";
+import { judgeSkillResult, type ResultGrade } from "./utils/judge";
+import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 
 const DEFAULT_MODE: CalculatorMode = "hitter";
+const DEFAULT_VIEW: ToolView = "calculator";
+const DEFAULT_HITTER_POSITION_GROUP: HitterPositionGroup = "fielder";
 const DEFAULT_CARD_TYPE: CardType = "signature";
 const DEFAULT_SKILL_1 = "hitter_precision_hit";
 const DEFAULT_SKILL_2 = "hitter_big_game_hunter";
@@ -17,6 +28,38 @@ const DEFAULT_SKILL_3 = "hitter_batting_machine";
 const DEFAULT_LEVEL_1: SkillLevel = 6;
 const DEFAULT_LEVEL_2: SkillLevel = 5;
 const DEFAULT_LEVEL_3: SkillLevel = 5;
+const AUTO_ROLL_LIMIT = 5000;
+
+const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
+  { value: "C", label: "C 이상" },
+  { value: "A", label: "A 이상" },
+  { value: "S", label: "S 이상" },
+  { value: "SSR+", label: "SSR+ 이상" },
+];
+
+const GRADE_RANK: Record<ResultGrade, number> = {
+  F: 0,
+  C: 1,
+  A: 2,
+  S: 3,
+  "SSR+": 4,
+};
+
+const RESULT_GRADE_GUIDE: Array<{ grade: ResultGrade; title: string; description: string }> = [
+  { grade: "F", title: "F", description: "기준표 최저점 미만이거나 흔한 구간" },
+  { grade: "C", title: "C", description: "무난하게는 쓸 수 있는 구간" },
+  { grade: "A", title: "A", description: "실사용 가능한 상급 조합" },
+  { grade: "S", title: "S", description: "준종결권으로 볼 만한 고점 조합" },
+  { grade: "SSR+", title: "SSR+", description: "사실상 종결권으로 보는 최상위 구간" },
+];
+
+function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
+  if (cardType === "goldenGlove") {
+    return [6, 6, 6];
+  }
+
+  return [DEFAULT_LEVEL_1, DEFAULT_LEVEL_2, DEFAULT_LEVEL_3];
+}
 
 function pickValidSkill(
   desired: string,
@@ -69,7 +112,10 @@ function getResultSummaryMessage(percent: number | null): string {
 }
 
 function App() {
+  const [toolView, setToolView] = useState<ToolView>(DEFAULT_VIEW);
   const [mode, setMode] = useState<CalculatorMode>(DEFAULT_MODE);
+  const [hitterPositionGroup, setHitterPositionGroup] =
+    useState<HitterPositionGroup>(DEFAULT_HITTER_POSITION_GROUP);
 
   const [cardType, setCardType] = useState<CardType>(DEFAULT_CARD_TYPE);
   const [skill1, setSkill1] = useState(DEFAULT_SKILL_1);
@@ -79,6 +125,13 @@ function App() {
   const [level1, setLevel1] = useState<SkillLevel>(DEFAULT_LEVEL_1);
   const [level2, setLevel2] = useState<SkillLevel>(DEFAULT_LEVEL_2);
   const [level3, setLevel3] = useState<SkillLevel>(DEFAULT_LEVEL_3);
+
+  const [simRollCount, setSimRollCount] = useState(0);
+  const [simBestScore, setSimBestScore] = useState<number | null>(null);
+  const [simLastMessage, setSimLastMessage] = useState(
+    "버튼을 누르면 1회 사용 결과가 바로 나옵니다."
+  );
+  const [targetGrade, setTargetGrade] = useState<ResultGrade>("S");
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -102,22 +155,20 @@ function App() {
   const resolvedSkill2 = pickValidSkill(skill2, filteredSkillIds, [resolvedSkill1]);
   const resolvedSkill3 = pickValidSkill(skill3, filteredSkillIds, [resolvedSkill1, resolvedSkill2]);
 
-  const handleReset = () => {
-    if (!gameData) return;
+  const selectedSkillMeta = useMemo(() => {
+    const skillMap = new Map(filteredSkills.map((skill) => [skill.id, skill]));
 
-    setCardType(DEFAULT_CARD_TYPE);
+    return {
+      skill1: skillMap.get(resolvedSkill1),
+      skill2: skillMap.get(resolvedSkill2),
+      skill3: skillMap.get(resolvedSkill3),
+    };
+  }, [filteredSkills, resolvedSkill1, resolvedSkill2, resolvedSkill3]);
 
-    const resetSkills = gameData.skills
-      .filter((skill) => skill.availableCardTypes.includes(DEFAULT_CARD_TYPE))
-      .map((skill) => skill.id);
-
-    setSkill1(resetSkills[0] ?? "");
-    setSkill2(resetSkills[1] ?? resetSkills[0] ?? "");
-    setSkill3(resetSkills[2] ?? resetSkills[0] ?? "");
-
-    setLevel1(DEFAULT_LEVEL_1);
-    setLevel2(DEFAULT_LEVEL_2);
-    setLevel3(DEFAULT_LEVEL_3);
+  const rolledSkillColors = {
+    skill1: selectedSkillMeta.skill1 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill1.grade] : "#111827",
+    skill2: selectedSkillMeta.skill2 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill2.grade] : "#111827",
+    skill3: selectedSkillMeta.skill3 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill3.grade] : "#111827",
   };
 
   const totalScore = gameData
@@ -137,26 +188,185 @@ function App() {
   const encouragementMessage = getEncouragementMessage(judgeResult?.matchedPercent ?? null);
   const summaryMessage = getResultSummaryMessage(judgeResult?.matchedPercent ?? null);
 
+  const resetSimulationSession = () => {
+    setSimRollCount(0);
+    setSimBestScore(null);
+    setSimLastMessage("버튼을 누르면 1회 사용 결과가 바로 나옵니다.");
+  };
+
+  const handleReset = () => {
+    if (!gameData) return;
+
+    setCardType(DEFAULT_CARD_TYPE);
+    const [defaultLevel1, defaultLevel2, defaultLevel3] = getDefaultLevels(DEFAULT_CARD_TYPE);
+
+    const resetSkills = gameData.skills
+      .filter((skill) => skill.availableCardTypes.includes(DEFAULT_CARD_TYPE))
+      .map((skill) => skill.id);
+
+    setSkill1(resetSkills[0] ?? "");
+    setSkill2(resetSkills[1] ?? resetSkills[0] ?? "");
+    setSkill3(resetSkills[2] ?? resetSkills[0] ?? "");
+
+    setLevel1(defaultLevel1);
+    setLevel2(defaultLevel2);
+    setLevel3(defaultLevel3);
+    resetSimulationSession();
+  };
+
+  const handleAdvancedSkillChangeRoll = () => {
+    if (!gameData) return;
+
+    const nextRoll = simulateAdvancedSkillChange({
+      mode,
+      cardType,
+      skills: gameData.skills,
+      hitterPositionGroup,
+      fixedSkillId: cardType === "impact" ? resolvedSkill1 : undefined,
+    });
+
+    const [nextSkill1, nextSkill2, nextSkill3] = nextRoll.skillIds;
+
+    setSkill1(nextSkill1);
+    setSkill2(nextSkill2);
+    setSkill3(nextSkill3);
+
+    const nextTotalScore = calculateSkillTotal({
+      cardType,
+      skillIds: [nextSkill1, nextSkill2, nextSkill3],
+      skillLevels: [level1, level2, level3],
+      scoreTable: gameData.scoreTable,
+    });
+
+    setSimRollCount((count) => count + 1);
+    setSimBestScore((bestScore) =>
+      bestScore === null ? nextTotalScore : Math.max(bestScore, nextTotalScore)
+    );
+    setSimLastMessage(`${simRollCount + 1}회차 결과 반영 완료`);
+  };
+
+  const handleAutoRollToTarget = () => {
+    if (!gameData) return;
+
+    let tryCount = 0;
+    let bestScoreInRun = simBestScore;
+    let finalSkillIds: [string, string, string] = [resolvedSkill1, resolvedSkill2, resolvedSkill3];
+    let finalJudgeResult = judgeResult;
+
+    while (tryCount < AUTO_ROLL_LIMIT) {
+      const nextRoll = simulateAdvancedSkillChange({
+        mode,
+        cardType,
+        skills: gameData.skills,
+        hitterPositionGroup,
+        fixedSkillId: cardType === "impact" ? resolvedSkill1 : undefined,
+      });
+
+      const nextTotalScore = calculateSkillTotal({
+        cardType,
+        skillIds: nextRoll.skillIds,
+        skillLevels: [level1, level2, level3],
+        scoreTable: gameData.scoreTable,
+      });
+
+      const nextJudgeResult = judgeSkillResult(gameData.thresholds, cardType, nextTotalScore);
+
+      tryCount += 1;
+      finalSkillIds = nextRoll.skillIds;
+      finalJudgeResult = nextJudgeResult;
+      bestScoreInRun =
+        bestScoreInRun === null ? nextTotalScore : Math.max(bestScoreInRun, nextTotalScore);
+
+      if (GRADE_RANK[nextJudgeResult.grade] >= GRADE_RANK[targetGrade]) {
+        break;
+      }
+    }
+
+    setSkill1(finalSkillIds[0]);
+    setSkill2(finalSkillIds[1]);
+    setSkill3(finalSkillIds[2]);
+    setSimRollCount((count) => count + tryCount);
+    setSimBestScore(bestScoreInRun);
+
+    if (finalJudgeResult && GRADE_RANK[finalJudgeResult.grade] >= GRADE_RANK[targetGrade]) {
+      setSimLastMessage(`${tryCount}번 만에 ${targetGrade} 이상 달성`);
+      return;
+    }
+
+    setSimLastMessage(`${AUTO_ROLL_LIMIT}번 안에 ${targetGrade} 이상이 나오지 않았음`);
+  };
+
   return (
     <div className="app-bg">
       <div className="app-shell">
         <header className="hero">
           <div>
             <p className="eyebrow">V26 Toolbox</p>
-            <h1>스킬 계산기</h1>
+            <h1>{toolView === "calculator" ? "스킬 계산기" : "고급스킬변경권 시뮬"}</h1>
           </div>
         </header>
+
+        <div className="tool-tabs" role="tablist" aria-label="도구 선택">
+          <button
+            type="button"
+            className={`tool-tab ${toolView === "calculator" ? "active" : ""}`}
+            onClick={() => setToolView("calculator")}
+          >
+            스킬 계산기
+          </button>
+          <button
+            type="button"
+            className={`tool-tab ${toolView === "simulator" ? "active" : ""}`}
+            onClick={() => setToolView("simulator")}
+          >
+            고급스킬변경권 시뮬
+          </button>
+        </div>
 
         <main className="layout-grid">
           <section className="panel panel-main">
             <div className="panel-head">
-              <h2>입력</h2>
+              <h2>{toolView === "calculator" ? "입력" : "시뮬 설정"}</h2>
             </div>
 
             <div className="control-row">
-              <div className="control-block">
-                <PlayerTypeToggle value={mode} onChange={setMode} />
+              <div className="control-block control-block-mode">
+                <PlayerTypeToggle
+                  value={mode}
+                  onChange={(nextMode) => {
+                    setMode(nextMode);
+                    resetSimulationSession();
+                  }}
+                />
               </div>
+
+              {toolView === "simulator" && mode === "hitter" && (
+                <div className="control-block">
+                  <label>타자 포지션</label>
+                  <div className="toggle-row">
+                    <button
+                      type="button"
+                      className={`toggle-btn ${hitterPositionGroup === "fielder" ? "active" : ""}`}
+                      onClick={() => {
+                        setHitterPositionGroup("fielder");
+                        resetSimulationSession();
+                      }}
+                    >
+                      야수
+                    </button>
+                    <button
+                      type="button"
+                      className={`toggle-btn ${hitterPositionGroup === "catcher" ? "active" : ""}`}
+                      onClick={() => {
+                        setHitterPositionGroup("catcher");
+                        resetSimulationSession();
+                      }}
+                    >
+                      포수
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="control-block">
                 <label htmlFor="card-type">카드 종류</label>
@@ -164,7 +374,17 @@ function App() {
                   <select
                     id="card-type"
                     value={cardType}
-                    onChange={(e) => setCardType(e.target.value as CardType)}
+                    onChange={(e) => {
+                      const nextCardType = e.target.value as CardType;
+                      const [defaultLevel1, defaultLevel2, defaultLevel3] =
+                        getDefaultLevels(nextCardType);
+
+                      setCardType(nextCardType);
+                      setLevel1(defaultLevel1);
+                      setLevel2(defaultLevel2);
+                      setLevel3(defaultLevel3);
+                      resetSimulationSession();
+                    }}
                   >
                     {Object.entries(CARD_TYPE_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>
@@ -185,68 +405,244 @@ function App() {
                   ? "데이터를 불러오지 못했습니다."
                   : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
               </div>
+            ) : toolView === "calculator" ? (
+              <>
+                <div className="mobile-live-summary">
+                  <div className="mobile-live-summary-head">
+                    <strong>현재 결과</strong>
+                    <span style={{ color: resultGradeColor }}>{judgeResult?.grade ?? "-"}</span>
+                  </div>
+                  <div className="mobile-live-summary-stats">
+                    <div>점수 {gameData ? totalScore : "-"}</div>
+                    <div>확률 {formatMatchedPercent(judgeResult?.matchedPercent ?? null)}</div>
+                  </div>
+                  <div className="mobile-skill-chip-list">
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
+                      {selectedSkillMeta.skill1?.name ?? "-"}
+                    </span>
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
+                      {selectedSkillMeta.skill2?.name ?? "-"}
+                    </span>
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
+                      {selectedSkillMeta.skill3?.name ?? "-"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="skill-grid">
+                  <div className="skill-col">
+                    <SkillSelect
+                      label={cardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
+                      value={resolvedSkill1}
+                      options={filteredSkills}
+                      excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
+                      onChange={setSkill1}
+                      disabled={cardType === "impact"}
+                    />
+                    <select
+                      value={level1}
+                      onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
+                      disabled={cardType === "impact"}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="skill-col">
+                    <SkillSelect
+                      label="스킬 2"
+                      value={resolvedSkill2}
+                      options={filteredSkills}
+                      excludedSkillIds={[resolvedSkill1, resolvedSkill3]}
+                      onChange={setSkill2}
+                    />
+                    <select
+                      value={level2}
+                      onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="skill-col">
+                    <SkillSelect
+                      label="스킬 3"
+                      value={resolvedSkill3}
+                      options={filteredSkills}
+                      excludedSkillIds={[resolvedSkill1, resolvedSkill2]}
+                      onChange={setSkill3}
+                    />
+                    <select
+                      value={level3}
+                      onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </>
             ) : (
-              <div className="skill-grid">
-                <div className="skill-col">
-                  <SkillSelect
-                    label={cardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
-                    value={resolvedSkill1}
-                    options={filteredSkills}
-                    excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
-                    onChange={setSkill1}
-                    disabled={cardType === "impact"}
-                  />
-                  <select
-                    value={level1}
-                    onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
-                    disabled={cardType === "impact"}
+              <div className="simulation-stack">
+                <div className="simulation-panel">
+                  <div>
+                    <h3>고급스킬변경권</h3>
+                    <p className="tool-note">
+                      버튼 한 번이 고급스킬변경권 1회 사용입니다. 현재 카드 종류와 보직 기준으로
+                      확률이 적용됩니다.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="roll-btn"
+                    onClick={handleAdvancedSkillChangeRoll}
                   >
-                    {[5, 6, 7, 8].map((level) => (
-                      <option key={level} value={level}>
-                        {level} 레벨
-                      </option>
-                    ))}
-                  </select>
+                    고급스킬변경권 1회 사용
+                  </button>
                 </div>
 
-                <div className="skill-col">
-                  <SkillSelect
-                    label="스킬 2"
-                    value={resolvedSkill2}
-                    options={filteredSkills}
-                    excludedSkillIds={[resolvedSkill1, resolvedSkill3]}
-                    onChange={setSkill2}
-                  />
-                  <select
-                    value={level2}
-                    onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
+                <div className="auto-roll-panel">
+                  <div className="auto-roll-controls">
+                    <label htmlFor="target-grade">목표 판정등급</label>
+                    <select
+                      id="target-grade"
+                      value={targetGrade}
+                      onChange={(e) => setTargetGrade(e.target.value as ResultGrade)}
+                    >
+                      {TARGET_GRADE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    className="roll-btn auto-roll-btn"
+                    onClick={handleAutoRollToTarget}
                   >
-                    {[5, 6, 7, 8].map((level) => (
-                      <option key={level} value={level}>
-                        {level} 레벨
-                      </option>
-                    ))}
-                  </select>
+                    목표 달성까지 자동 롤
+                  </button>
                 </div>
 
-                <div className="skill-col">
-                  <SkillSelect
-                    label="스킬 3"
-                    value={resolvedSkill3}
-                    options={filteredSkills}
-                    excludedSkillIds={[resolvedSkill1, resolvedSkill2]}
-                    onChange={setSkill3}
-                  />
-                  <select
-                    value={level3}
-                    onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
-                  >
-                    {[5, 6, 7, 8].map((level) => (
-                      <option key={level} value={level}>
-                        {level} 레벨
-                      </option>
-                    ))}
-                  </select>
+                <div className="simulation-stats">
+                  <div className="result-stat">
+                    <span>이번 세션 사용 횟수</span>
+                    <strong>{simRollCount}회</strong>
+                  </div>
+                  <div className="result-stat">
+                    <span>이번 세션 최고 점수</span>
+                    <strong>{simBestScore ?? "-"}</strong>
+                  </div>
+                </div>
+
+                <p className="tool-note tool-note-strong">{simLastMessage}</p>
+
+                <div className="mobile-live-summary">
+                  <div className="mobile-live-summary-head">
+                    <strong>현재 결과</strong>
+                    <span style={{ color: resultGradeColor }}>{judgeResult?.grade ?? "-"}</span>
+                  </div>
+                  <div className="mobile-live-summary-stats">
+                    <div>점수 {gameData ? totalScore : "-"}</div>
+                    <div>확률 {formatMatchedPercent(judgeResult?.matchedPercent ?? null)}</div>
+                  </div>
+                  <div className="mobile-skill-chip-list">
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
+                      {selectedSkillMeta.skill1?.name ?? "-"}
+                    </span>
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
+                      {selectedSkillMeta.skill2?.name ?? "-"}
+                    </span>
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
+                      {selectedSkillMeta.skill3?.name ?? "-"}
+                    </span>
+                  </div>
+                </div>
+
+                {cardType === "impact" && (
+                  <div className="impact-fixed-skill">
+                    <SkillSelect
+                      label="임팩트 고정 스킬"
+                      value={resolvedSkill1}
+                      options={filteredSkills}
+                      excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
+                      onChange={setSkill1}
+                    />
+                  </div>
+                )}
+
+                <div className="skill-grid">
+                  <div className="skill-col">
+                    <div className="rolled-skill-card">
+                      <div className="rolled-skill-label">
+                        {cardType === "impact" ? "고정 스킬 1" : "롤 결과 스킬 1"}
+                      </div>
+                      <strong style={{ color: rolledSkillColors.skill1 }}>
+                        {selectedSkillMeta.skill1?.name ?? "-"}
+                      </strong>
+                    </div>
+                    <select
+                      value={level1}
+                      onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
+                      disabled={cardType === "impact"}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="skill-col">
+                    <div className="rolled-skill-card">
+                      <div className="rolled-skill-label">롤 결과 스킬 2</div>
+                      <strong style={{ color: rolledSkillColors.skill2 }}>
+                        {selectedSkillMeta.skill2?.name ?? "-"}
+                      </strong>
+                    </div>
+                    <select
+                      value={level2}
+                      onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="skill-col">
+                    <div className="rolled-skill-card">
+                      <div className="rolled-skill-label">롤 결과 스킬 3</div>
+                      <strong style={{ color: rolledSkillColors.skill3 }}>
+                        {selectedSkillMeta.skill3?.name ?? "-"}
+                      </strong>
+                    </div>
+                    <select
+                      value={level3}
+                      onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
@@ -275,6 +671,24 @@ function App() {
             <p className="result-summary">{summaryMessage}</p>
 
             {encouragementMessage && <div className="result-badge">{encouragementMessage}</div>}
+
+            <div className="result-grade-guide">
+              <div className="result-grade-guide-title">판정등급 기준</div>
+              <div className="result-grade-guide-list">
+                {RESULT_GRADE_GUIDE.map((item) => (
+                  <div key={item.grade} className="result-grade-guide-item">
+                    <strong style={{ color: RESULT_GRADE_COLORS[item.grade] }}>{item.title}</strong>
+                    <span>{item.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {toolView === "simulator" && (
+              <p className="tool-note">
+                현재 버전은 앱에 등록된 스킬 데이터를 기준으로 1회 롤을 재현합니다.
+              </p>
+            )}
 
             {cardType === "impact" && (
               <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>

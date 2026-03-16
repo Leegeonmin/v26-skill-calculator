@@ -9,7 +9,7 @@ function PlayerTypeToggle({ value, onChange }: PlayerTypeToggleProps) {
   return (
     <div className="toggle-root">
       <div className="toggle-label">계산 대상</div>
-      <div className="toggle-row">
+      <div className="toggle-row toggle-row-modes">
         <button
           type="button"
           className={`toggle-btn ${value === "hitter" ? "active" : ""}`}

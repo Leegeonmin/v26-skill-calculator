@@ -3,6 +3,8 @@
 export type PitcherRole = "starter" | "middle" | "closer";
 export type StarterHand = "right" | "left";
 export type CalculatorMode = "hitter" | "starter" | "middle" | "closer";
+export type ToolView = "calculator" | "simulator";
+export type HitterPositionGroup = "fielder" | "catcher";
 
 export type CardType = "impact" | "signature" | "goldenGlove" | "national";
 
@@ -32,6 +34,8 @@ export interface SkillMeta {
   grade: SkillGrade;
   availableCardTypes: CardType[];
 }
+
+export type SkillGradeWeights = Partial<Record<SkillGrade, number>>;
 
 export type SkillOption = {
   key: string;
