@@ -33,8 +33,8 @@ const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
 
 const TOOL_VIEW_LABELS: Record<ToolView, string> = {
-  calculator: "스킬 계산기",
-  simulator: "고급스킬변경권 시뮬",
+  calculator: "스킬점수 계산기",
+  simulator: "고스변 시뮬",
   impactChange: "임팩트 스변 시뮬",
 };
 
@@ -381,14 +381,14 @@ function App() {
             className={`tool-tab ${toolView === "calculator" ? "active" : ""}`}
             onClick={() => setToolView("calculator")}
           >
-            스킬 계산기
+            스킬점수 계산기
           </button>
           <button
             type="button"
             className={`tool-tab ${toolView === "simulator" ? "active" : ""}`}
             onClick={() => setToolView("simulator")}
           >
-            고급스킬변경권 시뮬
+            고스변 시뮬
           </button>
           <button
             type="button"
