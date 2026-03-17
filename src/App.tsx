@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import PlayerTypeToggle from "./components/PlayerTypeToggle";
 import SkillSelect from "./components/SkillSelect";
@@ -53,6 +53,13 @@ const RESULT_GRADE_GUIDE: Array<{ grade: ResultGrade; title: string; description
   { grade: "SSR+", title: "SSR+", description: "사실상 종결권으로 보는 최상위 구간" },
 ];
 
+const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, string]>).map(
+  ([value, label]) => ({
+    value,
+    label,
+  })
+);
+
 function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
   if (cardType === "goldenGlove") {
     return [6, 6, 6];
@@ -79,6 +86,11 @@ function formatMatchedPercent(percent: number | null): string {
   if (percent <= 0) return "0% 미만";
   if (percent < 0.01) return "< 0.01%";
   return `${percent}%`;
+}
+
+function getSkillScoreLabel(score: number | undefined): string {
+  if (score === undefined) return "점수 -";
+  return `점수 ${score}`;
 }
 
 function getEncouragementMessage(percent: number | null): string | null {
@@ -169,6 +181,12 @@ function App() {
     skill1: selectedSkillMeta.skill1 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill1.grade] : "#111827",
     skill2: selectedSkillMeta.skill2 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill2.grade] : "#111827",
     skill3: selectedSkillMeta.skill3 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill3.grade] : "#111827",
+  };
+
+  const skillScores = {
+    skill1: gameData?.scoreTable[resolvedSkill1]?.[level1],
+    skill2: gameData?.scoreTable[resolvedSkill2]?.[level2],
+    skill3: gameData?.scoreTable[resolvedSkill3]?.[level3],
   };
 
   const totalScore = gameData
@@ -342,7 +360,7 @@ function App() {
 
               {toolView === "simulator" && mode === "hitter" && (
                 <div className="control-block">
-                  <label>타자 포지션</label>
+                  <label>?? ???</label>
                   <div className="toggle-row">
                     <button
                       type="button"
@@ -352,7 +370,7 @@ function App() {
                         resetSimulationSession();
                       }}
                     >
-                      야수
+                      ??
                     </button>
                     <button
                       type="button"
@@ -362,36 +380,37 @@ function App() {
                         resetSimulationSession();
                       }}
                     >
-                      포수
+                      ??
                     </button>
                   </div>
                 </div>
               )}
 
               <div className="control-block">
-                <label htmlFor="card-type">카드 종류</label>
-                <div className="inline-actions">
-                  <select
-                    id="card-type"
-                    value={cardType}
-                    onChange={(e) => {
-                      const nextCardType = e.target.value as CardType;
-                      const [defaultLevel1, defaultLevel2, defaultLevel3] =
-                        getDefaultLevels(nextCardType);
+                <label>카드 타입</label>
+                <div className="inline-actions inline-actions-card">
+                  <div className="toggle-row toggle-row-cards">
+                    {CARD_TYPE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
+                        onClick={() => {
+                          const nextCardType = option.value;
+                          const [defaultLevel1, defaultLevel2, defaultLevel3] =
+                            getDefaultLevels(nextCardType);
 
-                      setCardType(nextCardType);
-                      setLevel1(defaultLevel1);
-                      setLevel2(defaultLevel2);
-                      setLevel3(defaultLevel3);
-                      resetSimulationSession();
-                    }}
-                  >
-                    {Object.entries(CARD_TYPE_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
+                          setCardType(nextCardType);
+                          setLevel1(defaultLevel1);
+                          setLevel2(defaultLevel2);
+                          setLevel3(defaultLevel3);
+                          resetSimulationSession();
+                        }}
+                      >
+                        {option.label}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                   <button type="button" className="ghost-btn" onClick={handleReset}>
                     초기화
                   </button>
@@ -418,13 +437,13 @@ function App() {
                   </div>
                   <div className="mobile-skill-chip-list">
                     <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
-                      {selectedSkillMeta.skill1?.name ?? "-"}
+                      {selectedSkillMeta.skill1?.name ?? "-"} · {skillScores.skill1 ?? "-"}
                     </span>
                     <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
-                      {selectedSkillMeta.skill2?.name ?? "-"}
+                      {selectedSkillMeta.skill2?.name ?? "-"} · {skillScores.skill2 ?? "-"}
                     </span>
                     <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
-                      {selectedSkillMeta.skill3?.name ?? "-"}
+                      {selectedSkillMeta.skill3?.name ?? "-"} · {skillScores.skill3 ?? "-"}
                     </span>
                   </div>
                 </div>
@@ -438,6 +457,7 @@ function App() {
                       excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
                       onChange={setSkill1}
                       disabled={cardType === "impact"}
+                      metaText={getSkillScoreLabel(skillScores.skill1)}
                     />
                     <select
                       value={level1}
@@ -459,6 +479,7 @@ function App() {
                       options={filteredSkills}
                       excludedSkillIds={[resolvedSkill1, resolvedSkill3]}
                       onChange={setSkill2}
+                      metaText={getSkillScoreLabel(skillScores.skill2)}
                     />
                     <select
                       value={level2}
@@ -479,6 +500,7 @@ function App() {
                       options={filteredSkills}
                       excludedSkillIds={[resolvedSkill1, resolvedSkill2]}
                       onChange={setSkill3}
+                      metaText={getSkillScoreLabel(skillScores.skill3)}
                     />
                     <select
                       value={level3}
@@ -498,10 +520,6 @@ function App() {
                 <div className="simulation-panel">
                   <div>
                     <h3>고급스킬변경권</h3>
-                    <p className="tool-note">
-                      버튼 한 번이 고급스킬변경권 1회 사용입니다. 현재 카드 종류와 보직 기준으로
-                      확률이 적용됩니다.
-                    </p>
                   </div>
                   <button
                     type="button"
@@ -560,13 +578,13 @@ function App() {
                   </div>
                   <div className="mobile-skill-chip-list">
                     <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
-                      {selectedSkillMeta.skill1?.name ?? "-"}
+                      {selectedSkillMeta.skill1?.name ?? "-"} · {skillScores.skill1 ?? "-"}
                     </span>
                     <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
-                      {selectedSkillMeta.skill2?.name ?? "-"}
+                      {selectedSkillMeta.skill2?.name ?? "-"} · {skillScores.skill2 ?? "-"}
                     </span>
                     <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
-                      {selectedSkillMeta.skill3?.name ?? "-"}
+                      {selectedSkillMeta.skill3?.name ?? "-"} · {skillScores.skill3 ?? "-"}
                     </span>
                   </div>
                 </div>
@@ -592,6 +610,7 @@ function App() {
                       <strong style={{ color: rolledSkillColors.skill1 }}>
                         {selectedSkillMeta.skill1?.name ?? "-"}
                       </strong>
+                      <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill1)}</div>
                     </div>
                     <select
                       value={level1}
@@ -612,6 +631,7 @@ function App() {
                       <strong style={{ color: rolledSkillColors.skill2 }}>
                         {selectedSkillMeta.skill2?.name ?? "-"}
                       </strong>
+                      <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill2)}</div>
                     </div>
                     <select
                       value={level2}
@@ -631,6 +651,7 @@ function App() {
                       <strong style={{ color: rolledSkillColors.skill3 }}>
                         {selectedSkillMeta.skill3?.name ?? "-"}
                       </strong>
+                      <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill3)}</div>
                     </div>
                     <select
                       value={level3}

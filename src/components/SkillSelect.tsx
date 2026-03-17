@@ -9,6 +9,7 @@ interface SkillSelectProps {
   excludedSkillIds?: string[];
   onChange: (skillId: string) => void;
   disabled?: boolean;
+  metaText?: string;
 }
 
 function SkillSelect({
@@ -18,6 +19,7 @@ function SkillSelect({
   excludedSkillIds = [],
   onChange,
   disabled = false,
+  metaText,
 }: SkillSelectProps) {
   const [keyword, setKeyword] = useState("");
 
@@ -51,6 +53,8 @@ function SkillSelect({
       <div className="selected-skill-row">
         현재 선택: <span style={{ color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
       </div>
+
+      {metaText && <div className="selected-skill-meta">{metaText}</div>}
 
       <div className="skill-result-list">
         {filteredOptions.length === 0 ? (

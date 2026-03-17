@@ -18,6 +18,11 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background: radial-gradient(circle at top right, #f7efe3, #eef1f6 44%, #ece8f5);
@@ -144,6 +149,8 @@ select {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  width: 100%;
+  min-width: 0;
 }
 
 .panel-main {
@@ -193,6 +200,10 @@ select {
   gap: 8px;
 }
 
+.inline-actions-card {
+  flex-direction: column;
+}
+
 select,
 input {
   width: 100%;
@@ -225,6 +236,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .skill-select {
@@ -250,6 +262,13 @@ input {
 }
 
 .selected-skill-row span {
+  font-weight: 700;
+}
+
+.selected-skill-meta {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
   font-weight: 700;
 }
 
@@ -306,6 +325,12 @@ input {
 .toggle-row-modes {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+}
+
+.toggle-row-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   width: 100%;
 }
 
@@ -429,11 +454,11 @@ input {
 }
 
 .mobile-live-summary-head strong {
-  font-size: 0.98rem;
+  font-size: 0.94rem;
 }
 
 .mobile-live-summary-head span {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
@@ -448,18 +473,20 @@ input {
 .mobile-skill-chip-list {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  flex-wrap: wrap;
+  overflow-x: visible;
+  padding-bottom: 0;
 }
 
 .mobile-skill-chip {
-  flex: 0 0 auto;
-  padding: 10px 12px;
-  border-radius: 999px;
+  flex: 1 1 100%;
+  padding: 8px 10px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: #fff;
+  font-size: 0.84rem;
   font-weight: 700;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .simulation-stack {
@@ -473,14 +500,14 @@ input {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--line);
   background: linear-gradient(135deg, #f8fbff, #eef6f3);
 }
 
 .simulation-panel h3 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 1.02rem;
 }
 
@@ -560,6 +587,13 @@ input {
   font-size: 1.05rem;
 }
 
+.rolled-skill-score {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
 .rolled-skill-label {
   color: var(--muted);
   font-size: 0.86rem;
@@ -600,13 +634,58 @@ input {
 }
 
 @media (max-width: 900px) {
+  .app-bg {
+    padding: 14px 10px 20px;
+  }
+
+  .hero {
+    margin-bottom: 8px;
+  }
+
+  .hero h1 {
+    margin: 2px 0 2px;
+    font-size: clamp(1.55rem, 7vw, 2rem);
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+  }
+
+  .panel-main,
+  .panel-result {
+    padding: 14px;
+  }
+
+  .panel-head h2 {
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+  }
+
   .control-row,
   .skill-grid {
     grid-template-columns: 1fr;
   }
 
+  .control-row {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .control-block {
+    padding: 10px;
+  }
+
+  .control-block-mode {
+    padding: 9px;
+  }
+
   .toggle-row-modes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .toggle-row-cards {
+    gap: 6px;
   }
 
   .simulation-panel,
@@ -614,10 +693,18 @@ input {
     grid-template-columns: 1fr;
   }
 
-  .simulation-panel,
-  .auto-roll-panel {
+.simulation-panel,
+.auto-roll-panel {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .layout-grid,
+  .panel-main,
+  .control-row,
+  .skill-grid,
+  .simulation-stack {
+    min-width: 0;
   }
 
   .hero {
@@ -631,10 +718,28 @@ input {
 
   .tool-tabs {
     display: flex;
+    width: 100%;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 5px;
+  }
+
+  .tool-tab {
+    flex: 1;
+    padding: 9px 10px;
+    font-size: 0.92rem;
   }
 
   .mobile-live-summary {
     display: block;
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+
+  .mobile-live-summary-stats {
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 0.84rem;
   }
 
   .result-grade-guide-item {
@@ -644,5 +749,83 @@ input {
 
   .result-grade-guide-item span {
     text-align: left;
+  }
+
+  .simulation-stack {
+    gap: 10px;
+  }
+
+  .simulation-panel,
+  .auto-roll-panel {
+    padding: 12px;
+  }
+
+  .simulation-stats {
+    gap: 8px;
+  }
+
+  .roll-btn,
+  .ghost-btn,
+  .toggle-btn,
+  select,
+  input {
+    min-height: 40px;
+  }
+
+  .toggle-btn {
+    padding: 8px 10px;
+    min-height: 40px;
+    font-size: 0.92rem;
+  }
+
+  .ghost-btn {
+    min-width: 0;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+  }
+
+  .skill-select {
+    padding: 10px;
+  }
+
+  .skill-select h3 {
+    margin-bottom: 8px;
+    font-size: 0.98rem;
+  }
+
+  .selected-skill-row {
+    margin: 8px 0 4px;
+    font-size: 0.92rem;
+  }
+
+  .selected-skill-meta {
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+  }
+
+  .skill-result-list {
+    min-height: 220px;
+    max-height: 220px;
+  }
+
+  .skill-option {
+    padding: 9px 10px;
+    margin-bottom: 5px;
+    font-size: 0.92rem;
+  }
+
+  .rolled-skill-card {
+    min-height: 90px;
+    padding: 12px;
+  }
+
+  .rolled-skill-card strong {
+    margin-top: 6px;
+    font-size: 0.98rem;
+  }
+
+  .rolled-skill-score {
+    margin-top: 4px;
+    font-size: 0.8rem;
   }
 }
