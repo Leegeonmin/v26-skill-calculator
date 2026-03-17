@@ -21,7 +21,7 @@ const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_015", name: "해결사" },
   { id: "starter_skill_016", name: "긴급투입" },
   { id: "starter_skill_017", name: "구속제어" },
-  { id: "starter_skill_018", name: "리그톱플레이어" },
+  { id: "starter_skill_018", name: "리그탑플레이어" },
   { id: "starter_skill_019", name: "전천후" },
   { id: "starter_skill_020", name: "철완(지구력 100~116)" },
   { id: "starter_skill_021", name: "순위경쟁" },

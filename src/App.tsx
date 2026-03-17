@@ -517,52 +517,44 @@ function App() {
               </>
             ) : (
               <div className="simulation-stack">
-                <div className="simulation-panel">
-                  <div>
-                    <h3>고급스킬변경권</h3>
-                  </div>
-                  <button
-                    type="button"
-                    className="roll-btn"
-                    onClick={handleAdvancedSkillChangeRoll}
-                  >
-                    고급스킬변경권 1회 사용
-                  </button>
-                </div>
-
-                <div className="auto-roll-panel">
-                  <div className="auto-roll-controls">
-                    <label htmlFor="target-grade">목표 판정등급</label>
-                    <select
-                      id="target-grade"
-                      value={targetGrade}
-                      onChange={(e) => setTargetGrade(e.target.value as ResultGrade)}
+                <div className="simulation-actions">
+                  <div className="simulation-action-buttons">
+                    <button
+                      type="button"
+                      className="roll-btn"
+                      onClick={handleAdvancedSkillChangeRoll}
                     >
-                      {TARGET_GRADE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      고급스킬변경권 1회 사용
+                    </button>
+                    <button
+                      type="button"
+                      className="roll-btn auto-roll-btn"
+                      onClick={handleAutoRollToTarget}
+                    >
+                      목표 달성까지 자동 롤
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="roll-btn auto-roll-btn"
-                    onClick={handleAutoRollToTarget}
-                  >
-                    목표 달성까지 자동 롤
-                  </button>
+                  <div className="auto-roll-compact">
+                    <label htmlFor="target-grade">목표 판정등급</label>
+                    <div className="auto-roll-controls">
+                      <select
+                        id="target-grade"
+                        value={targetGrade}
+                        onChange={(e) => setTargetGrade(e.target.value as ResultGrade)}
+                      >
+                        {TARGET_GRADE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="simulation-stats">
-                  <div className="result-stat">
-                    <span>이번 세션 사용 횟수</span>
-                    <strong>{simRollCount}회</strong>
-                  </div>
-                  <div className="result-stat">
-                    <span>이번 세션 최고 점수</span>
-                    <strong>{simBestScore ?? "-"}</strong>
-                  </div>
+                <div className="simulation-summary">
+                  <span>이번 세션 사용 횟수 <strong>{simRollCount}회</strong></span>
+                  <span>최고 점수 <strong>{simBestScore ?? "-"}</strong></span>
                 </div>
 
                 <p className="tool-note tool-note-strong">{simLastMessage}</p>

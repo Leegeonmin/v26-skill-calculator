@@ -174,6 +174,7 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
+  align-items: start;
 }
 
 .control-block {
@@ -185,6 +186,7 @@ select {
 
 .control-block-mode {
   padding: 12px 14px;
+  align-self: start;
 }
 
 .control-block label {
@@ -495,52 +497,67 @@ input {
   gap: 14px;
 }
 
-.simulation-panel {
+.simulation-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   padding: 14px 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--line);
   background: linear-gradient(135deg, #f8fbff, #eef6f3);
 }
 
-.simulation-panel h3 {
-  margin: 0;
-  font-size: 1.02rem;
-}
-
-.simulation-stats {
+.simulation-action-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.auto-roll-panel {
+.simulation-summary {
   display: flex;
-  gap: 12px;
-  align-items: end;
-  padding: 16px;
-  border-radius: var(--radius-md);
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
-  background: #fcfdff;
+  border-radius: 12px;
+  background: #fbfcff;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.simulation-summary span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.simulation-summary strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.auto-roll-compact {
+  display: grid;
+  grid-template-columns: auto minmax(0, 220px);
+  gap: 10px;
+  align-items: center;
 }
 
 .auto-roll-controls {
-  flex: 1;
+  min-width: 0;
 }
 
-.auto-roll-controls label {
-  display: block;
-  margin-bottom: 7px;
+.auto-roll-compact label {
   font-size: 0.88rem;
   color: var(--muted);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .auto-roll-btn {
-  min-width: 190px;
+  min-width: 0;
 }
 
 .roll-btn {
@@ -680,23 +697,17 @@ input {
   }
 
   .toggle-row-modes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
   }
 
   .toggle-row-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
   }
 
-  .simulation-panel,
-  .simulation-stats {
+  .simulation-action-buttons {
     grid-template-columns: 1fr;
-  }
-
-.simulation-panel,
-.auto-roll-panel {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .layout-grid,
@@ -755,9 +766,26 @@ input {
     gap: 10px;
   }
 
-  .simulation-panel,
-  .auto-roll-panel {
+  .simulation-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+  }
+
+  .simulation-summary span {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .simulation-actions {
     padding: 12px;
+  }
+
+  .auto-roll-compact {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .simulation-stats {
@@ -773,9 +801,9 @@ input {
   }
 
   .toggle-btn {
-    padding: 8px 10px;
-    min-height: 40px;
-    font-size: 0.92rem;
+    padding: 8px 6px;
+    min-height: 38px;
+    font-size: 0.84rem;
   }
 
   .ghost-btn {
