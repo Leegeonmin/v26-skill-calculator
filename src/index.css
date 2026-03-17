@@ -590,6 +590,33 @@ input {
   max-width: 420px;
 }
 
+.impact-fixed-skill-full {
+  max-width: none;
+}
+
+.impact-card-lock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.impact-card-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #bfd6d0;
+  background: #edf8f4;
+  color: #17695d;
+  font-weight: 700;
+}
+
+.simulation-action-buttons-single {
+  grid-template-columns: 1fr;
+}
+
 .rolled-skill-card {
   min-height: 104px;
   padding: 14px;
@@ -808,6 +835,12 @@ input {
 
   .ghost-btn {
     min-width: 0;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+  }
+
+  .impact-card-pill {
+    min-height: 40px;
     padding: 9px 12px;
     font-size: 0.92rem;
   }

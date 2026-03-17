@@ -17,6 +17,7 @@ import type {
 import { calculateSkillTotal } from "./utils/calculate";
 import { judgeSkillResult, type ResultGrade } from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
+import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
 
 const DEFAULT_MODE: CalculatorMode = "hitter";
 const DEFAULT_VIEW: ToolView = "calculator";
@@ -29,6 +30,13 @@ const DEFAULT_LEVEL_1: SkillLevel = 6;
 const DEFAULT_LEVEL_2: SkillLevel = 5;
 const DEFAULT_LEVEL_3: SkillLevel = 5;
 const AUTO_ROLL_LIMIT = 5000;
+const IMPACT_CHANGE_LIMIT = 100000;
+
+const TOOL_VIEW_LABELS: Record<ToolView, string> = {
+  calculator: "스킬 계산기",
+  simulator: "고급스킬변경권 시뮬",
+  impactChange: "임팩트 스변 시뮬",
+};
 
 const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
   { value: "C", label: "C 이상" },
@@ -144,9 +152,15 @@ function App() {
     "버튼을 누르면 1회 사용 결과가 바로 나옵니다."
   );
   const [targetGrade, setTargetGrade] = useState<ResultGrade>("S");
+  const [impactSessionRollCount, setImpactSessionRollCount] = useState(0);
+  const [impactLastSuccessRollCount, setImpactLastSuccessRollCount] = useState<number | null>(null);
+  const [impactLastMessage, setImpactLastMessage] = useState(
+    "버튼을 누르면 2, 3번 스킬이 둘 다 메이저가 나올 때까지 자동으로 돌립니다."
+  );
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
+  const activeCardType: CardType = toolView === "impactChange" ? "impact" : cardType;
 
   const gameData = useMemo(
     () => getGameDataSet({ playerType, pitcherRole }),
@@ -155,8 +169,8 @@ function App() {
 
   const filteredSkills = useMemo(() => {
     if (!gameData) return [];
-    return gameData.skills.filter((skill) => skill.availableCardTypes.includes(cardType));
-  }, [gameData, cardType]);
+    return gameData.skills.filter((skill) => skill.availableCardTypes.includes(activeCardType));
+  }, [gameData, activeCardType]);
 
   const filteredSkillIds = useMemo(
     () => filteredSkills.map((skill) => skill.id),
@@ -191,7 +205,7 @@ function App() {
 
   const totalScore = gameData
     ? calculateSkillTotal({
-        cardType,
+        cardType: activeCardType,
         skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
         skillLevels: [level1, level2, level3],
         scoreTable: gameData.scoreTable,
@@ -199,7 +213,7 @@ function App() {
     : 0;
 
   const judgeResult = gameData
-    ? judgeSkillResult(gameData.thresholds, cardType, totalScore)
+    ? judgeSkillResult(gameData.thresholds, activeCardType, totalScore)
     : null;
 
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
@@ -212,14 +226,25 @@ function App() {
     setSimLastMessage("버튼을 누르면 1회 사용 결과가 바로 나옵니다.");
   };
 
+  const resetImpactChangeSession = () => {
+    setImpactSessionRollCount(0);
+    setImpactLastSuccessRollCount(null);
+    setImpactLastMessage("버튼을 누르면 2, 3번 스킬이 둘 다 메이저가 나올 때까지 자동으로 돌립니다.");
+  };
+
   const handleReset = () => {
     if (!gameData) return;
 
-    setCardType(DEFAULT_CARD_TYPE);
-    const [defaultLevel1, defaultLevel2, defaultLevel3] = getDefaultLevels(DEFAULT_CARD_TYPE);
+    const resetCardType = toolView === "impactChange" ? "impact" : DEFAULT_CARD_TYPE;
+
+    if (toolView !== "impactChange") {
+      setCardType(DEFAULT_CARD_TYPE);
+    }
+
+    const [defaultLevel1, defaultLevel2, defaultLevel3] = getDefaultLevels(resetCardType);
 
     const resetSkills = gameData.skills
-      .filter((skill) => skill.availableCardTypes.includes(DEFAULT_CARD_TYPE))
+      .filter((skill) => skill.availableCardTypes.includes(resetCardType))
       .map((skill) => skill.id);
 
     setSkill1(resetSkills[0] ?? "");
@@ -230,6 +255,7 @@ function App() {
     setLevel2(defaultLevel2);
     setLevel3(defaultLevel3);
     resetSimulationSession();
+    resetImpactChangeSession();
   };
 
   const handleAdvancedSkillChangeRoll = () => {
@@ -237,10 +263,10 @@ function App() {
 
     const nextRoll = simulateAdvancedSkillChange({
       mode,
-      cardType,
+      cardType: activeCardType,
       skills: gameData.skills,
       hitterPositionGroup,
-      fixedSkillId: cardType === "impact" ? resolvedSkill1 : undefined,
+      fixedSkillId: activeCardType === "impact" ? resolvedSkill1 : undefined,
     });
 
     const [nextSkill1, nextSkill2, nextSkill3] = nextRoll.skillIds;
@@ -250,7 +276,7 @@ function App() {
     setSkill3(nextSkill3);
 
     const nextTotalScore = calculateSkillTotal({
-      cardType,
+      cardType: activeCardType,
       skillIds: [nextSkill1, nextSkill2, nextSkill3],
       skillLevels: [level1, level2, level3],
       scoreTable: gameData.scoreTable,
@@ -274,20 +300,20 @@ function App() {
     while (tryCount < AUTO_ROLL_LIMIT) {
       const nextRoll = simulateAdvancedSkillChange({
         mode,
-        cardType,
+        cardType: activeCardType,
         skills: gameData.skills,
         hitterPositionGroup,
-        fixedSkillId: cardType === "impact" ? resolvedSkill1 : undefined,
+        fixedSkillId: activeCardType === "impact" ? resolvedSkill1 : undefined,
       });
 
       const nextTotalScore = calculateSkillTotal({
-        cardType,
+        cardType: activeCardType,
         skillIds: nextRoll.skillIds,
         skillLevels: [level1, level2, level3],
         scoreTable: gameData.scoreTable,
       });
 
-      const nextJudgeResult = judgeSkillResult(gameData.thresholds, cardType, nextTotalScore);
+      const nextJudgeResult = judgeSkillResult(gameData.thresholds, activeCardType, nextTotalScore);
 
       tryCount += 1;
       finalSkillIds = nextRoll.skillIds;
@@ -314,13 +340,38 @@ function App() {
     setSimLastMessage(`${AUTO_ROLL_LIMIT}번 안에 ${targetGrade} 이상이 나오지 않았음`);
   };
 
+  const handleImpactChangeRoll = () => {
+    if (!gameData) return;
+
+    const result = simulateImpactSkillChangeUntilDoubleMajor({
+      mode,
+      skills: gameData.skills,
+      hitterPositionGroup,
+      fixedSkillId: resolvedSkill1,
+      maxRolls: IMPACT_CHANGE_LIMIT,
+    });
+
+    setSkill1(result.skillIds[0]);
+    setSkill2(result.skillIds[1]);
+    setSkill3(result.skillIds[2]);
+    setImpactSessionRollCount((count) => count + result.rollCount);
+    setImpactLastSuccessRollCount(result.success ? result.rollCount : null);
+
+    if (result.success) {
+      setImpactLastMessage(`${result.rollCount}번 만에 2, 3번 메이저 달성`);
+      return;
+    }
+
+    setImpactLastMessage(`${IMPACT_CHANGE_LIMIT}번 안에 2, 3번 메이저가 나오지 않았음`);
+  };
+
   return (
     <div className="app-bg">
       <div className="app-shell">
         <header className="hero">
           <div>
             <p className="eyebrow">V26 Toolbox</p>
-            <h1>{toolView === "calculator" ? "스킬 계산기" : "고급스킬변경권 시뮬"}</h1>
+            <h1>{TOOL_VIEW_LABELS[toolView]}</h1>
           </div>
         </header>
 
@@ -339,12 +390,32 @@ function App() {
           >
             고급스킬변경권 시뮬
           </button>
+          <button
+            type="button"
+            className={`tool-tab ${toolView === "impactChange" ? "active" : ""}`}
+            onClick={() => {
+              const [impactLevel1, impactLevel2, impactLevel3] = getDefaultLevels("impact");
+              setToolView("impactChange");
+              setLevel1(impactLevel1);
+              setLevel2(impactLevel2);
+              setLevel3(impactLevel3);
+              resetImpactChangeSession();
+            }}
+          >
+            임팩트 스변 시뮬
+          </button>
         </div>
 
         <main className="layout-grid">
           <section className="panel panel-main">
             <div className="panel-head">
-              <h2>{toolView === "calculator" ? "입력" : "시뮬 설정"}</h2>
+              <h2>
+                {toolView === "calculator"
+                  ? "입력"
+                  : toolView === "simulator"
+                    ? "시뮬 설정"
+                    : "임팩트 스변 설정"}
+              </h2>
             </div>
 
             <div className="control-row">
@@ -354,13 +425,14 @@ function App() {
                   onChange={(nextMode) => {
                     setMode(nextMode);
                     resetSimulationSession();
+                    resetImpactChangeSession();
                   }}
                 />
               </div>
 
-              {toolView === "simulator" && mode === "hitter" && (
+              {(toolView === "simulator" || toolView === "impactChange") && mode === "hitter" && (
                 <div className="control-block">
-                  <label>?? ???</label>
+                  <label>타자 포지션</label>
                   <div className="toggle-row">
                     <button
                       type="button"
@@ -368,9 +440,10 @@ function App() {
                       onClick={() => {
                         setHitterPositionGroup("fielder");
                         resetSimulationSession();
+                        resetImpactChangeSession();
                       }}
                     >
-                      ??
+                      야수
                     </button>
                     <button
                       type="button"
@@ -378,44 +451,57 @@ function App() {
                       onClick={() => {
                         setHitterPositionGroup("catcher");
                         resetSimulationSession();
+                        resetImpactChangeSession();
                       }}
                     >
-                      ??
+                      포수
                     </button>
                   </div>
                 </div>
               )}
 
-              <div className="control-block">
-                <label>카드 타입</label>
-                <div className="inline-actions inline-actions-card">
-                  <div className="toggle-row toggle-row-cards">
-                    {CARD_TYPE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
-                        onClick={() => {
-                          const nextCardType = option.value;
-                          const [defaultLevel1, defaultLevel2, defaultLevel3] =
-                            getDefaultLevels(nextCardType);
+              {toolView !== "impactChange" ? (
+                <div className="control-block">
+                  <label>카드 타입</label>
+                  <div className="inline-actions inline-actions-card">
+                    <div className="toggle-row toggle-row-cards">
+                      {CARD_TYPE_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
+                          onClick={() => {
+                            const nextCardType = option.value;
+                            const [defaultLevel1, defaultLevel2, defaultLevel3] =
+                              getDefaultLevels(nextCardType);
 
-                          setCardType(nextCardType);
-                          setLevel1(defaultLevel1);
-                          setLevel2(defaultLevel2);
-                          setLevel3(defaultLevel3);
-                          resetSimulationSession();
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                            setCardType(nextCardType);
+                            setLevel1(defaultLevel1);
+                            setLevel2(defaultLevel2);
+                            setLevel3(defaultLevel3);
+                            resetSimulationSession();
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="ghost-btn" onClick={handleReset}>
+                      초기화
+                    </button>
                   </div>
-                  <button type="button" className="ghost-btn" onClick={handleReset}>
-                    초기화
-                  </button>
                 </div>
-              </div>
+              ) : (
+                <div className="control-block">
+                  <label>카드 타입</label>
+                  <div className="impact-card-lock">
+                    <span className="impact-card-pill">임팩트 고정</span>
+                    <button type="button" className="ghost-btn" onClick={handleReset}>
+                      초기화
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {!gameData ? (
@@ -451,18 +537,18 @@ function App() {
                 <div className="skill-grid">
                   <div className="skill-col">
                     <SkillSelect
-                      label={cardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
+                      label={activeCardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
                       value={resolvedSkill1}
                       options={filteredSkills}
                       excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
                       onChange={setSkill1}
-                      disabled={cardType === "impact"}
+                      disabled={activeCardType === "impact"}
                       metaText={getSkillScoreLabel(skillScores.skill1)}
                     />
                     <select
                       value={level1}
                       onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
-                      disabled={cardType === "impact"}
+                      disabled={activeCardType === "impact"}
                     >
                       {[5, 6, 7, 8].map((level) => (
                         <option key={level} value={level}>
@@ -515,7 +601,7 @@ function App() {
                   </div>
                 </div>
               </>
-            ) : (
+            ) : toolView === "simulator" ? (
               <div className="simulation-stack">
                 <div className="simulation-actions">
                   <div className="simulation-action-buttons">
@@ -581,7 +667,7 @@ function App() {
                   </div>
                 </div>
 
-                {cardType === "impact" && (
+                {activeCardType === "impact" && (
                   <div className="impact-fixed-skill">
                     <SkillSelect
                       label="임팩트 고정 스킬"
@@ -597,7 +683,7 @@ function App() {
                   <div className="skill-col">
                     <div className="rolled-skill-card">
                       <div className="rolled-skill-label">
-                        {cardType === "impact" ? "고정 스킬 1" : "롤 결과 스킬 1"}
+                        {activeCardType === "impact" ? "고정 스킬 1" : "롤 결과 스킬 1"}
                       </div>
                       <strong style={{ color: rolledSkillColors.skill1 }}>
                         {selectedSkillMeta.skill1?.name ?? "-"}
@@ -607,7 +693,7 @@ function App() {
                     <select
                       value={level1}
                       onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
-                      disabled={cardType === "impact"}
+                      disabled={activeCardType === "impact"}
                     >
                       {[5, 6, 7, 8].map((level) => (
                         <option key={level} value={level}>
@@ -615,6 +701,113 @@ function App() {
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="skill-col">
+                    <div className="rolled-skill-card">
+                      <div className="rolled-skill-label">롤 결과 스킬 2</div>
+                      <strong style={{ color: rolledSkillColors.skill2 }}>
+                        {selectedSkillMeta.skill2?.name ?? "-"}
+                      </strong>
+                      <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill2)}</div>
+                    </div>
+                    <select
+                      value={level2}
+                      onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="skill-col">
+                    <div className="rolled-skill-card">
+                      <div className="rolled-skill-label">롤 결과 스킬 3</div>
+                      <strong style={{ color: rolledSkillColors.skill3 }}>
+                        {selectedSkillMeta.skill3?.name ?? "-"}
+                      </strong>
+                      <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill3)}</div>
+                    </div>
+                    <select
+                      value={level3}
+                      onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
+                    >
+                      {[5, 6, 7, 8].map((level) => (
+                        <option key={level} value={level}>
+                          {level} 레벨
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="simulation-stack">
+                <div className="simulation-actions">
+                  <div className="impact-fixed-skill impact-fixed-skill-full">
+                    <SkillSelect
+                      label="고정 스킬 1"
+                      value={resolvedSkill1}
+                      options={filteredSkills}
+                      excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
+                      onChange={(nextSkillId) => {
+                        setSkill1(nextSkillId);
+                        resetImpactChangeSession();
+                      }}
+                      metaText="임팩트 1스킬 고정"
+                    />
+                  </div>
+
+                  <div className="simulation-action-buttons simulation-action-buttons-single">
+                    <button type="button" className="roll-btn" onClick={handleImpactChangeRoll}>
+                      2, 3번 메이저까지 자동 롤
+                    </button>
+                  </div>
+                </div>
+
+                <div className="simulation-summary">
+                  <span>누적 사용 횟수 <strong>{impactSessionRollCount}회</strong></span>
+                  <span>
+                    마지막 성공 횟수 <strong>{impactLastSuccessRollCount ?? "-"}</strong>
+                  </span>
+                </div>
+
+                <p className="tool-note tool-note-strong">{impactLastMessage}</p>
+
+                <div className="mobile-live-summary">
+                  <div className="mobile-live-summary-head">
+                    <strong>현재 결과</strong>
+                    <span style={{ color: resultGradeColor }}>{judgeResult?.grade ?? "-"}</span>
+                  </div>
+                  <div className="mobile-live-summary-stats">
+                    <div>점수 {gameData ? totalScore : "-"}</div>
+                    <div>확률 {formatMatchedPercent(judgeResult?.matchedPercent ?? null)}</div>
+                  </div>
+                  <div className="mobile-skill-chip-list">
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
+                      {selectedSkillMeta.skill1?.name ?? "-"} · 고정
+                    </span>
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
+                      {selectedSkillMeta.skill2?.name ?? "-"} · {skillScores.skill2 ?? "-"}
+                    </span>
+                    <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
+                      {selectedSkillMeta.skill3?.name ?? "-"} · {skillScores.skill3 ?? "-"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="skill-grid">
+                  <div className="skill-col">
+                    <div className="rolled-skill-card">
+                      <div className="rolled-skill-label">고정 스킬 1</div>
+                      <strong style={{ color: rolledSkillColors.skill1 }}>
+                        {selectedSkillMeta.skill1?.name ?? "-"}
+                      </strong>
+                      <div className="rolled-skill-score">임팩트 1스킬 고정</div>
+                    </div>
                   </div>
 
                   <div className="skill-col">
@@ -703,7 +896,13 @@ function App() {
               </p>
             )}
 
-            {cardType === "impact" && (
+            {toolView === "impactChange" && (
+              <p className="tool-note">
+                일반 스킬변경권 확률표 기준으로 임팩트 카드의 2, 3번 슬롯을 메이저 2개가 나올 때까지 자동으로 돌립니다.
+              </p>
+            )}
+
+            {activeCardType === "impact" && (
               <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>
             )}
           </aside>
