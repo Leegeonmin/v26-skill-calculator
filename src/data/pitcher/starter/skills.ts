@@ -30,7 +30,7 @@ const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_024", name: "난세영웅" },
   { id: "starter_skill_025", name: "홈어드밴티지" },
   { id: "starter_skill_026", name: "약속의8회" },
-  { id: "starter_skill_027", name: "국대에이스(중복)" },
+  { id: "starter_skill_027", name: "국대에이스" },
   { id: "starter_skill_028", name: "도전정신(5성)" },
   { id: "starter_skill_029", name: "에이스" },
   { id: "starter_skill_030", name: "가을사나이" },
@@ -40,7 +40,6 @@ const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_034", name: "오버페이스" },
   { id: "starter_skill_035", name: "워크에식" },
   { id: "starter_skill_036", name: "베스트포지션" },
-  { id: "starter_skill_037", name: "마당쇠" },
   { id: "starter_skill_038", name: "집중력" },
   { id: "starter_skill_039", name: "집념" },
   { id: "starter_skill_040", name: "패기(골글)" },
@@ -104,21 +103,27 @@ const NATIONAL_ONLY_SKILLS = new Set([
   "투쟁심",
   "전승우승",
   "해결사",
+  "국대에이스",
 ]);
 
+function getBaseName(name: string): string {
+  return name.split("(")[0].trim();
+}
+
 function resolveStarterSkillGrade(name: string): SkillGrade {
-  if (NATIONAL_ONLY_SKILLS.has(name)) return "nationalOnly";
-  if (AMATEUR_SKILLS.has(name)) return "amateur";
-  if (ROOKIE_SKILLS.has(name)) return "rookie";
-  if (MINOR_SKILLS.has(name)) return "minor";
+  const baseName = getBaseName(name);
+
+  if (NATIONAL_ONLY_SKILLS.has(baseName)) return "nationalOnly";
+  if (AMATEUR_SKILLS.has(baseName)) return "amateur";
+  if (ROOKIE_SKILLS.has(baseName)) return "rookie";
+  if (MINOR_SKILLS.has(baseName)) return "minor";
   return "major";
 }
 
 export const STARTER_SKILLS: SkillMeta[] = STARTER_SKILL_ROWS.map((skill) => ({
   ...skill,
   grade: resolveStarterSkillGrade(skill.name),
-  availableCardTypes: NATIONAL_ONLY_SKILLS.has(skill.name)
+  availableCardTypes: NATIONAL_ONLY_SKILLS.has(getBaseName(skill.name))
     ? NATIONAL_ONLY_CARD_TYPES
     : ALL_CARD_TYPES,
 }));
-

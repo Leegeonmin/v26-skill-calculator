@@ -44,7 +44,7 @@ const MIDDLE_SKILL_ROWS: MiddleSkillRow[] = [
   { id: "middle_skill_032", rawName: "수호신(셋업맨2)", score: { 5: 13.97, 6: 16.29, 7: 18.62, 8: 20.95 } },
   { id: "middle_skill_033", rawName: "약속의8회(셋업맨1)", score: { 5: 12.5, 6: 15.07 } },
   { id: "middle_skill_034", rawName: "홈어드밴티지", score: { 5: 12.62, 6: 15.07, 7: 17.52, 8: 19.97 } },
-  { id: "middle_skill_035", rawName: "국대에이스(중복)", score: { 5: 12.25, 6: 14.7 } },
+  { id: "middle_skill_035", rawName: "국대에이스", score: { 5: 12.25, 6: 14.7 } },
   { id: "middle_skill_036", rawName: "도전정신(5성)", score: { 5: 12.25, 6: 14.7, 7: 17.15, 8: 19.6 } },
   { id: "middle_skill_037", rawName: "에이스", score: { 5: 12.25, 6: 14.7, 7: 17.15, 8: 19.6 } },
   { id: "middle_skill_038", rawName: "가을사나이", score: { 5: 12.38, 6: 14.64, 7: 16.9, 8: 19.15 } },

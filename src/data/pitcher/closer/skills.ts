@@ -36,7 +36,7 @@ const CLOSER_SKILL_ROWS: CloserSkillRow[] = [
   { id: "closer_skill_024", rawName: "워크에식", score: { 5: 16.53, 6: 16.53, 7: 18.98, 8: 18.98 } },
   { id: "closer_skill_025", rawName: "승리의함성", score: { 5: 13.91, 6: 16.23, 7: 18.55, 8: 20.88 } },
   { id: "closer_skill_026", rawName: "홈어드밴티지", score: { 5: 12.62, 6: 15.07, 7: 17.52, 8: 19.97 } },
-  { id: "closer_skill_027", rawName: "국대에이스(중복)", score: { 5: 12.25, 6: 14.7 } },
+  { id: "closer_skill_027", rawName: "국대에이스", score: { 5: 12.25, 6: 14.7 } },
   { id: "closer_skill_028", rawName: "도전정신(5성)", score: { 5: 12.25, 6: 14.7, 7: 17.15, 8: 19.6 } },
   { id: "closer_skill_029", rawName: "에이스", score: { 5: 12.25, 6: 14.7, 7: 17.15, 8: 19.6 } },
   { id: "closer_skill_030", rawName: "약속의8회", score: { 5: 12.25, 6: 14.7 } },
@@ -88,7 +88,6 @@ const NATIONAL_ONLY_SKILLS = new Set([
   "해결사",
   "국민계투",
   "국대에이스",
-  "패기",
 ]);
 
 function cleanDisplayName(rawName: string): string {

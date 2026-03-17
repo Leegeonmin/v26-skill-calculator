@@ -44,7 +44,7 @@ function normalizeSkillBaseName(name: string): string {
     return aliasRule[1];
   }
 
-  return compactName.replace(/\([^)]*\)/g, "");
+  return compactName;
 }
 
 function buildSkillFamilies(
