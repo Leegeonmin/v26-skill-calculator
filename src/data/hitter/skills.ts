@@ -1,4 +1,5 @@
-﻿import type { CardType, SkillMeta } from "../../types";
+import type { CardType, SkillMeta } from "../../types";
+
 
 const ALL_CARD_TYPES: CardType[] = [
   "impact",
@@ -98,7 +99,7 @@ export const SKILLS: SkillMeta[] = [
     id: "hitter_challenge_spirit_4star",
     name: "도전정신(4성)",
     grade: "major",
-    availableCardTypes: ALL_CARD_TYPES,
+    availableCardTypes: ["impact"],
   },
   {
     id: "hitter_fighting_spirit",
@@ -140,7 +141,7 @@ export const SKILLS: SkillMeta[] = [
     id: "hitter_challenge_spirit_5star",
     name: "도전정신(5성)",
     grade: "major",
-    availableCardTypes: ALL_CARD_TYPES,
+    availableCardTypes: ["signature", "goldenGlove", "national"],
   },
   {
     id: "hitter_fall_man",

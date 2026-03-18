@@ -99,7 +99,6 @@ export default function CalculatorView({
             options={filteredSkills}
             excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
             onChange={setSkill1}
-            disabled={activeCardType === "impact"}
             metaText={getSkillScoreLabel(skillScores.skill1)}
           />
           <select

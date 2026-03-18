@@ -1,7 +1,6 @@
-﻿import type { CardType, SkillGrade, SkillMeta, SkillScoreTable } from "../../../types";
+﻿import type { SkillGrade, SkillMeta, SkillScoreTable } from "../../../types";
+import { resolveAvailableCardTypes } from "../../cardAvailability";
 
-const ALL_CARD_TYPES: CardType[] = ["impact", "signature", "goldenGlove", "national"];
-const NATIONAL_ONLY_CARD_TYPES: CardType[] = ["national"];
 
 type MiddleSkillRow = {
   id: string;
@@ -75,7 +74,6 @@ const MIDDLE_SKILL_ROWS: MiddleSkillRow[] = [
   { id: "middle_skill_063", rawName: "라이징스타(1,2,6중계)", score: { 5: 7.05, 6: 8.23, 7: 9.4, 8: 10.58 } },
   { id: "middle_skill_064", rawName: "수호신(추격조,롱릴리프)", score: { 5: 6.62, 6: 7.72, 7: 8.82, 8: 9.92 } },
   { id: "middle_skill_065", rawName: "평정심", score: { 5: 6.38, 6: 7.65, 7: 8.93, 8: 10.2 } },
-  { id: "middle_skill_066", rawName: "첫단추", score: { 5: 6.38, 6: 7.65, 7: 8.93, 8: 10.2 } },
   { id: "middle_skill_067", rawName: "승리의함성(추격조)", score: { 5: 6.32, 6: 7.56, 7: 8.8, 8: 10.04 } },
   { id: "middle_skill_068", rawName: "위닝샷", score: { 5: 4.64, 6: 7.45, 7: 7.82, 8: 8.18 } },
   { id: "middle_skill_069", rawName: "우타킬러", score: { 5: 5.7, 6: 6.84, 7: 7.98, 8: 9.12 } },
@@ -135,7 +133,7 @@ export const MIDDLE_SKILLS: SkillMeta[] = MIDDLE_SKILL_ROWS.map((row) => {
     id: row.id,
     name: cleanedName,
     grade,
-    availableCardTypes: grade === "nationalOnly" ? NATIONAL_ONLY_CARD_TYPES : ALL_CARD_TYPES,
+    availableCardTypes: resolveAvailableCardTypes(cleanedName, grade),
   };
 });
 

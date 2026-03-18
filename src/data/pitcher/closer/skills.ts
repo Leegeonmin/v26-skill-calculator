@@ -1,7 +1,6 @@
-﻿import type { CardType, SkillGrade, SkillMeta, SkillScoreTable } from "../../../types";
+﻿import type { SkillGrade, SkillMeta, SkillScoreTable } from "../../../types";
+import { resolveAvailableCardTypes } from "../../cardAvailability";
 
-const ALL_CARD_TYPES: CardType[] = ["impact", "signature", "goldenGlove", "national"];
-const NATIONAL_ONLY_CARD_TYPES: CardType[] = ["national"];
 
 type CloserSkillRow = {
   id: string;
@@ -52,12 +51,10 @@ const CLOSER_SKILL_ROWS: CloserSkillRow[] = [
   { id: "closer_skill_040", rawName: "백전노장", score: { 5: 8.6, 6: 10.69, 7: 12.32, 8: 13.95 } },
   { id: "closer_skill_041", rawName: "아티스트", score: { 5: 9.4, 6: 10.58, 7: 11.75, 8: 12.93 } },
   { id: "closer_skill_042", rawName: "언터쳐블", score: { 5: 9.4, 6: 10.58, 7: 11.75, 8: 12.93 } },
-  { id: "closer_skill_043", rawName: "원투펀치", score: { 5: 7.65, 6: 10.2, 7: 12.75, 8: 15.3 } },
   { id: "closer_skill_044", rawName: "승부사", score: { 5: 8.77, 6: 10.04, 7: 11.32, 8: 12.59 } },
   { id: "closer_skill_045", rawName: "오버페이스", score: { 5: 9.65, 6: 9.65, 7: 12.1, 8: 12.1 } },
   { id: "closer_skill_046", rawName: "라이징스타", score: { 5: 7.05, 6: 8.23, 7: 9.4, 8: 10.58 } },
   { id: "closer_skill_047", rawName: "평정심", score: { 5: 6.38, 6: 7.65, 7: 8.93, 8: 10.2 } },
-  { id: "closer_skill_048", rawName: "첫단추", score: { 5: 6.38, 6: 7.65, 7: 8.93, 8: 10.2 } },
   { id: "closer_skill_049", rawName: "위닝샷★1", score: { 5: 4.64, 6: 7.45, 7: 7.82, 8: 8.18 } },
   { id: "closer_skill_050", rawName: "우타킬러", score: { 5: 5.7, 6: 6.84, 7: 7.98, 8: 9.12 } },
   { id: "closer_skill_051", rawName: "완급조절", score: { 5: 4.53, 6: 5.44, 7: 6.35, 8: 7.25 } },
@@ -115,7 +112,7 @@ export const CLOSER_SKILLS: SkillMeta[] = CLOSER_SKILL_ROWS.map((row) => {
     id: row.id,
     name: cleanedName,
     grade,
-    availableCardTypes: grade === "nationalOnly" ? NATIONAL_ONLY_CARD_TYPES : ALL_CARD_TYPES,
+    availableCardTypes: resolveAvailableCardTypes(cleanedName, grade),
   };
 });
 

@@ -1,7 +1,6 @@
-﻿import type { CardType, SkillGrade, SkillMeta } from "../../../types";
+﻿import type { SkillGrade, SkillMeta } from "../../../types";
+import { resolveAvailableCardTypes } from "../../cardAvailability";
 
-const ALL_CARD_TYPES: CardType[] = ["impact", "signature", "goldenGlove", "national"];
-const NATIONAL_ONLY_CARD_TYPES: CardType[] = ["national"];
 
 const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_001", name: "좌승사자(좌투)" },
@@ -123,7 +122,5 @@ function resolveStarterSkillGrade(name: string): SkillGrade {
 export const STARTER_SKILLS: SkillMeta[] = STARTER_SKILL_ROWS.map((skill) => ({
   ...skill,
   grade: resolveStarterSkillGrade(skill.name),
-  availableCardTypes: NATIONAL_ONLY_SKILLS.has(getBaseName(skill.name))
-    ? NATIONAL_ONLY_CARD_TYPES
-    : ALL_CARD_TYPES,
+  availableCardTypes: resolveAvailableCardTypes(skill.name, resolveStarterSkillGrade(skill.name)),
 }));
