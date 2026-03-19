@@ -1,13 +1,16 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 import PlayerTypeToggle from "./components/PlayerTypeToggle";
 import { CARD_TYPE_LABELS } from "./data/cardTypes";
 import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS, SKILL_GRADE_COLORS } from "./data/uiColors";
-import { trackEvent } from "./lib/analytics";
+import { getDisplayNameFromSession, signInWithGoogle, signOut } from "./lib/auth";
+import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import CalculatorView from "./views/CalculatorView";
 import AdvancedSimulatorView from "./views/AdvancedSimulatorView";
 import ImpactSimulatorView from "./views/ImpactSimulatorView";
+import RankingView from "./views/RankingView";
 import type {
   CalculatorMode,
   CardType,
@@ -39,6 +42,7 @@ const TOOL_VIEW_LABELS: Record<ToolView, string> = {
   calculator: "스킬점수 계산기",
   simulator: "고스변 시뮬",
   impactChange: "임팩트 스변 시뮬",
+  ranking: "고스변 랭킹",
 };
 
 const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
@@ -160,6 +164,9 @@ function App() {
   const [impactLastMessage, setImpactLastMessage] = useState(
     "버튼을 누르면 2, 3번 스킬이 둘 다 메이저가 나올 때까지 자동으로 돌립니다."
   );
+  const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthBusy, setIsAuthBusy] = useState(false);
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -222,87 +229,42 @@ function App() {
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
   const encouragementMessage = getEncouragementMessage(judgeResult?.matchedPercent ?? null);
   const summaryMessage = getResultSummaryMessage(judgeResult?.matchedPercent ?? null);
-
-  const [sessionId] = useState(
-    () =>
-      globalThis.crypto?.randomUUID?.() ??
-      `session-${Date.now()}-${Math.random().toString(16).slice(2)}`
-  );
-  const toolViewEnteredAtRef = useRef(Date.now());
-  const previousToolViewRef = useRef<ToolView>(DEFAULT_VIEW);
-  const sessionMetricsRef = useRef({
-    calculatorDurationMs: 0,
-    simulatorDurationMs: 0,
-    impactChangeDurationMs: 0,
-    advancedRollOnceCount: 0,
-    advancedAutoRollCount: 0,
-    impactAutoRollCount: 0,
-  });
-
-  const getAnalyticsContext = () => ({
-    session_id: sessionId,
-    tool_view: toolView,
-    mode,
-    player_type: playerType,
-    pitcher_role: playerType === "pitcher" ? pitcherRole : null,
-    card_type: activeCardType,
-    hitter_position_group: mode === "hitter" ? hitterPositionGroup : null,
-  });
-
-  const addToolViewDuration = (view: ToolView, durationMs: number) => {
-    if (view === "calculator") {
-      sessionMetricsRef.current.calculatorDurationMs += durationMs;
-      return;
-    }
-
-    if (view === "simulator") {
-      sessionMetricsRef.current.simulatorDurationMs += durationMs;
-      return;
-    }
-
-    sessionMetricsRef.current.impactChangeDurationMs += durationMs;
-  };
-
-  const flushCurrentToolViewDuration = (viewOverride?: ToolView) => {
-    const currentView = viewOverride ?? previousToolViewRef.current;
-    const durationMs = Date.now() - toolViewEnteredAtRef.current;
-
-    addToolViewDuration(currentView, durationMs);
-    toolViewEnteredAtRef.current = Date.now();
-
-    trackEvent("tool_view_dwell", {
-      session_id: sessionId,
-      tool_view: currentView,
-      duration_ms: durationMs,
-    });
-  };
+  const authDisplayName = getDisplayNameFromSession(authSession);
+  const supabaseReady = isSupabaseConfigured();
 
   useEffect(() => {
-    const flushSessionSummary = () => {
-      flushCurrentToolViewDuration();
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return;
+    }
 
-      trackEvent("session_summary", {
-        session_id: sessionId,
-        total_duration_ms:
-          sessionMetricsRef.current.calculatorDurationMs +
-          sessionMetricsRef.current.simulatorDurationMs +
-          sessionMetricsRef.current.impactChangeDurationMs,
-        calculator_duration_ms: sessionMetricsRef.current.calculatorDurationMs,
-        simulator_duration_ms: sessionMetricsRef.current.simulatorDurationMs,
-        impact_change_duration_ms: sessionMetricsRef.current.impactChangeDurationMs,
-        advanced_roll_once_count: sessionMetricsRef.current.advancedRollOnceCount,
-        advanced_auto_roll_count: sessionMetricsRef.current.advancedAutoRollCount,
-        impact_auto_roll_count: sessionMetricsRef.current.impactAutoRollCount,
-      });
-    };
+    let isMounted = true;
 
-    window.addEventListener("pagehide", flushSessionSummary);
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!isMounted) return;
+
+      if (error) {
+        setAuthError(error.message);
+        return;
+      }
+
+      setAuthSession(data.session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      setAuthSession(session);
+    });
 
     return () => {
-      window.removeEventListener("pagehide", flushSessionSummary);
+      isMounted = false;
+      subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+
   const resetSimulationSession = () => {
     setSimRollCount(0);
     setSimBestScore(null);
@@ -370,18 +332,6 @@ function App() {
       bestScore === null ? nextTotalScore : Math.max(bestScore, nextTotalScore)
     );
     setSimLastMessage(`${simRollCount + 1}회차 결과 반영 완료`);
-    sessionMetricsRef.current.advancedRollOnceCount += 1;
-
-    trackEvent("advanced_roll_once_used", {
-      ...getAnalyticsContext(),
-      session_id: sessionId,
-      click_count_in_session: sessionMetricsRef.current.advancedRollOnceCount,
-      total_score: nextTotalScore,
-      result_grade: judgeSkillResult(gameData.thresholds, activeCardType, nextTotalScore).grade,
-      skill_1: nextSkill1,
-      skill_2: nextSkill2,
-      skill_3: nextSkill3,
-    });
   };
 
   const handleAutoRollToTarget = () => {
@@ -430,22 +380,6 @@ function App() {
     const autoRollSuccess =
       finalJudgeResult && GRADE_RANK[finalJudgeResult.grade] >= GRADE_RANK[targetGrade];
 
-    sessionMetricsRef.current.advancedAutoRollCount += 1;
-
-    trackEvent("advanced_auto_roll_used", {
-      ...getAnalyticsContext(),
-      session_id: sessionId,
-      click_count_in_session: sessionMetricsRef.current.advancedAutoRollCount,
-      target_grade: targetGrade,
-      attempts: tryCount,
-      success: Boolean(autoRollSuccess),
-      final_grade: finalJudgeResult?.grade ?? null,
-      best_score: bestScoreInRun,
-      skill_1: finalSkillIds[0],
-      skill_2: finalSkillIds[1],
-      skill_3: finalSkillIds[2],
-    });
-
     if (autoRollSuccess) {
       setSimLastMessage(`${tryCount}번 만에 ${targetGrade} 이상 달성`);
       return;
@@ -455,9 +389,6 @@ function App() {
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
-    flushCurrentToolViewDuration(previousToolViewRef.current);
-    previousToolViewRef.current = nextToolView;
-
     if (nextToolView === "impactChange") {
       const [impactLevel1, impactLevel2, impactLevel3] = getDefaultLevels("impact");
       setToolView("impactChange");
@@ -492,6 +423,34 @@ function App() {
     setLevel3(defaultLevel3);
     resetSimulationSession();
   };
+  const handleGoogleSignIn = async () => {
+    setIsAuthBusy(true);
+    setAuthError(null);
+
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      setAuthError(
+        error instanceof Error ? error.message : "Google ??? ? ??? ??????."
+      );
+    } finally {
+      setIsAuthBusy(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsAuthBusy(true);
+    setAuthError(null);
+
+    try {
+      await signOut();
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "???? ? ??? ??????.");
+    } finally {
+      setIsAuthBusy(false);
+    }
+  };
+
   const handleImpactChangeRoll = () => {
     if (!gameData) return;
 
@@ -509,19 +468,6 @@ function App() {
     setImpactSessionRollCount((count) => count + result.rollCount);
     setImpactLastSuccessRollCount(result.success ? result.rollCount : null);
 
-    sessionMetricsRef.current.impactAutoRollCount += 1;
-
-    trackEvent("impact_double_major_auto_roll_used", {
-      ...getAnalyticsContext(),
-      session_id: sessionId,
-      click_count_in_session: sessionMetricsRef.current.impactAutoRollCount,
-      fixed_skill_id: resolvedSkill1,
-      attempts: result.rollCount,
-      success: result.success,
-      skill_2: result.skillIds[1],
-      skill_3: result.skillIds[2],
-    });
-
     if (result.success) {
       setImpactLastMessage(`${result.rollCount}번 만에 2, 3번 메이저 달성`);
       return;
@@ -538,7 +484,38 @@ function App() {
             <p className="eyebrow">V26 Toolbox</p>
             <h1>{TOOL_VIEW_LABELS[toolView]}</h1>
           </div>
+
+          <div className="auth-panel">
+            {!supabaseReady && <span className="auth-hint">Supabase 설정 필요</span>}
+
+            {supabaseReady && authDisplayName && (
+              <>
+                <span className="auth-user">{authDisplayName}</span>
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={handleSignOut}
+                  disabled={isAuthBusy}
+                >
+                  {isAuthBusy ? "처리 중..." : "로그아웃"}
+                </button>
+              </>
+            )}
+
+            {supabaseReady && !authDisplayName && (
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={handleGoogleSignIn}
+                disabled={isAuthBusy}
+              >
+                {isAuthBusy ? "처리 중..." : "Google 로그인"}
+              </button>
+            )}
+          </div>
         </header>
+
+        {authError && <p className="auth-error">{authError}</p>}
 
         <>
             <div className="tool-tabs" role="tablist" aria-label="도구 선택">
@@ -563,9 +540,27 @@ function App() {
               >
                 임팩트 스변 시뮬
               </button>
+              <button
+                type="button"
+                className={`tool-tab ${toolView === "ranking" ? "active" : ""}`}
+                onClick={() => handleToolViewChange("ranking")}
+              >
+                고스변 랭킹
+              </button>
             </div>
 
             <main className="layout-grid">
+          {toolView === "ranking" ? (
+            <section className="panel panel-main panel-wide">
+              <RankingView
+                authSession={authSession}
+                supabaseReady={supabaseReady}
+                isAuthBusy={isAuthBusy}
+                onGoogleSignIn={handleGoogleSignIn}
+              />
+            </section>
+          ) : (
+            <>
           <section className="panel panel-main">
             <div className="panel-head">
               <h2>
@@ -784,6 +779,8 @@ function App() {
               <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>
             )}
           </aside>
+            </>
+          )}
             </main>
         </>
 
