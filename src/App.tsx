@@ -540,31 +540,32 @@ function App() {
           </div>
         </header>
 
-        <div className="tool-tabs" role="tablist" aria-label="도구 선택">
-          <button
-            type="button"
-            className={`tool-tab ${toolView === "calculator" ? "active" : ""}`}
-            onClick={() => handleToolViewChange("calculator")}
-          >
-            스킬점수 계산기
-          </button>
-          <button
-            type="button"
-            className={`tool-tab ${toolView === "simulator" ? "active" : ""}`}
-            onClick={() => handleToolViewChange("simulator")}
-          >
-            고스변 시뮬
-          </button>
-          <button
-            type="button"
-            className={`tool-tab ${toolView === "impactChange" ? "active" : ""}`}
-            onClick={() => handleToolViewChange("impactChange")}
-          >
-            임팩트 스변 시뮬
-          </button>
-        </div>
+        <>
+            <div className="tool-tabs" role="tablist" aria-label="도구 선택">
+              <button
+                type="button"
+                className={`tool-tab ${toolView === "calculator" ? "active" : ""}`}
+                onClick={() => handleToolViewChange("calculator")}
+              >
+                스킬점수 계산기
+              </button>
+              <button
+                type="button"
+                className={`tool-tab ${toolView === "simulator" ? "active" : ""}`}
+                onClick={() => handleToolViewChange("simulator")}
+              >
+                고스변 시뮬
+              </button>
+              <button
+                type="button"
+                className={`tool-tab ${toolView === "impactChange" ? "active" : ""}`}
+                onClick={() => handleToolViewChange("impactChange")}
+              >
+                임팩트 스변 시뮬
+              </button>
+            </div>
 
-        <main className="layout-grid">
+            <main className="layout-grid">
           <section className="panel panel-main">
             <div className="panel-head">
               <h2>
@@ -783,7 +784,8 @@ function App() {
               <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>
             )}
           </aside>
-        </main>
+            </main>
+        </>
 
         <footer className="app-footer">made by 우주</footer>
         <Analytics />
