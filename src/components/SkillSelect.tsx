@@ -10,6 +10,7 @@ interface SkillSelectProps {
   onChange: (skillId: string) => void;
   disabled?: boolean;
   metaText?: string;
+  slotNumber?: number;
 }
 
 function SkillSelect({
@@ -20,6 +21,7 @@ function SkillSelect({
   onChange,
   disabled = false,
   metaText,
+  slotNumber,
 }: SkillSelectProps) {
   const [keyword, setKeyword] = useState("");
 
@@ -40,21 +42,37 @@ function SkillSelect({
 
   return (
     <div className={`skill-select ${disabled ? "disabled" : ""}`}>
-      <h3>{label}</h3>
-
-      <input
-        type="text"
-        placeholder="스킬 검색"
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        disabled={disabled}
-      />
-
-      <div className="selected-skill-row">
-        현재 선택: <span style={{ color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
+      <div className="skill-select-head">
+        <div className="skill-select-head-main">
+          {slotNumber ? <span className="skill-slot-badge">{slotNumber}</span> : null}
+          <h3>{label}</h3>
+        </div>
+        {metaText ? <span className="skill-score-pill">{metaText}</span> : null}
       </div>
 
-      {metaText && <div className="selected-skill-meta">{metaText}</div>}
+      <div className="skill-search-wrap">
+        <span className="skill-search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="ui-icon">
+            <path
+              d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.33l4.38 4.39 1.42-1.42-4.39-4.38A8 8 0 0 0 10 2Z"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="스킬 검색"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          disabled={disabled}
+        />
+      </div>
+
+      <div className="selected-skill-row">
+        <p>현재 선택:</p>
+        <span style={{ color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
+        {metaText ? <small>{metaText.replace("점수 ", "기본 점수 ")}</small> : null}
+      </div>
 
       <div className="skill-result-list">
         {filteredOptions.length === 0 ? (
@@ -71,7 +89,7 @@ function SkillSelect({
                 onClick={() => onChange(skill.id)}
                 disabled={disabled}
                 className={`skill-option ${isSelected ? "selected" : ""}`}
-                style={{ color, borderColor: isSelected ? color : "#dde4f0" }}
+                style={{ color, borderColor: "#dde4f0" }}
               >
                 {skill.name}
               </button>

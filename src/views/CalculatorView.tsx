@@ -97,6 +97,7 @@ export default function CalculatorView({
             label={activeCardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
             value={resolvedSkill1}
             options={filteredSkills}
+            slotNumber={1}
             excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
             onChange={setSkill1}
             metaText={getSkillScoreLabel(skillScores.skill1)}
@@ -119,6 +120,7 @@ export default function CalculatorView({
             label="스킬 2"
             value={resolvedSkill2}
             options={filteredSkills}
+            slotNumber={2}
             excludedSkillIds={[resolvedSkill1, resolvedSkill3]}
             onChange={setSkill2}
             metaText={getSkillScoreLabel(skillScores.skill2)}
@@ -137,6 +139,7 @@ export default function CalculatorView({
             label="스킬 3"
             value={resolvedSkill3}
             options={filteredSkills}
+            slotNumber={3}
             excludedSkillIds={[resolvedSkill1, resolvedSkill2]}
             onChange={setSkill3}
             metaText={getSkillScoreLabel(skillScores.skill3)}
