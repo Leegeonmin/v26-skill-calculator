@@ -11,6 +11,16 @@ import type {
   StoredSkillSet,
 } from "../types/ranking";
 
+export type RankingHomeSnapshot = {
+  season: Season | null;
+  entry: SeasonEntry | null;
+  rankings: RankingRow[];
+  myRanking: RankingRow | null;
+  todayRollLogId: string | null;
+  pendingRoll: PendingDailyRoll | null;
+  participantCounts: Record<RankingCategory, number>;
+};
+
 function requireSupabase() {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -55,6 +65,44 @@ export async function getCurrentSeason(): Promise<Season | null> {
   const supabase = requireSupabase();
   const response = await supabase.rpc("current_active_season");
   return unwrapSingle(response);
+}
+
+export async function getRankingHomeSnapshot(
+  category: RankingCategory
+): Promise<RankingHomeSnapshot> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("get_ranking_home_snapshot", {
+    p_category: category,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const snapshot = (Array.isArray(data) ? data[0] : data) as
+    | {
+        season?: Season | null;
+        entry?: SeasonEntry | null;
+        rankings?: RankingRow[];
+        my_ranking?: RankingRow | null;
+        today_roll_log_id?: string | null;
+        pending_roll?: PendingDailyRoll | null;
+        participant_counts?: Partial<Record<RankingCategory, number>> | null;
+      }
+    | null;
+
+  return {
+    season: snapshot?.season ?? null,
+    entry: snapshot?.entry ?? null,
+    rankings: snapshot?.rankings ?? [],
+    myRanking: snapshot?.my_ranking ?? null,
+    todayRollLogId: snapshot?.today_roll_log_id ?? null,
+    pendingRoll: snapshot?.pending_roll ?? null,
+    participantCounts: {
+      hitter: snapshot?.participant_counts?.hitter ?? 0,
+      pitcher_starter: snapshot?.participant_counts?.pitcher_starter ?? 0,
+    },
+  };
 }
 
 export async function ensureWeeklyActiveSeason(): Promise<Season> {

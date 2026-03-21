@@ -5,13 +5,13 @@ import { SKILL_GRADE_COLORS } from "../data/uiColors";
 import {
   createInitialSeason,
   createPendingDailyRankRoll,
+  getRankingHomeSnapshot,
   getPendingDailyRoll,
   getLatestEndedSeasonSummary,
   getLastSeenSettlementSeasonId,
   getMySeasonRanking,
   getSeasonParticipantCounts,
   getSeasonWithFallback,
-  getMySeasonEntry,
   getSeasonRankings,
   setLastSeenSettlementSeasonId,
   getTodayRollLog,
@@ -469,55 +469,32 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
       setError(null);
 
       try {
-        let season = await getSeasonWithFallback();
+        let snapshot = await getRankingHomeSnapshot(leaderboardCategory);
         if (!isMounted) return;
 
-        if (!season && authSession) {
-          season = await createInitialSeason();
+        if (!snapshot.season && authSession) {
+          let season = await getSeasonWithFallback();
+          if (!isMounted) return;
+
+          if (!season) {
+            season = await createInitialSeason();
+            if (!isMounted) return;
+          }
+
+          snapshot = await getRankingHomeSnapshot(leaderboardCategory);
           if (!isMounted) return;
         }
 
-        setCurrentSeason(season);
+        setCurrentSeason(snapshot.season);
+        setEntry(snapshot.entry);
+        setRankings(snapshot.rankings);
+        setMyRankingRow(snapshot.myRanking);
+        setTodayRollLogId(snapshot.todayRollLogId);
+        setPendingRoll(snapshot.pendingRoll);
+        setParticipantCounts(snapshot.participantCounts);
 
-        if (!season) {
-          setEntry(null);
-          setRankings([]);
-          setMyRankingRow(null);
-          setTodayRollLogId(null);
-          setPendingRoll(null);
-          return;
-        }
-
-        const [nextEntry, nextRankings, nextMyRankingRow, nextParticipantCounts] = await Promise.all([
-          authSession ? getMySeasonEntry(season.id) : Promise.resolve(null),
-          getSeasonRankings(season.id, leaderboardCategory),
-          authSession ? getMySeasonRanking(season.id, leaderboardCategory) : Promise.resolve(null),
-          getSeasonParticipantCounts(season.id),
-        ]);
-
-        if (!isMounted) return;
-
-        setEntry(nextEntry);
-        setRankings(nextRankings);
-        setMyRankingRow(nextMyRankingRow);
-        setParticipantCounts(nextParticipantCounts);
-        if (nextEntry) {
-          const [nextTodayRollLog, nextPendingRoll] = await Promise.all([
-            getTodayRollLog(nextEntry.id),
-            getPendingDailyRoll(nextEntry.id),
-          ]);
-
-          if (!isMounted) return;
-
-          setTodayRollLogId(nextTodayRollLog?.id ?? null);
-          setPendingRoll(nextPendingRoll);
-        } else {
-          setTodayRollLogId(null);
-          setPendingRoll(null);
-        }
-
-        if (nextEntry) {
-          setParticipationCategory(nextEntry.category);
+        if (snapshot.entry) {
+          setParticipationCategory(snapshot.entry.category);
         }
       } catch (nextError) {
         if (!isMounted) return;
