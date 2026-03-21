@@ -19,6 +19,16 @@ import {
   type AdminUsageSummary,
 } from "./lib/admin";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
+import {
+  formatMatchedPercent,
+  getDefaultLevels,
+  getEncouragementMessage,
+  getOrCreateToolUsageSessionId,
+  getResultSummaryMessage,
+  getSkillScoreLabel,
+  gradeRank,
+  pickValidSkill,
+} from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
@@ -52,7 +62,6 @@ const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
 const ADMIN_PATH = "/admin";
 const ADMIN_SESSION_KEY = "v26-admin-session";
-const TOOL_USAGE_SESSION_KEY = "v26-tool-usage-session";
 
 type ServiceView = "toolbox" | "ranking";
 
@@ -74,14 +83,6 @@ const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
   { value: "SSR+", label: "SSR+ 이상" },
 ];
 
-const GRADE_RANK: Record<ResultGrade, number> = {
-  F: 0,
-  C: 1,
-  A: 2,
-  S: 3,
-  "SSR+": 4,
-};
-
 const RESULT_GRADE_GUIDE: Array<{ grade: ResultGrade; title: string; description: string }> = [
   { grade: "F", title: "F", description: "기준표 최저점 미만이거나 흔한 구간" },
   { grade: "C", title: "C", description: "무난하게는 쓸 수 있는 구간" },
@@ -96,88 +97,6 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
     label,
   })
 );
-
-function getOrCreateToolUsageSessionId(): string {
-  if (typeof window === "undefined") {
-    return "server";
-  }
-
-  const stored = window.sessionStorage.getItem(TOOL_USAGE_SESSION_KEY);
-  if (stored) {
-    return stored;
-  }
-
-  const nextId =
-    typeof window.crypto?.randomUUID === "function"
-      ? window.crypto.randomUUID()
-      : `tool-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
-  window.sessionStorage.setItem(TOOL_USAGE_SESSION_KEY, nextId);
-  return nextId;
-}
-
-function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
-  if (cardType === "goldenGlove") {
-    return [6, 6, 6];
-  }
-
-  return [DEFAULT_LEVEL_1, DEFAULT_LEVEL_2, DEFAULT_LEVEL_3];
-}
-
-function pickValidSkill(
-  desired: string,
-  candidates: string[],
-  excluded: string[] = []
-): string {
-  if (desired && candidates.includes(desired) && !excluded.includes(desired)) {
-    return desired;
-  }
-
-  const fallback = candidates.find((id) => !excluded.includes(id));
-  return fallback ?? "";
-}
-
-function formatMatchedPercent(percent: number | null): string {
-  if (percent === null) return "기준표 최저점 미만";
-  if (percent <= 0) return "0% 미만";
-  if (percent < 0.01) return "< 0.01%";
-  return `${percent}%`;
-}
-
-function getSkillScoreLabel(score: number | undefined): string {
-  if (score === undefined) return "점수 -";
-  return `점수 ${score}`;
-}
-
-function getEncouragementMessage(percent: number | null): string | null {
-  if (percent === null) return null;
-  if (percent <= 0.01) return "사기꾼";
-  return null;
-}
-
-function getResultSummaryMessage(percent: number | null): string {
-  if (percent === null) {
-    return "애매하다. 조금 더 돌려보는 걸 추천";
-  }
-
-  if (percent <= 0.5) {
-    return "극극종결. 사장님 아니면 안돌려도됨";
-  }
-
-  if (percent <= 1.5) {
-    return "매우 잘 뜬 편. 웬만하면 만족하고 써도 됨";
-  }
-
-  if (percent <= 7) {
-    return "실사용 가능";
-  }
-
-  if (percent <= 12) {
-    return "쓰다가 여유 생기면 돌리길 추천";
-  }
-
-  return "흔한 편. 임시로 쓰고 갈아타는 쪽 추천";
-}
 
 function App() {
   const isAdminRoute =
@@ -583,7 +502,7 @@ function App() {
       bestScoreInRun =
         bestScoreInRun === null ? nextTotalScore : Math.max(bestScoreInRun, nextTotalScore);
 
-      if (GRADE_RANK[nextJudgeResult.grade] >= GRADE_RANK[targetGrade]) {
+      if (gradeRank(nextJudgeResult.grade) >= gradeRank(targetGrade)) {
         break;
       }
     }
@@ -595,7 +514,7 @@ function App() {
     setSimBestScore(bestScoreInRun);
 
     const autoRollSuccess =
-      finalJudgeResult && GRADE_RANK[finalJudgeResult.grade] >= GRADE_RANK[targetGrade];
+      finalJudgeResult && gradeRank(finalJudgeResult.grade) >= gradeRank(targetGrade);
 
     if (autoRollSuccess) {
       setSimLastMessage(`${tryCount}번 만에 ${targetGrade} 이상 달성`);
