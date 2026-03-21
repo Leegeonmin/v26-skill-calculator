@@ -9,7 +9,6 @@ import {
   getMyProfile,
   signInWithGoogle,
   signOut,
-  updateMyProfileDisplayName,
 } from "./lib/auth";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import CalculatorView from "./views/CalculatorView";
@@ -112,19 +111,19 @@ function IconGlyph({ name, className = "" }: { name: IconName; className?: strin
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
       <path
-        fill="currentColor"
+        fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
       />
       <path
-        fill="currentColor"
+        fill="#34A853"
         d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
       />
       <path
-        fill="currentColor"
+        fill="#FBBC05"
         d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
       />
       <path
-        fill="currentColor"
+        fill="#EA4335"
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       />
     </svg>
@@ -226,7 +225,18 @@ function getResultSummaryMessage(percent: number | null): string {
 
 function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [toolView, setToolView] = useState<ToolView>(DEFAULT_VIEW);
+  const [toolView, setToolView] = useState<ToolView>(() => {
+    if (typeof window === "undefined") {
+      return DEFAULT_VIEW;
+    }
+
+    const requestedView = new URL(window.location.href).searchParams.get("view");
+    const validViews: ToolView[] = ["calculator", "simulator", "impactChange", "ranking"];
+
+    return requestedView && validViews.includes(requestedView as ToolView)
+      ? (requestedView as ToolView)
+      : DEFAULT_VIEW;
+  });
   const [mode, setMode] = useState<CalculatorMode>(DEFAULT_MODE);
   const [hitterPositionGroup, setHitterPositionGroup] =
     useState<HitterPositionGroup>(DEFAULT_HITTER_POSITION_GROUP);
@@ -255,9 +265,6 @@ function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthBusy, setIsAuthBusy] = useState(false);
   const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
-  const [nicknameInput, setNicknameInput] = useState("");
-  const [nicknameError, setNicknameError] = useState<string | null>(null);
-  const [isNicknameBusy, setIsNicknameBusy] = useState(false);
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -325,8 +332,13 @@ function App() {
   const activeService: ServiceView = toolView === "ranking" ? "ranking" : "toolbox";
   const toolboxToolView: Exclude<ToolView, "ranking"> =
     toolView === "ranking" ? "calculator" : toolView;
-  const shouldRequireNickname = Boolean(authSession && supabaseReady && !profileDisplayName);
   const serviceInfo = SERVICE_INFO[activeService];
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", toolView);
+    window.history.replaceState({}, "", url.toString());
+  }, [toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -353,7 +365,6 @@ function App() {
             const profile = await getMyProfile();
             if (!isMounted) return;
             setProfileDisplayName(profile?.display_name?.trim() || null);
-            setNicknameInput(profile?.display_name?.trim() || "");
           } catch (profileError) {
             if (!isMounted) return;
             setAuthError(
@@ -365,7 +376,6 @@ function App() {
         })();
       } else {
         setProfileDisplayName(null);
-        setNicknameInput("");
       }
     });
 
@@ -382,7 +392,6 @@ function App() {
             const profile = await getMyProfile();
             if (!isMounted) return;
             setProfileDisplayName(profile?.display_name?.trim() || null);
-            setNicknameInput(profile?.display_name?.trim() || "");
           } catch (profileError) {
             if (!isMounted) return;
             setAuthError(
@@ -394,7 +403,6 @@ function App() {
         })();
       } else {
         setProfileDisplayName(null);
-        setNicknameInput("");
       }
     });
 
@@ -580,7 +588,9 @@ function App() {
     setAuthError(null);
 
     try {
-      await signInWithGoogle();
+      const redirectTo =
+        `${window.location.origin}?view=${toolView}`;
+      await signInWithGoogle(redirectTo);
     } catch (error) {
       setAuthError(
         error instanceof Error ? error.message : "Google ??? ? ??? ??????."
@@ -600,23 +610,6 @@ function App() {
       setAuthError(error instanceof Error ? error.message : "???? ? ??? ??????.");
     } finally {
       setIsAuthBusy(false);
-    }
-  };
-
-  const handleNicknameSubmit = async () => {
-    setNicknameError(null);
-    setIsNicknameBusy(true);
-
-    try {
-      const profile = await updateMyProfileDisplayName(nicknameInput);
-      setProfileDisplayName(profile.display_name?.trim() || null);
-      setNicknameInput(profile.display_name?.trim() || "");
-    } catch (error) {
-      setNicknameError(
-        error instanceof Error ? error.message : "닉네임을 저장하지 못했습니다."
-      );
-    } finally {
-      setIsNicknameBusy(false);
     }
   };
 
@@ -738,7 +731,7 @@ function App() {
           </div>
 
           <div className="mobile-nav-content">
-            {/* <div className="side-section">
+            <div className="side-section">
               <p className="side-section-title">고스변 랭킹챌린지</p>
               <button
                 type="button"
@@ -756,7 +749,7 @@ function App() {
                   <IconGlyph name="sparkles" className="ui-icon ui-icon-xs" />
                 </span>
               </button>
-            </div> */}
+            </div>
 
             <div className="side-section">
               <p className="side-section-title">v26 스킬 계산</p>
@@ -783,7 +776,7 @@ function App() {
         <div className="app-body">
           <aside className="side-dock" aria-label="서비스 선택">
             <div className="side-nav">
-              {/* <div className="side-section">
+              <div className="side-section">
                 <p className="side-section-title">고스변 랭킹챌린지</p>
                 <button
                   type="button"
@@ -798,7 +791,7 @@ function App() {
                     <IconGlyph name="sparkles" className="ui-icon ui-icon-xs" />
                   </span>
                 </button>
-              </div> */}
+              </div>
 
               <div className="side-section">
                 <p className="side-section-title">v26 스킬 계산</p>
@@ -1210,39 +1203,6 @@ function App() {
         </div>
 
         <footer className="app-footer">made by 우주</footer>
-        {shouldRequireNickname && (
-          <div className="modal-backdrop" role="presentation">
-            <div
-              className="modal-card"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="nickname-modal-title"
-            >
-              <p className="modal-eyebrow">첫 로그인 설정</p>
-              <h2 id="nickname-modal-title">사용할 닉네임을 입력해주세요</h2>
-              <p className="modal-copy">
-                구글 이름 대신 랭킹과 화면에 표시할 닉네임으로 저장됩니다.
-              </p>
-              <input
-                type="text"
-                value={nicknameInput}
-                onChange={(event) => setNicknameInput(event.target.value)}
-                placeholder="2자 이상 12자 이하"
-                maxLength={12}
-                autoFocus
-              />
-              {nicknameError && <p className="modal-error">{nicknameError}</p>}
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={() => void handleNicknameSubmit()}
-                disabled={isNicknameBusy}
-              >
-                {isNicknameBusy ? "저장 중..." : "닉네임 저장"}
-              </button>
-            </div>
-          </div>
-        )}
         <Analytics />
       </div>
     </div>

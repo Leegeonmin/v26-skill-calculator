@@ -13,16 +13,86 @@ function requireSupabase() {
 
 function unwrapSingle<T>(response: PostgrestSingleResponse<T>): T | null {
   if (response.error) {
-    throw response.error;
+    const nextError = new Error(response.error.message || "Supabase request failed");
+    nextError.name = response.error.code || "PostgrestError";
+    throw nextError;
   }
 
   return response.data;
+}
+
+function normalizeErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return [error.name, error.message].filter(Boolean).join(": ");
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as {
+      code?: string;
+      message?: string;
+      details?: string;
+      hint?: string;
+    };
+
+    return [maybeError.code, maybeError.message, maybeError.details, maybeError.hint]
+      .filter(Boolean)
+      .join(" | ");
+  }
+
+  return String(error);
 }
 
 export async function getCurrentSeason(): Promise<Season | null> {
   const supabase = requireSupabase();
   const response = await supabase.rpc("current_active_season");
   return unwrapSingle(response);
+}
+
+export async function ensureWeeklyActiveSeason(): Promise<Season> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("ensure_weekly_active_season");
+
+  if (error) {
+    const nextError = new Error(error.message || "ensure_weekly_active_season failed");
+    nextError.name = error.code || "PostgrestError";
+    throw nextError;
+  }
+
+  return data as Season;
+}
+
+export async function getSeasonWithFallback(): Promise<Season | null> {
+  try {
+    return await ensureWeeklyActiveSeason();
+  } catch (error) {
+    const message = normalizeErrorMessage(error).toLowerCase();
+
+    if (
+      message.includes("ensure_weekly_active_season") ||
+      message.includes("42883") ||
+      message.includes("pgrst202") ||
+      message.includes("permission denied") ||
+      message.includes("update requires a where clause") ||
+      message.toLowerCase().includes("function")
+    ) {
+      return await getCurrentSeason();
+    }
+
+    throw error;
+  }
+}
+
+export async function createInitialSeason(name?: string): Promise<Season> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("create_initial_season", {
+    p_name: name ?? null,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as Season;
 }
 
 export async function getCurrentKstDate(): Promise<string> {
@@ -38,10 +108,19 @@ export async function getCurrentKstDate(): Promise<string> {
 
 export async function getMySeasonEntry(seasonId: string): Promise<SeasonEntry | null> {
   const supabase = requireSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
   const response = await supabase
     .from("season_entries")
     .select("*")
     .eq("season_id", seasonId)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   return unwrapSingle(response as PostgrestSingleResponse<SeasonEntry | null>);

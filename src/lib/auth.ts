@@ -8,7 +8,17 @@ export type Profile = {
   provider: string;
 };
 
-export async function signInWithGoogle() {
+function generateRandomNickname(): string {
+  const prefixes = ["푸른", "강한", "날랜", "빛난", "단단", "빠른", "맹렬한", "영리한"];
+  const suffixes = ["타자", "에이스", "투수", "거포", "챌린저", "승부사", "히어로", "명장"];
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  const number = Math.floor(Math.random() * 90) + 10;
+
+  return `${prefix}${suffix}${number}`;
+}
+
+export async function signInWithGoogle(redirectTo?: string) {
   const supabase = getSupabaseClient();
 
   if (!supabase) {
@@ -18,7 +28,7 @@ export async function signInWithGoogle() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: redirectTo ?? window.location.origin,
     },
   });
 
@@ -71,7 +81,7 @@ export async function ensureProfile(session: Session | null) {
 
   const { data: existingProfile, error: fetchError } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, display_name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -79,9 +89,12 @@ export async function ensureProfile(session: Session | null) {
     throw fetchError;
   }
 
+  const currentDisplayName = existingProfile?.display_name?.trim() || null;
+  const nextDisplayName = currentDisplayName ?? generateRandomNickname();
+
   const payload = {
     id: user.id,
-    display_name: null,
+    display_name: nextDisplayName,
     avatar_url: avatarUrl,
     provider,
   };
@@ -90,6 +103,7 @@ export async function ensureProfile(session: Session | null) {
     ? await supabase
         .from("profiles")
         .update({
+          display_name: currentDisplayName ?? nextDisplayName,
           avatar_url: avatarUrl,
           provider,
         })
