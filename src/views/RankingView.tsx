@@ -6,15 +6,10 @@ import {
   createInitialSeason,
   createPendingDailyRankRoll,
   getRankingHomeSnapshot,
-  getPendingDailyRoll,
   getLatestEndedSeasonSummary,
   getLastSeenSettlementSeasonId,
-  getMySeasonRanking,
-  getSeasonParticipantCounts,
   getSeasonWithFallback,
-  getSeasonRankings,
   setLastSeenSettlementSeasonId,
-  getTodayRollLog,
   joinSeason,
   resolvePendingDailyRankRoll,
 } from "../lib/ranking";
@@ -578,19 +573,16 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     try {
       const { skillSet, score } = buildInitialSkillSet(participationCategory);
       const nextEntry = await joinSeason(participationCategory, skillSet, score);
-      const [nextRankings, nextMyRanking, nextParticipantCounts] = await Promise.all([
-        getSeasonRankings(currentSeason.id, leaderboardCategory),
-        getMySeasonRanking(currentSeason.id, leaderboardCategory),
-        getSeasonParticipantCounts(currentSeason.id),
-      ]);
+      const snapshot = await getRankingHomeSnapshot(leaderboardCategory);
 
       setEntry(nextEntry);
       setParticipationCategory(nextEntry.category);
-      setRankings(nextRankings);
-      setMyRankingRow(nextMyRanking);
-      setParticipantCounts(nextParticipantCounts);
-      setTodayRollLogId(null);
-      setPendingRoll(null);
+      setCurrentSeason(snapshot.season);
+      setRankings(snapshot.rankings);
+      setMyRankingRow(snapshot.myRanking);
+      setParticipantCounts(snapshot.participantCounts);
+      setTodayRollLogId(snapshot.todayRollLogId);
+      setPendingRoll(snapshot.pendingRoll);
       setRolledSkillSet(null);
       setRolledScore(null);
       setInitialRevealCategory(nextEntry.category);
@@ -663,19 +655,15 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
 
     try {
       const nextEntry = await resolvePendingDailyRankRoll(entry.id, selectedResult);
-
-      const [nextRankings, nextTodayRollLog, nextPendingRoll, nextMyRanking] = await Promise.all([
-        getSeasonRankings(currentSeason.id, leaderboardCategory),
-        getTodayRollLog(entry.id),
-        getPendingDailyRoll(entry.id),
-        getMySeasonRanking(currentSeason.id, leaderboardCategory),
-      ]);
+      const snapshot = await getRankingHomeSnapshot(leaderboardCategory);
 
       setEntry(nextEntry);
-      setRankings(nextRankings);
-      setMyRankingRow(nextMyRanking);
-      setTodayRollLogId(nextTodayRollLog?.id ?? null);
-      setPendingRoll(nextPendingRoll);
+      setCurrentSeason(snapshot.season);
+      setRankings(snapshot.rankings);
+      setMyRankingRow(snapshot.myRanking);
+      setTodayRollLogId(snapshot.todayRollLogId);
+      setPendingRoll(snapshot.pendingRoll);
+      setParticipantCounts(snapshot.participantCounts);
       setRolledSkillSet(null);
       setRolledScore(null);
     } catch (nextError) {
