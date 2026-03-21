@@ -133,6 +133,11 @@ select {
   gap: 8px;
 }
 
+.app-header-login .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .app-body {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr);
@@ -204,6 +209,9 @@ select {
   min-width: 0;
   font-size: 0.92rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -287,11 +295,34 @@ select {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
 .ranking-page-head {
   display: grid;
   gap: 6px;
+}
+
+.ranking-page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ranking-page-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(20, 100, 192, 0.1);
+  color: #1464c0;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 
 .ranking-page-kicker {
@@ -353,6 +384,11 @@ select {
   flex-shrink: 0;
 }
 
+.ranking-section-icon .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .ranking-section-icon-warm {
   background: #fff1e7;
   color: #d97706;
@@ -371,6 +407,34 @@ select {
   background: rgba(255, 255, 255, 0.84);
   box-shadow: var(--shadow);
   backdrop-filter: blur(16px);
+}
+
+.ranking-alert-card {
+  padding: 16px 18px;
+  border-color: #cddcf4;
+  background: rgba(239, 246, 255, 0.92);
+}
+
+.ranking-alert-copy {
+  margin: 0;
+  color: #1e3a5f;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.ranking-guide-card {
+  margin-bottom: 22px;
+}
+
+.ranking-guide-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ranking-guide-list p {
+  margin: 0;
+  color: #41506a;
+  line-height: 1.6;
 }
 
 .ranking-season-meta,
@@ -413,10 +477,20 @@ select {
   color: #fff;
 }
 
+.ranking-toggle-btn:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
 .ranking-support-copy {
   margin: 0;
   color: #41506a;
   font-size: 0.98rem;
+}
+
+.ranking-support-copy-strong {
+  color: #172033;
+  font-weight: 700;
 }
 
 .ranking-cta-card,
@@ -540,20 +614,43 @@ select {
   word-break: break-word;
 }
 
-.ranking-season-meta div,
+.ranking-season-meta-item,
 .ranking-entry-row,
 .ranking-my-card {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #f8faff 0%, #f1f5fb 100%);
-  border: 1px solid #dfe6f1;
 }
 
 .ranking-season-meta-horizontal {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.ranking-season-meta-item {
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.ranking-entry-row,
+.ranking-my-card {
+  padding: 12px 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e2e8f2;
+}
+
+.ranking-entry-row-skill {
+  display: grid;
+  justify-content: stretch;
+  padding-top: 16px;
+  border-bottom: 0;
+}
+
+.ranking-entry-row-skill > span {
+  margin-bottom: 10px;
 }
 
 .ranking-season-meta-horizontal div {
@@ -561,7 +658,8 @@ select {
 }
 
 .ranking-season-meta-horizontal strong {
-  text-align: right;
+  text-align: left;
+  line-height: 1.45;
 }
 
 .ranking-season-meta span,
@@ -569,6 +667,10 @@ select {
 .ranking-my-card span {
   color: #52607a;
   font-weight: 600;
+}
+
+.ranking-season-meta span {
+  font-size: 0.9rem;
 }
 
 .ranking-table-wrap {
@@ -589,6 +691,7 @@ select {
   padding: 13px 12px;
   border-bottom: 1px solid #dde3ef;
   text-align: left;
+  vertical-align: top;
 }
 
 .ranking-table th {
@@ -597,6 +700,60 @@ select {
   background: rgba(233, 238, 249, 0.78);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.ranking-skill-cell {
+  min-width: 220px;
+  color: #41506a;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.ranking-skill-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.ranking-skill-preview .rolled-skill-card {
+  min-height: 96px;
+  padding: 12px;
+  background: #fcfdff;
+}
+
+.ranking-skill-preview .rolled-skill-card strong {
+  margin-top: 6px;
+  font-size: 0.98rem;
+  line-height: 1.32;
+  word-break: keep-all;
+}
+
+.ranking-skill-preview .rolled-skill-score {
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+
+.ranking-skill-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ranking-skill-list-item {
+  display: grid;
+  gap: 2px;
+}
+
+.ranking-skill-list-item strong {
+  font-size: 0.96rem;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.ranking-skill-list-item span {
+  color: #66748f;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .ranking-empty {
@@ -1432,6 +1589,128 @@ input {
   font-size: 0.95rem;
 }
 
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-google-btn {
+  min-width: 132px;
+}
+
+.ranking-roll-modal {
+  width: min(100%, 840px);
+  gap: 18px;
+}
+
+.ranking-roll-modal-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.ranking-roll-modal-section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid #dfe6f1;
+  background: linear-gradient(180deg, #f8faff 0%, #f1f5fb 100%);
+}
+
+.ranking-roll-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ranking-roll-modal-head span {
+  color: #52607a;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.ranking-roll-modal-head strong {
+  font-size: 1.08rem;
+  letter-spacing: -0.02em;
+}
+
+.ranking-roll-modal-score-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ranking-roll-modal-note {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f5f8fe;
+  border: 1px solid #d8e3f5;
+  color: #445674;
+  font-weight: 600;
+}
+
+.ranking-roll-delta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.ranking-roll-delta.better {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.ranking-roll-delta.worse {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.ranking-roll-delta.same {
+  background: rgba(82, 96, 122, 0.12);
+  color: #52607a;
+}
+
+.ranking-roll-modal-action {
+  justify-self: end;
+  min-width: 148px;
+}
+
+.modal-choice-btn {
+  border: 1px solid #d2dbeb;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: none;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.ghost-btn.modal-choice-btn,
+.primary-btn.modal-choice-btn {
+  border: 1px solid #d2dbeb;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.modal-choice-btn:hover {
+  filter: none;
+}
+
+.ghost-btn.modal-choice-btn:hover,
+.primary-btn.modal-choice-btn:hover {
+  border-color: #1464c0;
+  background: #1464c0;
+  color: #ffffff;
+}
+
 .modal-error {
   margin: 0;
   color: #b42318;
@@ -1820,7 +2099,7 @@ input {
     border-radius: 20px;
   }
 
-  .ranking-season-meta div,
+  .ranking-season-meta-item,
   .ranking-entry-row,
   .ranking-my-card {
     flex-direction: column;
