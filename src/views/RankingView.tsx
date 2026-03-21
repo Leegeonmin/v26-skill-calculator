@@ -4,15 +4,18 @@ import { getGameDataSet } from "../data/gameData";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
 import {
   createInitialSeason,
+  createPendingDailyRankRoll,
+  getPendingDailyRoll,
   getSeasonWithFallback,
   getMySeasonEntry,
   getSeasonRankings,
   getTodayRollLog,
   joinSeason,
-  submitDailyRankRoll,
+  resolvePendingDailyRankRoll,
 } from "../lib/ranking";
 import { signInWithGoogle } from "../lib/auth";
 import type {
+  PendingDailyRoll,
   RankingCategory,
   RankingRow,
   Season,
@@ -27,18 +30,6 @@ type RankingViewProps = {
   authSession: Session | null;
   supabaseReady: boolean;
 };
-
-type PendingRollSnapshot = {
-  entryId: string;
-  seasonId: string;
-  rollDateKst: string;
-  beforeSkills: StoredSkillSet;
-  beforeScore: number;
-  rolledSkills: StoredSkillSet;
-  rolledScore: number;
-};
-
-const PENDING_ROLL_STORAGE_KEY = "ranking-pending-roll";
 
 const CATEGORY_LABELS: Record<RankingCategory, string> = {
   hitter: "타자",
@@ -236,40 +227,6 @@ function getCurrentKstDateKey(now = new Date()): string {
   }).format(now);
 }
 
-function readPendingRollSnapshot(): PendingRollSnapshot | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const raw = window.sessionStorage.getItem(PENDING_ROLL_STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw) as PendingRollSnapshot;
-  } catch {
-    window.sessionStorage.removeItem(PENDING_ROLL_STORAGE_KEY);
-    return null;
-  }
-}
-
-function writePendingRollSnapshot(snapshot: PendingRollSnapshot) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.sessionStorage.setItem(PENDING_ROLL_STORAGE_KEY, JSON.stringify(snapshot));
-}
-
-function clearPendingRollSnapshot() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.sessionStorage.removeItem(PENDING_ROLL_STORAGE_KEY);
-}
-
 function SectionIcon({ kind }: { kind: "season" | "participation" | "leaderboard" }) {
   if (kind === "season") {
     return (
@@ -319,6 +276,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   const [error, setError] = useState<string | null>(null);
   const [rolledSkillSet, setRolledSkillSet] = useState<StoredSkillSet | null>(null);
   const [rolledScore, setRolledScore] = useState<number | null>(null);
+  const [pendingRoll, setPendingRoll] = useState<PendingDailyRoll | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
 
@@ -361,6 +319,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
           setEntry(null);
           setRankings([]);
           setTodayRollLogId(null);
+          setPendingRoll(null);
           return;
         }
 
@@ -373,7 +332,20 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
 
         setEntry(nextEntry);
         setRankings(nextRankings);
-        setTodayRollLogId(nextEntry ? (await getTodayRollLog(nextEntry.id))?.id ?? null : null);
+        if (nextEntry) {
+          const [nextTodayRollLog, nextPendingRoll] = await Promise.all([
+            getTodayRollLog(nextEntry.id),
+            getPendingDailyRoll(nextEntry.id),
+          ]);
+
+          if (!isMounted) return;
+
+          setTodayRollLogId(nextTodayRollLog?.id ?? null);
+          setPendingRoll(nextPendingRoll);
+        } else {
+          setTodayRollLogId(null);
+          setPendingRoll(null);
+        }
 
         if (nextEntry) {
           setParticipationCategory(nextEntry.category);
@@ -400,55 +372,45 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   }, [authSession, leaderboardCategory, supabaseReady]);
 
   useEffect(() => {
-    const pendingRoll = readPendingRollSnapshot();
-
     if (
       !pendingRoll ||
       !authSession ||
-      !currentSeason ||
       !entry ||
       todayRollLogId ||
       rolledSkillSet ||
-      pendingRoll.entryId !== entry.id ||
-      pendingRoll.seasonId !== currentSeason.id ||
-      pendingRoll.rollDateKst !== getCurrentKstDateKey()
+      pendingRoll.entry_id !== entry.id ||
+      pendingRoll.roll_date_kst !== getCurrentKstDateKey()
     ) {
       return;
     }
 
     void (async () => {
       try {
-        const nextEntry = await submitDailyRankRoll({
-          entryId: entry.id,
-          beforeSkills: pendingRoll.beforeSkills,
-          rolledSkills: pendingRoll.rolledSkills,
-          selectedResult: "keep",
-          finalSkills: pendingRoll.beforeSkills,
-          finalScore: pendingRoll.beforeScore,
-        });
+        const nextEntry = await resolvePendingDailyRankRoll(entry.id, "keep");
 
-        const [nextRankings, nextTodayRollLog] = await Promise.all([
-          getSeasonRankings(currentSeason.id, leaderboardCategory),
+        const [nextRankings, nextTodayRollLog, nextPendingRoll] = await Promise.all([
+          getSeasonRankings(entry.season_id, leaderboardCategory),
           getTodayRollLog(entry.id),
+          getPendingDailyRoll(entry.id),
         ]);
 
         setEntry(nextEntry);
         setRankings(nextRankings);
         setTodayRollLogId(nextTodayRollLog?.id ?? null);
+        setPendingRoll(nextPendingRoll);
         setRolledSkillSet(null);
         setRolledScore(null);
-        clearPendingRollSnapshot();
-        setError("새로고침되어 기존 스킬 유지로 처리되었습니다.");
+        setError("다른 탭 또는 새로고침이 감지되어 기존 스킬 유지로 처리되었습니다.");
       } catch (nextError) {
-        clearPendingRollSnapshot();
+        setPendingRoll(null);
         setError(
           nextError instanceof Error
             ? nextError.message
-            : "새로고침 후 기존 스킬 유지 처리에 실패했습니다."
+            : "보류 중인 스킬 변경을 기존 스킬 유지로 처리하지 못했습니다."
         );
       }
     })();
-  }, [authSession, currentSeason, entry, leaderboardCategory, rolledSkillSet, todayRollLogId]);
+  }, [authSession, entry, leaderboardCategory, pendingRoll, rolledSkillSet, todayRollLogId]);
 
   const handleJoinSeason = async () => {
     if (!currentSeason) return;
@@ -465,6 +427,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
       setParticipationCategory(nextEntry.category);
       setRankings(nextRankings);
       setTodayRollLogId(null);
+      setPendingRoll(null);
       setRolledSkillSet(null);
       setRolledScore(null);
     } catch (nextError) {
@@ -509,15 +472,15 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         scoreTable: gameData.scoreTable,
       });
 
-      writePendingRollSnapshot({
+      const nextPendingRoll = await createPendingDailyRankRoll({
         entryId: entry.id,
-        seasonId: entry.season_id,
-        rollDateKst: getCurrentKstDateKey(),
         beforeSkills: entry.current_skills,
         beforeScore: entry.current_score,
         rolledSkills: nextSkillSet,
         rolledScore: nextScore,
       });
+
+      setPendingRoll(nextPendingRoll);
       setRolledSkillSet(nextSkillSet);
       setRolledScore(nextScore);
     } catch (nextError) {
@@ -534,29 +497,20 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     setError(null);
 
     try {
-      const finalSkills = selectedResult === "replace" ? rolledSkillSet : entry.current_skills;
-      const finalScore = selectedResult === "replace" ? rolledScore : entry.current_score;
+      const nextEntry = await resolvePendingDailyRankRoll(entry.id, selectedResult);
 
-      const nextEntry = await submitDailyRankRoll({
-        entryId: entry.id,
-        beforeSkills: entry.current_skills,
-        rolledSkills: rolledSkillSet,
-        selectedResult,
-        finalSkills,
-        finalScore,
-      });
-
-      const [nextRankings, nextTodayRollLog] = await Promise.all([
+      const [nextRankings, nextTodayRollLog, nextPendingRoll] = await Promise.all([
         getSeasonRankings(currentSeason.id, leaderboardCategory),
         getTodayRollLog(entry.id),
+        getPendingDailyRoll(entry.id),
       ]);
 
       setEntry(nextEntry);
       setRankings(nextRankings);
       setTodayRollLogId(nextTodayRollLog?.id ?? null);
+      setPendingRoll(nextPendingRoll);
       setRolledSkillSet(null);
       setRolledScore(null);
-      clearPendingRollSnapshot();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "결과 확정에 실패했습니다.");
     } finally {
@@ -766,7 +720,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
           )}
 
-          {authSession && entry && !todayRollLogId && !rolledSkillSet && (
+          {authSession && entry && !todayRollLogId && !rolledSkillSet && !pendingRoll && (
             <div className="ranking-roll-box">
               <p className="ranking-support-copy">
                 {showSettlementNotice

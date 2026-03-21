@@ -1,6 +1,14 @@
 import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { getSupabaseClient } from "./supabase";
-import type { DailyRollLog, RankingCategory, RankingRow, Season, SeasonEntry, StoredSkillSet } from "../types/ranking";
+import type {
+  DailyRollLog,
+  PendingDailyRoll,
+  RankingCategory,
+  RankingRow,
+  Season,
+  SeasonEntry,
+  StoredSkillSet,
+} from "../types/ranking";
 
 function requireSupabase() {
   const supabase = getSupabaseClient();
@@ -140,6 +148,20 @@ export async function getTodayRollLog(entryId: string): Promise<DailyRollLog | n
   return unwrapSingle(response as PostgrestSingleResponse<DailyRollLog | null>);
 }
 
+export async function getPendingDailyRoll(entryId: string): Promise<PendingDailyRoll | null> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("get_pending_daily_rank_roll", {
+    p_entry_id: entryId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const pending = Array.isArray(data) ? data[0] : data;
+  return (pending as PendingDailyRoll | null) ?? null;
+}
+
 export async function joinSeason(
   category: RankingCategory,
   initialSkills: StoredSkillSet,
@@ -175,6 +197,46 @@ export async function submitDailyRankRoll(input: {
     p_selected_result: input.selectedResult,
     p_final_skills: input.finalSkills,
     p_final_score: input.finalScore,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as SeasonEntry;
+}
+
+export async function createPendingDailyRankRoll(input: {
+  entryId: string;
+  beforeSkills: StoredSkillSet;
+  beforeScore: number;
+  rolledSkills: StoredSkillSet;
+  rolledScore: number;
+}): Promise<PendingDailyRoll> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("create_pending_daily_rank_roll", {
+    p_entry_id: input.entryId,
+    p_before_skills: input.beforeSkills,
+    p_before_score: input.beforeScore,
+    p_rolled_skills: input.rolledSkills,
+    p_rolled_score: input.rolledScore,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as PendingDailyRoll;
+}
+
+export async function resolvePendingDailyRankRoll(
+  entryId: string,
+  selectedResult: "keep" | "replace"
+): Promise<SeasonEntry> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("resolve_pending_daily_rank_roll", {
+    p_entry_id: entryId,
+    p_selected_result: selectedResult,
   });
 
   if (error) {

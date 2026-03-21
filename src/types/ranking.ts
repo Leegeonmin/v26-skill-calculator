@@ -42,6 +42,17 @@ export type DailyRollLog = {
   created_at: string;
 };
 
+export type PendingDailyRoll = {
+  id: string;
+  entry_id: string;
+  roll_date_kst: string;
+  before_skills: StoredSkillSet;
+  before_score: number;
+  rolled_skills: StoredSkillSet;
+  rolled_score: number;
+  created_at: string;
+};
+
 export type RankingRow = {
   entry_id: string;
   season_id: string;
