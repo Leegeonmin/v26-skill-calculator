@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 import { CARD_TYPE_LABELS } from "./data/cardTypes";
@@ -10,11 +10,18 @@ import {
   signInWithGoogle,
   signOut,
 } from "./lib/auth";
+import {
+  adminGetToolUsageSummary,
+  adminLogin,
+  adminLogout,
+  adminValidateSession,
+  type AdminUsageSummary,
+} from "./lib/admin";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
-import CalculatorView from "./views/CalculatorView";
-import AdvancedSimulatorView from "./views/AdvancedSimulatorView";
-import ImpactSimulatorView from "./views/ImpactSimulatorView";
+import AppChrome from "./components/AppChrome";
 import RankingView from "./views/RankingView";
+import AdminView from "./views/AdminView";
+import ToolboxStage from "./views/ToolboxStage";
 import type {
   CalculatorMode,
   CardType,
@@ -28,6 +35,7 @@ import { calculateSkillTotal } from "./utils/calculate";
 import { judgeSkillResult, type ResultGrade } from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
+import { logToolUsageEvent } from "./lib/toolUsage";
 
 const DEFAULT_MODE: CalculatorMode = "hitter";
 const DEFAULT_VIEW: ToolView = "calculator";
@@ -41,6 +49,9 @@ const DEFAULT_LEVEL_2: SkillLevel = 5;
 const DEFAULT_LEVEL_3: SkillLevel = 5;
 const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
+const ADMIN_PATH = "/admin";
+const ADMIN_SESSION_KEY = "v26-admin-session";
+const TOOL_USAGE_SESSION_KEY = "v26-tool-usage-session";
 
 type ServiceView = "toolbox" | "ranking";
 
@@ -54,81 +65,6 @@ const SERVICE_INFO: Record<ServiceView, { title: string; subtitle: string }> = {
     subtitle: "스킬 계산기와 시뮬레이터를 한 곳에서 확인",
   },
 };
-
-const TOOL_VIEW_LABELS: Record<Exclude<ToolView, "ranking">, string> = {
-  calculator: "스킬점수 계산기",
-  simulator: "고스변 시뮬",
-  impactChange: "임팩트 스변 시뮬",
-};
-
-type IconName = "trophy" | "calculator" | "sparkles" | "flame" | "google";
-
-function IconGlyph({ name, className = "" }: { name: IconName; className?: string }) {
-  if (name === "trophy") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
-        <path
-          d="M8 4h8v2h3v2a5 5 0 0 1-5 5h-.35A6 6 0 0 1 13 15.92V18h3v2H8v-2h3v-2.08A6 6 0 0 1 10.35 13H10a5 5 0 0 1-5-5V6h3V4Zm-1 4a3 3 0 0 0 3 3V8H7Zm10 3a3 3 0 0 0 3-3h-3v3Z"
-          fill="currentColor"
-        />
-      </svg>
-    );
-  }
-
-  if (name === "calculator") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
-        <path
-          d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 4v3h10V7H7Zm2 6H7v2h2v-2Zm4 0h-2v2h2v-2Zm4 0h-2v2h2v-2ZM9 17H7v2h2v-2Zm4 0h-2v2h2v-2Zm4 0h-2v2h2v-2Z"
-          fill="currentColor"
-        />
-      </svg>
-    );
-  }
-
-  if (name === "sparkles") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
-        <path
-          d="m12 3 1.75 4.25L18 9l-4.25 1.75L12 15l-1.75-4.25L6 9l4.25-1.75L12 3Zm6 10 1 2.5L21.5 16 19 17l-1 2.5L17 17l-2.5-1 2.5-.5 1-2.5ZM6 14l.8 1.7L8.5 16l-1.7.8L6 18.5l-.8-1.7L3.5 16l1.7-.3L6 14Z"
-          fill="currentColor"
-        />
-      </svg>
-    );
-  }
-
-  if (name === "flame") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
-        <path
-          d="M13.5 2s.5 2.5-1 4.5C11 8.5 8 9.5 8 14a4 4 0 0 0 8 0c0-2.5-1.5-4-2.5-5.5C12 6.5 13.5 2 13.5 2Zm-1 8.5c1 1 2.5 2.2 2.5 4.5a3 3 0 1 1-6 0c0-2.77 1.86-3.84 3.5-4.5Z"
-          fill="currentColor"
-        />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      />
-    </svg>
-  );
-}
 
 const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
   { value: "C", label: "C 이상" },
@@ -159,6 +95,25 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
     label,
   })
 );
+
+function getOrCreateToolUsageSessionId(): string {
+  if (typeof window === "undefined") {
+    return "server";
+  }
+
+  const stored = window.sessionStorage.getItem(TOOL_USAGE_SESSION_KEY);
+  if (stored) {
+    return stored;
+  }
+
+  const nextId =
+    typeof window.crypto?.randomUUID === "function"
+      ? window.crypto.randomUUID()
+      : `tool-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+  window.sessionStorage.setItem(TOOL_USAGE_SESSION_KEY, nextId);
+  return nextId;
+}
 
 function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
   if (cardType === "goldenGlove") {
@@ -224,6 +179,8 @@ function getResultSummaryMessage(percent: number | null): string {
 }
 
 function App() {
+  const isAdminRoute =
+    typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toolView, setToolView] = useState<ToolView>(() => {
     if (typeof window === "undefined") {
@@ -265,6 +222,22 @@ function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthBusy, setIsAuthBusy] = useState(false);
   const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
+  const [adminUsernameInput, setAdminUsernameInput] = useState("");
+  const [adminPasswordInput, setAdminPasswordInput] = useState("");
+  const [adminPasswordError, setAdminPasswordError] = useState<string | null>(null);
+  const [adminCheckingSession, setAdminCheckingSession] = useState(isAdminRoute);
+  const [adminUnlocked, setAdminUnlocked] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return Boolean(window.sessionStorage.getItem(ADMIN_SESSION_KEY));
+  });
+  const [adminStats, setAdminStats] = useState<AdminUsageSummary | null>(null);
+  const [adminStatsLoading, setAdminStatsLoading] = useState(false);
+  const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
+  const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
+  const loggedToolViewsRef = useRef<Set<string>>(new Set());
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -335,10 +308,99 @@ function App() {
   const serviceInfo = SERVICE_INFO[activeService];
 
   useEffect(() => {
+    if (!isAdminRoute) {
+      return;
+    }
+
+    const storedSessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+
+    if (!storedSessionToken) {
+      setAdminCheckingSession(false);
+      setAdminUnlocked(false);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const session = await adminValidateSession(storedSessionToken);
+
+        if (!session) {
+          window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          setAdminUnlocked(false);
+          setAdminCheckingSession(false);
+          return;
+        }
+
+        setAdminUnlocked(true);
+      } catch {
+        window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        setAdminUnlocked(false);
+      } finally {
+        setAdminCheckingSession(false);
+      }
+    })();
+  }, [isAdminRoute]);
+
+  useEffect(() => {
+    if (!isAdminRoute || !adminUnlocked) {
+      return;
+    }
+
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!sessionToken) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        setAdminStatsLoading(true);
+        setAdminStatsError(null);
+        const summary = await adminGetToolUsageSummary(sessionToken);
+        setAdminStats(summary);
+      } catch (error) {
+        setAdminStatsError(
+          error instanceof Error ? error.message : "통계 정보를 불러오지 못했습니다."
+        );
+      } finally {
+        setAdminStatsLoading(false);
+      }
+    })();
+  }, [adminUnlocked, isAdminRoute]);
+
+  useEffect(() => {
+    if (isAdminRoute) {
+      return;
+    }
+
     const url = new URL(window.location.href);
     url.searchParams.set("view", toolView);
     window.history.replaceState({}, "", url.toString());
-  }, [toolView]);
+  }, [isAdminRoute, toolView]);
+
+  useEffect(() => {
+    if (isAdminRoute || toolView === "ranking" || !supabaseReady || !toolUsageSessionId) {
+      return;
+    }
+
+    const viewKey = `${toolUsageSessionId}:${toolView}`;
+    if (loggedToolViewsRef.current.has(viewKey)) {
+      return;
+    }
+
+    loggedToolViewsRef.current.add(viewKey);
+
+    void logToolUsageEvent({
+      tool: "tool_view",
+      mode,
+      cardType: activeCardType,
+      metadata: {
+        session_id: toolUsageSessionId,
+        view: toolView,
+      },
+    }).catch(() => {
+      loggedToolViewsRef.current.delete(viewKey);
+    });
+  }, [activeCardType, isAdminRoute, mode, supabaseReady, toolUsageSessionId, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -474,12 +536,25 @@ function App() {
       skillLevels: [level1, level2, level3],
       scoreTable: gameData.scoreTable,
     });
+    const nextJudgeResult = judgeSkillResult(gameData.thresholds, activeCardType, nextTotalScore);
 
     setSimRollCount((count) => count + 1);
     setSimBestScore((bestScore) =>
       bestScore === null ? nextTotalScore : Math.max(bestScore, nextTotalScore)
     );
     setSimLastMessage(`${simRollCount + 1}회차 결과 반영 완료`);
+
+    void logToolUsageEvent({
+      tool: "advanced_manual_roll",
+      mode,
+      cardType: activeCardType,
+      rollCount: 1,
+      resultScore: nextTotalScore,
+      resultGrade: nextJudgeResult.grade,
+      metadata: {
+        session_id: toolUsageSessionId,
+      },
+    }).catch(() => {});
   };
 
   const handleAutoRollToTarget = () => {
@@ -530,10 +605,31 @@ function App() {
 
     if (autoRollSuccess) {
       setSimLastMessage(`${tryCount}번 만에 ${targetGrade} 이상 달성`);
-      return;
+    } else {
+      setSimLastMessage(`${AUTO_ROLL_LIMIT}번 안에 ${targetGrade} 이상이 나오지 않았음`);
     }
 
-    setSimLastMessage(`${AUTO_ROLL_LIMIT}번 안에 ${targetGrade} 이상이 나오지 않았음`);
+    void logToolUsageEvent({
+      tool: "advanced_auto_roll",
+      mode,
+      cardType: activeCardType,
+      targetGrade,
+      rollCount: tryCount,
+      resultScore:
+        finalJudgeResult && finalSkillIds.every(Boolean)
+          ? calculateSkillTotal({
+              cardType: activeCardType,
+              skillIds: finalSkillIds,
+              skillLevels: [level1, level2, level3],
+              scoreTable: gameData.scoreTable,
+            })
+          : null,
+      resultGrade: finalJudgeResult?.grade ?? null,
+      metadata: {
+        session_id: toolUsageSessionId,
+        success: Boolean(autoRollSuccess),
+      },
+    }).catch(() => {});
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
@@ -632,575 +728,182 @@ function App() {
 
     if (result.success) {
       setImpactLastMessage(`${result.rollCount}번 만에 2, 3번 메이저 달성`);
+    } else {
+      setImpactLastMessage(`${IMPACT_CHANGE_LIMIT}번 안에 2, 3번 메이저가 나오지 않았음`);
+    }
+
+    void logToolUsageEvent({
+      tool: "impact_auto_roll",
+      mode,
+      cardType: "impact",
+      targetGrade: "DOUBLE_MAJOR",
+      rollCount: result.rollCount,
+      resultGrade: result.success ? "DOUBLE_MAJOR" : null,
+      metadata: {
+        session_id: toolUsageSessionId,
+        success: result.success,
+        fixedSkillId: resolvedSkill1,
+      },
+    }).catch(() => {});
+  };
+
+  const handleAdminUnlock = async () => {
+    if (!adminUsernameInput.trim() || !adminPasswordInput.trim()) {
+      setAdminPasswordError("아이디와 비밀번호를 모두 입력해주세요.");
       return;
     }
 
-    setImpactLastMessage(`${IMPACT_CHANGE_LIMIT}번 안에 2, 3번 메이저가 나오지 않았음`);
+    try {
+      const session = await adminLogin(adminUsernameInput.trim(), adminPasswordInput);
+      setAdminPasswordError(null);
+      setAdminUnlocked(true);
+      window.sessionStorage.setItem(ADMIN_SESSION_KEY, session.session_token);
+    } catch (error) {
+      setAdminPasswordError(
+        error instanceof Error ? error.message : "관리자 로그인에 실패했습니다."
+      );
+    }
   };
+
+  const handleAdminLock = async () => {
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+
+    if (sessionToken) {
+      try {
+        await adminLogout(sessionToken);
+      } catch {
+        // Ignore logout RPC failures and clear client session anyway.
+      }
+    }
+
+    setAdminUnlocked(false);
+    setAdminUsernameInput("");
+    setAdminPasswordInput("");
+    setAdminPasswordError(null);
+    window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  };
+
+  const handleGoHome = () => {
+    window.location.href = `${window.location.origin}/?view=ranking`;
+  };
+
+  if (isAdminRoute) {
+    return (
+      <div className="app-bg">
+        <div className="app-shell">
+          <AdminView
+            unlocked={adminUnlocked}
+            checkingSession={adminCheckingSession}
+            usernameInput={adminUsernameInput}
+            passwordInput={adminPasswordInput}
+            passwordError={adminPasswordError}
+            stats={adminStats}
+            statsLoading={adminStatsLoading}
+            statsError={adminStatsError}
+            onUsernameChange={(value) => {
+              setAdminUsernameInput(value);
+              if (adminPasswordError) {
+                setAdminPasswordError(null);
+              }
+            }}
+            onPasswordChange={(value) => {
+              setAdminPasswordInput(value);
+              if (adminPasswordError) {
+                setAdminPasswordError(null);
+              }
+            }}
+            onUnlock={() => void handleAdminUnlock()}
+            onLock={() => void handleAdminLock()}
+            onGoHome={handleGoHome}
+          />
+          <Analytics />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-bg">
       <div className="app-shell">
-        <header className="app-header">
-          <div className="app-header-inner">
-            <div className="app-header-brand">
-              <button
-                type="button"
-                className="app-mobile-nav-trigger"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="메뉴 열기"
-              >
-                <svg viewBox="0 0 24 24" className="ui-icon" aria-hidden="true">
-                  <path
-                    d="M4 7h16v2H4V7Zm0 5h16v2H4v-2Zm0 5h16v2H4v-2Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </button>
-              <div className="app-header-badge" aria-hidden="true">
-                <IconGlyph
-                  name={activeService === "ranking" ? "trophy" : "calculator"}
-                  className="ui-icon"
-                />
-              </div>
-              <div className="app-header-copy">
-                <h1>{serviceInfo.title}</h1>
-                <p>{serviceInfo.subtitle}</p>
-              </div>
-            </div>
+        <AppChrome
+          activeService={activeService}
+          serviceTitle={serviceInfo.title}
+          serviceSubtitle={serviceInfo.subtitle}
+          mobileNavOpen={mobileNavOpen}
+          supabaseReady={supabaseReady}
+          authDisplayName={authDisplayName}
+          isAuthBusy={isAuthBusy}
+          onOpenMobileNav={() => setMobileNavOpen(true)}
+          onCloseMobileNav={() => setMobileNavOpen(false)}
+          onSelectService={handleServiceChange}
+          onGoogleSignIn={() => void handleGoogleSignIn()}
+          onSignOut={() => void handleSignOut()}
+        >
+          {authError && <p className="auth-error">{authError}</p>}
 
-            {activeService === "ranking" && (
-              <div className="auth-panel app-header-action">
-                {!supabaseReady && <span className="auth-hint">Supabase 설정 필요</span>}
-
-                {supabaseReady && authDisplayName && (
-                  <>
-                    <span className="auth-user">{authDisplayName}</span>
-                    <button
-                      type="button"
-                      className="ghost-btn"
-                      onClick={handleSignOut}
-                      disabled={isAuthBusy}
-                    >
-                      {isAuthBusy ? "처리 중..." : "로그아웃"}
-                    </button>
-                  </>
-                )}
-
-                {supabaseReady && !authDisplayName && (
-                  <button
-                    type="button"
-                    className="ghost-btn app-header-login"
-                    onClick={handleGoogleSignIn}
-                    disabled={isAuthBusy}
-                  >
-                    <IconGlyph name="google" className="ui-icon" />
-                    <span>{isAuthBusy ? "처리 중..." : "Google 로그인"}</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </header>
-
-        {mobileNavOpen && (
-          <button
-            type="button"
-            className="mobile-nav-overlay"
-            aria-label="메뉴 닫기"
-            onClick={() => setMobileNavOpen(false)}
-          />
-        )}
-
-        <aside className={`mobile-nav-drawer ${mobileNavOpen ? "open" : ""}`} aria-label="모바일 메뉴">
-          <div className="mobile-nav-head">
-            <strong>메뉴</strong>
-            <button
-              type="button"
-              className="app-mobile-nav-close"
-              onClick={() => setMobileNavOpen(false)}
-              aria-label="메뉴 닫기"
-            >
-              <svg viewBox="0 0 24 24" className="ui-icon" aria-hidden="true">
-                <path
-                  d="m6.7 5.3 5.3 5.3 5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3 1.4-1.4Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="mobile-nav-content">
-            <div className="side-section">
-              <p className="side-section-title">고스변 랭킹챌린지</p>
-              <button
-                type="button"
-                className={`side-button ${activeService === "ranking" ? "active" : ""}`}
-                onClick={() => {
-                  handleServiceChange("ranking");
-                  setMobileNavOpen(false);
-                }}
-              >
-                <span className="side-button-icon" aria-hidden="true">
-                  <IconGlyph name="trophy" className="ui-icon" />
-                </span>
-                <span className="side-button-label">주간 시즌 리더보드</span>
-                <span className="side-button-tail" aria-hidden="true">
-                  <IconGlyph name="sparkles" className="ui-icon ui-icon-xs" />
-                </span>
-              </button>
-            </div>
-
-            <div className="side-section">
-              <p className="side-section-title">v26 스킬 계산</p>
-              <button
-                type="button"
-                className={`side-button ${activeService === "toolbox" ? "active" : ""}`}
-                onClick={() => {
-                  handleServiceChange("toolbox");
-                  setMobileNavOpen(false);
-                }}
-              >
-                <span className="side-button-icon" aria-hidden="true">
-                  <IconGlyph name="calculator" className="ui-icon" />
-                </span>
-                <span className="side-button-label">계산기 / 시뮬레이터</span>
-                <span className="side-button-tail" aria-hidden="true">
-                  <IconGlyph name="sparkles" className="ui-icon ui-icon-xs" />
-                </span>
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        <div className="app-body">
-          <aside className="side-dock" aria-label="서비스 선택">
-            <div className="side-nav">
-              <div className="side-section">
-                <p className="side-section-title">고스변 랭킹챌린지</p>
-                <button
-                  type="button"
-                  className={`side-button ${activeService === "ranking" ? "active" : ""}`}
-                  onClick={() => handleServiceChange("ranking")}
-                >
-                  <span className="side-button-icon" aria-hidden="true">
-                    <IconGlyph name="trophy" className="ui-icon" />
-                  </span>
-                  <span className="side-button-label">주간 시즌 리더보드</span>
-                  <span className="side-button-tail" aria-hidden="true">
-                    <IconGlyph name="sparkles" className="ui-icon ui-icon-xs" />
-                  </span>
-                </button>
-              </div>
-
-              <div className="side-section">
-                <p className="side-section-title">v26 스킬 계산</p>
-                <button
-                  type="button"
-                  className={`side-button ${activeService === "toolbox" ? "active" : ""}`}
-                  onClick={() => handleServiceChange("toolbox")}
-                >
-                  <span className="side-button-icon" aria-hidden="true">
-                    <IconGlyph name="calculator" className="ui-icon" />
-                  </span>
-                  <span className="side-button-label">계산기 / 시뮬레이터</span>
-                  <span className="side-button-tail" aria-hidden="true">
-                    <IconGlyph name="sparkles" className="ui-icon ui-icon-xs" />
-                  </span>
-                </button>
-              </div>
-            </div>
-          </aside>
-
-          <div className="main-stage">
-            {authError && <p className="auth-error">{authError}</p>}
-
-            {activeService === "toolbox" && (
-              <div className="tool-tabs-bar">
-                <div className="tool-tabs" role="tablist" aria-label="도구 선택">
-                  <button
-                    type="button"
-                    className={`tool-tab ${toolboxToolView === "calculator" ? "active" : ""}`}
-                    onClick={() => handleToolViewChange("calculator")}
-                  >
-                    <IconGlyph name="calculator" className="ui-icon" />
-                    <span>{TOOL_VIEW_LABELS.calculator}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`tool-tab ${toolboxToolView === "simulator" ? "active" : ""}`}
-                    onClick={() => handleToolViewChange("simulator")}
-                  >
-                    <IconGlyph name="sparkles" className="ui-icon" />
-                    <span>{TOOL_VIEW_LABELS.simulator}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`tool-tab ${toolboxToolView === "impactChange" ? "active" : ""}`}
-                    onClick={() => handleToolViewChange("impactChange")}
-                  >
-                    <IconGlyph name="flame" className="ui-icon" />
-                    <span>{TOOL_VIEW_LABELS.impactChange}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <main className="layout-grid">
           {toolView === "ranking" ? (
-            <section className="panel panel-main panel-wide">
-              <RankingView
-                authSession={authSession}
-                supabaseReady={supabaseReady}
-              />
-            </section>
+            <div className="main-stage">
+              <main className="layout-grid">
+                <section className="panel panel-main panel-wide">
+                  <RankingView authSession={authSession} supabaseReady={supabaseReady} />
+                </section>
+              </main>
+            </div>
           ) : (
-            <>
-          <section className={toolView === "calculator" ? "calculator-shell" : "panel panel-main"}>
-            {toolView === "calculator" ? (
-              <>
-                <div className="input-config-card">
-                  <div className="panel-head">
-                    <h2>입력</h2>
-                  </div>
-
-                  <div className="control-row">
-                    <div className="control-section">
-                      <label>계산 대상</label>
-                      <div className="toggle-row toggle-row-modes">
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "hitter" ? "active" : ""}`}
-                          onClick={() => handleModeChange("hitter")}
-                        >
-                          타자
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "starter" ? "active" : ""}`}
-                          onClick={() => handleModeChange("starter")}
-                        >
-                          선발
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "middle" ? "active" : ""}`}
-                          onClick={() => handleModeChange("middle")}
-                        >
-                          중계
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "closer" ? "active" : ""}`}
-                          onClick={() => handleModeChange("closer")}
-                        >
-                          마무리
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="control-section">
-                      <label>카드 타입</label>
-                      <div className="toggle-row toggle-row-cards">
-                        {CARD_TYPE_OPTIONS.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
-                            onClick={() => handleCardTypeChange(option.value)}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="control-reset-row">
-                    <button type="button" className="ghost-btn control-reset-btn" onClick={handleReset}>
-                      <span className="control-reset-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" className="ui-icon">
-                          <path
-                            d="M12 5a7 7 0 1 1-6.56 9.47 1 1 0 1 1 1.88-.68A5 5 0 1 0 12 7h-1.59l1.3 1.29a1 1 0 1 1-1.42 1.42L6.59 6l3.7-3.71a1 1 0 0 1 1.42 1.42L10.41 5H12Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </span>
-                      초기화
-                    </button>
-                  </div>
-                </div>
-
-                {!gameData ? (
-                  <div className="panel panel-main">
-                    <div className="empty-box">
-                      {mode === "hitter"
-                        ? "데이터를 불러오지 못했습니다."
-                        : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
-                    </div>
-                  </div>
-                ) : (
-                  <CalculatorView
-                    gameData={gameData}
-                    activeCardType={activeCardType}
-                    resultGradeColor={resultGradeColor}
-                    judgeGrade={judgeResult?.grade ?? "-"}
-                    totalScore={totalScore}
-                    matchedPercentLabel={formatMatchedPercent(judgeResult?.matchedPercent ?? null)}
-                    selectedSkillMeta={selectedSkillMeta}
-                    rolledSkillColors={rolledSkillColors}
-                    skillScores={skillScores}
-                    filteredSkills={filteredSkills}
-                    resolvedSkill1={resolvedSkill1}
-                    resolvedSkill2={resolvedSkill2}
-                    resolvedSkill3={resolvedSkill3}
-                    level1={level1}
-                    level2={level2}
-                    level3={level3}
-                    setSkill1={setSkill1}
-                    setSkill2={setSkill2}
-                    setSkill3={setSkill3}
-                    setLevel1={setLevel1}
-                    setLevel2={setLevel2}
-                    setLevel3={setLevel3}
-                    getSkillScoreLabel={getSkillScoreLabel}
-                  />
-                )}
-              </>
-            ) : (
-              <>
-                <div className="panel-head">
-                  <h2>{toolView === "simulator" ? "시뮬 설정" : "임팩트 스변 설정"}</h2>
-                </div>
-
-                <div className="input-config-card input-config-card-compact">
-                  <div className="control-row">
-                    <div className="control-section">
-                      <label>계산 대상</label>
-                      <div className="toggle-row toggle-row-modes">
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "hitter" ? "active" : ""}`}
-                          onClick={() => handleModeChange("hitter")}
-                        >
-                          타자
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "starter" ? "active" : ""}`}
-                          onClick={() => handleModeChange("starter")}
-                        >
-                          선발
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "middle" ? "active" : ""}`}
-                          onClick={() => handleModeChange("middle")}
-                        >
-                          중계
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${mode === "closer" ? "active" : ""}`}
-                          onClick={() => handleModeChange("closer")}
-                        >
-                          마무리
-                        </button>
-                      </div>
-                    </div>
-
-                    {(toolView === "simulator" || toolView === "impactChange") &&
-                      mode === "hitter" && (
-                        <div className="control-section">
-                          <label>타자 포지션</label>
-                          <div className="toggle-row">
-                            <button
-                              type="button"
-                              className={`toggle-btn ${
-                                hitterPositionGroup === "fielder" ? "active" : ""
-                              }`}
-                              onClick={() => handleHitterPositionGroupChange("fielder")}
-                            >
-                              야수
-                            </button>
-                            <button
-                              type="button"
-                              className={`toggle-btn ${
-                                hitterPositionGroup === "catcher" ? "active" : ""
-                              }`}
-                              onClick={() => handleHitterPositionGroupChange("catcher")}
-                            >
-                              포수
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                    {toolView !== "impactChange" ? (
-                      <div className="control-section">
-                        <label>카드 타입</label>
-                        <div className="toggle-row toggle-row-cards">
-                          {CARD_TYPE_OPTIONS.map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
-                              onClick={() => handleCardTypeChange(option.value)}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="control-section">
-                        <label>카드 타입</label>
-                        <div className="impact-card-lock">
-                          <span className="impact-card-pill">임팩트 고정</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="control-reset-row">
-                    <button type="button" className="ghost-btn control-reset-btn" onClick={handleReset}>
-                      <span className="control-reset-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" className="ui-icon">
-                          <path
-                            d="M12 5a7 7 0 1 1-6.56 9.47 1 1 0 1 1 1.88-.68A5 5 0 1 0 12 7h-1.59l1.3 1.29a1 1 0 1 1-1.42 1.42L6.59 6l3.7-3.71a1 1 0 0 1 1.42 1.42L10.41 5H12Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </span>
-                      초기화
-                    </button>
-                  </div>
-                </div>
-
-                {!gameData ? (
-                  <div className="empty-box">
-                    {mode === "hitter"
-                      ? "데이터를 불러오지 못했습니다."
-                      : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
-                  </div>
-                ) : toolView === "simulator" ? (
-                  <AdvancedSimulatorView
-                    activeCardType={activeCardType}
-                    resultGradeColor={resultGradeColor}
-                    judgeGrade={judgeResult?.grade ?? "-"}
-                    totalScore={gameData ? totalScore : "-"}
-                    matchedPercentLabel={formatMatchedPercent(judgeResult?.matchedPercent ?? null)}
-                    selectedSkillMeta={selectedSkillMeta}
-                    rolledSkillColors={rolledSkillColors}
-                    skillScores={skillScores}
-                    filteredSkills={filteredSkills}
-                    resolvedSkill1={resolvedSkill1}
-                    resolvedSkill2={resolvedSkill2}
-                    resolvedSkill3={resolvedSkill3}
-                    level1={level1}
-                    level2={level2}
-                    level3={level3}
-                    simRollCount={simRollCount}
-                    simBestScore={simBestScore}
-                    simLastMessage={simLastMessage}
-                    targetGrade={targetGrade}
-                    targetGradeOptions={TARGET_GRADE_OPTIONS}
-                    setTargetGrade={setTargetGrade}
-                    setSkill1={setSkill1}
-                    setLevel1={setLevel1}
-                    setLevel2={setLevel2}
-                    setLevel3={setLevel3}
-                    onRollOnce={handleAdvancedSkillChangeRoll}
-                    onAutoRoll={handleAutoRollToTarget}
-                    getSkillScoreLabel={getSkillScoreLabel}
-                  />
-                ) : (
-                  <ImpactSimulatorView
-                    resultGradeColor={resultGradeColor}
-                    judgeGrade={judgeResult?.grade ?? "-"}
-                    totalScore={gameData ? totalScore : "-"}
-                    matchedPercentLabel={formatMatchedPercent(judgeResult?.matchedPercent ?? null)}
-                    selectedSkillMeta={selectedSkillMeta}
-                    rolledSkillColors={rolledSkillColors}
-                    skillScores={skillScores}
-                    filteredSkills={filteredSkills}
-                    resolvedSkill1={resolvedSkill1}
-                    resolvedSkill2={resolvedSkill2}
-                    resolvedSkill3={resolvedSkill3}
-                    impactSessionRollCount={impactSessionRollCount}
-                    impactLastSuccessRollCount={impactLastSuccessRollCount}
-                    impactLastMessage={impactLastMessage}
-                    level2={level2}
-                    level3={level3}
-                    setSkill1={setSkill1}
-                    setLevel2={setLevel2}
-                    setLevel3={setLevel3}
-                    resetImpactChangeSession={resetImpactChangeSession}
-                    onImpactRoll={handleImpactChangeRoll}
-                    getSkillScoreLabel={getSkillScoreLabel}
-                  />
-                )}
-              </>
-            )}
-          </section>
-
-          <aside className="panel panel-result" style={{ borderColor: resultGradeColor }}>
-            <div className="panel-head">
-              <h2>결과</h2>
-            </div>
-
-            <div className="result-stat">
-              <span>총 스킬 점수</span>
-              <strong>{gameData ? totalScore : "-"}</strong>
-            </div>
-
-            <div className="result-stat">
-              <span>판정 등급</span>
-              <strong style={{ color: resultGradeColor }}>{judgeResult?.grade ?? "-"}</strong>
-            </div>
-
-            <div className="result-stat">
-              <span>기준 확률</span>
-              <strong>{formatMatchedPercent(judgeResult?.matchedPercent ?? null)}</strong>
-            </div>
-
-            <p className="result-summary">{summaryMessage}</p>
-
-            {encouragementMessage && <div className="result-badge">{encouragementMessage}</div>}
-
-            <div className="result-grade-guide">
-              <div className="result-grade-guide-title">판정등급 기준</div>
-              <div className="result-grade-guide-list">
-                {RESULT_GRADE_GUIDE.map((item) => (
-                  <div key={item.grade} className="result-grade-guide-item">
-                    <strong style={{ color: RESULT_GRADE_COLORS[item.grade] }}>{item.title}</strong>
-                    <span>{item.description}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {toolView === "simulator" && (
-              <p className="tool-note">
-                현재 버전은 앱에 등록된 스킬 데이터를 기준으로 1회 롤을 재현합니다.
-              </p>
-            )}
-
-            {toolView === "impactChange" && (
-              <p className="tool-note">
-                일반 스킬변경권 확률표 기준으로 임팩트 카드의 2, 3번 슬롯을 메이저 2개가 나올 때까지 자동으로 돌립니다.
-              </p>
-            )}
-
-            {activeCardType === "impact" && (
-              <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>
-            )}
-          </aside>
-            </>
+            <ToolboxStage
+              toolView={toolboxToolView}
+              mode={mode}
+              hitterPositionGroup={hitterPositionGroup}
+              cardType={cardType}
+              activeCardType={activeCardType}
+              gameData={gameData}
+              pitcherRole={pitcherRole}
+              resultGradeColor={resultGradeColor}
+              judgeGrade={judgeResult?.grade ?? "-"}
+              totalScore={gameData ? totalScore : "-"}
+              matchedPercentLabel={formatMatchedPercent(judgeResult?.matchedPercent ?? null)}
+              selectedSkillMeta={selectedSkillMeta}
+              rolledSkillColors={rolledSkillColors}
+              skillScores={skillScores}
+              filteredSkills={filteredSkills}
+              resolvedSkill1={resolvedSkill1}
+              resolvedSkill2={resolvedSkill2}
+              resolvedSkill3={resolvedSkill3}
+              level1={level1}
+              level2={level2}
+              level3={level3}
+              simRollCount={simRollCount}
+              simBestScore={simBestScore}
+              simLastMessage={simLastMessage}
+              targetGrade={targetGrade}
+              targetGradeOptions={TARGET_GRADE_OPTIONS}
+              impactSessionRollCount={impactSessionRollCount}
+              impactLastSuccessRollCount={impactLastSuccessRollCount}
+              impactLastMessage={impactLastMessage}
+              encouragementMessage={encouragementMessage}
+              summaryMessage={summaryMessage}
+              cardTypeOptions={CARD_TYPE_OPTIONS}
+              resultGradeGuide={RESULT_GRADE_GUIDE}
+              getSkillScoreLabel={getSkillScoreLabel}
+              setSkill1={setSkill1}
+              setSkill2={setSkill2}
+              setSkill3={setSkill3}
+              setLevel1={setLevel1}
+              setLevel2={setLevel2}
+              setLevel3={setLevel3}
+              setTargetGrade={setTargetGrade}
+              onModeChange={handleModeChange}
+              onHitterPositionGroupChange={handleHitterPositionGroupChange}
+              onCardTypeChange={handleCardTypeChange}
+              onReset={handleReset}
+              onToolViewChange={handleToolViewChange}
+              onRollOnce={handleAdvancedSkillChangeRoll}
+              onAutoRoll={handleAutoRollToTarget}
+              onImpactRoll={handleImpactChangeRoll}
+              resetImpactChangeSession={resetImpactChangeSession}
+            />
           )}
-            </main>
-          </div>
-        </div>
+        </AppChrome>
 
         <footer className="app-footer">made by 우주</footer>
         <Analytics />
