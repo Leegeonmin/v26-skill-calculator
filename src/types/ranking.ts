@@ -65,3 +65,14 @@ export type RankingRow = {
   score_reached_at: string;
   rank_position: number;
 };
+
+export type EndedSeasonSummary = {
+  season_id: string;
+  season_name: string;
+  season_starts_at: string;
+  season_ends_at: string;
+  category: RankingCategory;
+  current_skills: StoredSkillSet;
+  current_score: number;
+  rank_position: number;
+};

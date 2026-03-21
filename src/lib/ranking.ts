@@ -2,6 +2,7 @@ import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { getSupabaseClient } from "./supabase";
 import type {
   DailyRollLog,
+  EndedSeasonSummary,
   PendingDailyRoll,
   RankingCategory,
   RankingRow,
@@ -264,4 +265,145 @@ export async function getSeasonRankings(
   }
 
   return (data ?? []) as RankingRow[];
+}
+
+export async function getMySeasonRanking(
+  seasonId: string,
+  category: RankingCategory
+): Promise<RankingRow | null> {
+  const supabase = requireSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const response = await supabase
+    .from("season_rankings")
+    .select("*")
+    .eq("season_id", seasonId)
+    .eq("category", category)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  return unwrapSingle(response as PostgrestSingleResponse<RankingRow | null>);
+}
+
+export async function getLatestEndedSeasonSummary(): Promise<EndedSeasonSummary | null> {
+  const supabase = requireSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const { data: entryData, error: entryError } = await supabase
+    .from("season_entries")
+    .select(
+      `
+      season_id,
+      category,
+      current_skills,
+      current_score,
+      seasons!inner (
+        id,
+        name,
+        starts_at,
+        ends_at,
+        status
+      )
+    `
+    )
+    .eq("user_id", user.id)
+    .eq("seasons.status", "ended")
+    .order("ends_at", { ascending: false, referencedTable: "seasons" })
+    .limit(1)
+    .maybeSingle();
+
+  if (entryError) {
+    throw entryError;
+  }
+
+  const latestEntry = entryData as
+    | {
+        season_id: string;
+        category: RankingCategory;
+        current_skills: StoredSkillSet;
+        current_score: number;
+        seasons: {
+          id: string;
+          name: string;
+          starts_at: string;
+          ends_at: string;
+          status: string;
+        };
+      }
+    | null;
+
+  if (!latestEntry?.seasons?.id) {
+    return null;
+  }
+
+  const ranking = await getMySeasonRanking(latestEntry.season_id, latestEntry.category);
+  if (!ranking) {
+    return null;
+  }
+
+  return {
+    season_id: latestEntry.seasons.id,
+    season_name: latestEntry.seasons.name,
+    season_starts_at: latestEntry.seasons.starts_at,
+    season_ends_at: latestEntry.seasons.ends_at,
+    category: latestEntry.category,
+    current_skills: latestEntry.current_skills,
+    current_score: latestEntry.current_score,
+    rank_position: ranking.rank_position,
+  };
+}
+
+export async function getLastSeenSettlementSeasonId(): Promise<string | null> {
+  const supabase = requireSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const response = await supabase
+    .from("profiles")
+    .select("last_seen_settlement_season_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const profile = unwrapSingle(
+    response as PostgrestSingleResponse<{ last_seen_settlement_season_id: string | null } | null>
+  );
+
+  return profile?.last_seen_settlement_season_id ?? null;
+}
+
+export async function setLastSeenSettlementSeasonId(seasonId: string): Promise<void> {
+  const supabase = requireSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("AUTH_REQUIRED");
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ last_seen_settlement_season_id: seasonId })
+    .eq("id", user.id);
+
+  if (error) {
+    throw error;
+  }
 }

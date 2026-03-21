@@ -6,15 +6,20 @@ import {
   createInitialSeason,
   createPendingDailyRankRoll,
   getPendingDailyRoll,
+  getLatestEndedSeasonSummary,
+  getLastSeenSettlementSeasonId,
+  getMySeasonRanking,
   getSeasonWithFallback,
   getMySeasonEntry,
   getSeasonRankings,
+  setLastSeenSettlementSeasonId,
   getTodayRollLog,
   joinSeason,
   resolvePendingDailyRankRoll,
 } from "../lib/ranking";
 import { signInWithGoogle } from "../lib/auth";
 import type {
+  EndedSeasonSummary,
   PendingDailyRoll,
   RankingCategory,
   RankingRow,
@@ -146,24 +151,88 @@ function scoreTableValue(
   return typeof score === "number" ? score : null;
 }
 
+function calculateVisibleSkillScore(
+  category: RankingCategory,
+  skillSet: StoredSkillSet | null,
+  revealedCount: number
+): number | null {
+  if (!skillSet || revealedCount <= 0) {
+    return null;
+  }
+
+  const gameData = getGameDataSet({
+    playerType: category === "hitter" ? "hitter" : "pitcher",
+    pitcherRole: "starter",
+  });
+
+  if (!gameData) {
+    return null;
+  }
+
+  return skillSet.skillIds.slice(0, revealedCount).reduce((sum, skillId, index) => {
+    const level = skillSet.skillLevels[index] as SkillLevel;
+    return sum + (scoreTableValue(gameData.scoreTable, skillId, level) ?? 0);
+  }, 0);
+}
+
 function SkillSetPreview({
   category,
   skillSet,
+  revealedCount,
+  highlightedRevealIndex,
+  interactive = false,
+  onRevealNext,
 }: {
   category: RankingCategory;
   skillSet: StoredSkillSet;
+  revealedCount?: number;
+  highlightedRevealIndex?: number | null;
+  interactive?: boolean;
+  onRevealNext?: () => void;
 }) {
   const items = getSkillDisplayItems(category, skillSet);
+  const visibleCount = revealedCount ?? items.length;
 
   return (
     <div className="ranking-skill-preview">
-      {items.map((item) => (
-        <div key={item.key} className="rolled-skill-card">
-          <div className="rolled-skill-label">{item.label}</div>
-          <strong style={{ color: item.color }}>{item.name}</strong>
-          <div className="rolled-skill-score">{item.scoreLabel}</div>
-        </div>
-      ))}
+      {items.map((item, index) => {
+        const isVisible = index < visibleCount;
+
+        if (!isVisible) {
+          return (
+            <button
+              key={item.key}
+              type="button"
+              className={`rolled-skill-card rolled-skill-card-hidden ${
+                interactive ? "interactive" : ""
+              }`}
+              onClick={() => {
+                if (interactive) {
+                  onRevealNext?.();
+                }
+              }}
+              disabled={!interactive}
+            >
+              <div className="rolled-skill-label">{item.label}</div>
+              <strong>?</strong>
+              <div className="rolled-skill-score">클릭해서 공개</div>
+            </button>
+          );
+        }
+
+        return (
+          <div
+            key={item.key}
+            className={`rolled-skill-card ${
+              highlightedRevealIndex === index ? "rolled-skill-card-reveal" : ""
+            }`}
+          >
+            <div className="rolled-skill-label">{item.label}</div>
+            <strong style={{ color: item.color }}>{item.name}</strong>
+            <div className="rolled-skill-score">{item.scoreLabel}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -277,20 +346,100 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   const [rolledSkillSet, setRolledSkillSet] = useState<StoredSkillSet | null>(null);
   const [rolledScore, setRolledScore] = useState<number | null>(null);
   const [pendingRoll, setPendingRoll] = useState<PendingDailyRoll | null>(null);
+  const [revealedRollSkillCount, setRevealedRollSkillCount] = useState(0);
+  const [highlightedRevealIndex, setHighlightedRevealIndex] = useState<number | null>(null);
+  const [initialRevealSkillSet, setInitialRevealSkillSet] = useState<StoredSkillSet | null>(null);
+  const [initialRevealCategory, setInitialRevealCategory] = useState<RankingCategory | null>(null);
+  const [revealedInitialSkillCount, setRevealedInitialSkillCount] = useState(0);
+  const [highlightedInitialRevealIndex, setHighlightedInitialRevealIndex] = useState<number | null>(
+    null
+  );
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
-
+  const [myRankingRow, setMyRankingRow] = useState<RankingRow | null>(null);
+  const [endedSeasonSummary, setEndedSeasonSummary] = useState<EndedSeasonSummary | null>(null);
   const userId = authSession?.user.id ?? null;
-  const myRankingRow = useMemo(
-    () => rankings.find((row) => row.user_id === userId) ?? null,
-    [rankings, userId]
-  );
   const activeParticipationCategory = entry?.category ?? participationCategory;
   const showSettlementNotice = useMemo(() => isSettlementWindowKst(), []);
   const participationLabel = CATEGORY_LABELS[participationCategory];
+  const visibleRolledScore = useMemo(
+    () =>
+      entry
+        ? calculateVisibleSkillScore(entry.category, rolledSkillSet, revealedRollSkillCount)
+        : null,
+    [entry, revealedRollSkillCount, rolledSkillSet]
+  );
+  const visibleInitialRevealScore = useMemo(
+    () =>
+      initialRevealCategory
+        ? calculateVisibleSkillScore(
+            initialRevealCategory,
+            initialRevealSkillSet,
+            revealedInitialSkillCount
+          )
+        : null,
+    [initialRevealCategory, initialRevealSkillSet, revealedInitialSkillCount]
+  );
   const rollScoreDelta =
-    entry && rolledScore !== null ? Number((rolledScore - entry.current_score).toFixed(2)) : null;
+    entry && visibleRolledScore !== null
+      ? Number((visibleRolledScore - entry.current_score).toFixed(2))
+      : null;
   const isRolledResultBetter = rollScoreDelta !== null && rollScoreDelta > 0;
+  const todayUsageLabel = todayRollLogId
+    ? "사용 완료"
+    : pendingRoll
+    ? "결과 처리 중"
+    : "사용 가능";
+
+  useEffect(() => {
+    if (rolledSkillSet) {
+      setRevealedRollSkillCount(1);
+      setHighlightedRevealIndex(0);
+      return;
+    }
+
+    setRevealedRollSkillCount(0);
+    setHighlightedRevealIndex(null);
+  }, [rolledSkillSet]);
+
+  useEffect(() => {
+    if (highlightedRevealIndex === null) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setHighlightedRevealIndex((current) =>
+        current === highlightedRevealIndex ? null : current
+      );
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [highlightedRevealIndex]);
+
+  useEffect(() => {
+    if (initialRevealSkillSet) {
+      setRevealedInitialSkillCount(1);
+      setHighlightedInitialRevealIndex(0);
+      return;
+    }
+
+    setRevealedInitialSkillCount(0);
+    setHighlightedInitialRevealIndex(null);
+  }, [initialRevealSkillSet]);
+
+  useEffect(() => {
+    if (highlightedInitialRevealIndex === null) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setHighlightedInitialRevealIndex((current) =>
+        current === highlightedInitialRevealIndex ? null : current
+      );
+    }, 700);
+
+    return () => window.clearTimeout(timeout);
+  }, [highlightedInitialRevealIndex]);
 
   useEffect(() => {
     let isMounted = true;
@@ -318,20 +467,23 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         if (!season) {
           setEntry(null);
           setRankings([]);
+          setMyRankingRow(null);
           setTodayRollLogId(null);
           setPendingRoll(null);
           return;
         }
 
-        const [nextEntry, nextRankings] = await Promise.all([
+        const [nextEntry, nextRankings, nextMyRankingRow] = await Promise.all([
           authSession ? getMySeasonEntry(season.id) : Promise.resolve(null),
           getSeasonRankings(season.id, leaderboardCategory),
+          authSession ? getMySeasonRanking(season.id, leaderboardCategory) : Promise.resolve(null),
         ]);
 
         if (!isMounted) return;
 
         setEntry(nextEntry);
         setRankings(nextRankings);
+        setMyRankingRow(nextMyRankingRow);
         if (nextEntry) {
           const [nextTodayRollLog, nextPendingRoll] = await Promise.all([
             getTodayRollLog(nextEntry.id),
@@ -372,6 +524,41 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   }, [authSession, leaderboardCategory, supabaseReady]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadEndedSeasonSummary() {
+      if (!supabaseReady || !authSession || showSettlementNotice) {
+        if (isMounted) {
+          setEndedSeasonSummary(null);
+        }
+        return;
+      }
+
+      try {
+        const [summary, lastSeenSeasonId] = await Promise.all([
+          getLatestEndedSeasonSummary(),
+          getLastSeenSettlementSeasonId(),
+        ]);
+        if (!isMounted || !summary) {
+          return;
+        }
+
+        setEndedSeasonSummary(lastSeenSeasonId === summary.season_id ? null : summary);
+      } catch {
+        if (isMounted) {
+          setEndedSeasonSummary(null);
+        }
+      }
+    }
+
+    void loadEndedSeasonSummary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authSession, showSettlementNotice, supabaseReady]);
+
+  useEffect(() => {
     if (
       !pendingRoll ||
       !authSession ||
@@ -388,14 +575,16 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
       try {
         const nextEntry = await resolvePendingDailyRankRoll(entry.id, "keep");
 
-        const [nextRankings, nextTodayRollLog, nextPendingRoll] = await Promise.all([
+        const [nextRankings, nextTodayRollLog, nextPendingRoll, nextMyRanking] = await Promise.all([
           getSeasonRankings(entry.season_id, leaderboardCategory),
           getTodayRollLog(entry.id),
           getPendingDailyRoll(entry.id),
+          getMySeasonRanking(entry.season_id, leaderboardCategory),
         ]);
 
         setEntry(nextEntry);
         setRankings(nextRankings);
+        setMyRankingRow(nextMyRanking);
         setTodayRollLogId(nextTodayRollLog?.id ?? null);
         setPendingRoll(nextPendingRoll);
         setRolledSkillSet(null);
@@ -421,15 +610,21 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     try {
       const { skillSet, score } = buildInitialSkillSet(participationCategory);
       const nextEntry = await joinSeason(participationCategory, skillSet, score);
-      const nextRankings = await getSeasonRankings(currentSeason.id, leaderboardCategory);
+      const [nextRankings, nextMyRanking] = await Promise.all([
+        getSeasonRankings(currentSeason.id, leaderboardCategory),
+        getMySeasonRanking(currentSeason.id, leaderboardCategory),
+      ]);
 
       setEntry(nextEntry);
       setParticipationCategory(nextEntry.category);
       setRankings(nextRankings);
+      setMyRankingRow(nextMyRanking);
       setTodayRollLogId(null);
       setPendingRoll(null);
       setRolledSkillSet(null);
       setRolledScore(null);
+      setInitialRevealCategory(nextEntry.category);
+      setInitialRevealSkillSet(nextEntry.current_skills);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "시즌 참가에 실패했습니다.");
     } finally {
@@ -499,14 +694,16 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     try {
       const nextEntry = await resolvePendingDailyRankRoll(entry.id, selectedResult);
 
-      const [nextRankings, nextTodayRollLog, nextPendingRoll] = await Promise.all([
+      const [nextRankings, nextTodayRollLog, nextPendingRoll, nextMyRanking] = await Promise.all([
         getSeasonRankings(currentSeason.id, leaderboardCategory),
         getTodayRollLog(entry.id),
         getPendingDailyRoll(entry.id),
+        getMySeasonRanking(currentSeason.id, leaderboardCategory),
       ]);
 
       setEntry(nextEntry);
       setRankings(nextRankings);
+      setMyRankingRow(nextMyRanking);
       setTodayRollLogId(nextTodayRollLog?.id ?? null);
       setPendingRoll(nextPendingRoll);
       setRolledSkillSet(null);
@@ -711,7 +908,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
               </div>
               <div className="ranking-entry-row">
                 <span>오늘 사용 여부</span>
-                <strong>{todayRollLogId ? "사용 완료" : "사용 가능"}</strong>
+                <strong>{todayUsageLabel}</strong>
               </div>
               <div className="ranking-entry-row ranking-entry-row-skill">
                 <span>현재 스킬</span>
@@ -823,6 +1020,69 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         </section>
       </div>
 
+      {endedSeasonSummary && (
+        <div className="modal-backdrop" role="presentation">
+          <div
+            className="modal-card ranking-roll-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ranking-ended-season-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="modal-eyebrow">Weekly Settlement</p>
+            <h2 id="ranking-ended-season-title">지난 시즌 결과가 정산되었습니다</h2>
+            <p className="modal-copy">
+              <strong>{endedSeasonSummary.season_name}</strong> 결과입니다. 이번 시즌 참가 전에 지난 시즌 마감 기록을 확인하세요.
+            </p>
+
+            <div className="ranking-roll-modal-stack">
+              <section className="ranking-roll-modal-section">
+                <div className="ranking-roll-modal-head">
+                  <span>시즌 정보</span>
+                  <strong>{endedSeasonSummary.rank_position}위</strong>
+                </div>
+                <div className="ranking-entry-box">
+                  <div className="ranking-entry-row">
+                    <span>참가 카테고리</span>
+                    <strong>{CATEGORY_LABELS[endedSeasonSummary.category]}</strong>
+                  </div>
+                  <div className="ranking-entry-row">
+                    <span>최종 점수</span>
+                    <strong>{endedSeasonSummary.current_score}점</strong>
+                  </div>
+                  <div className="ranking-entry-row">
+                    <span>시즌 기간</span>
+                    <strong>
+                      {formatSeasonRange(
+                        endedSeasonSummary.season_starts_at,
+                        endedSeasonSummary.season_ends_at
+                      )}
+                    </strong>
+                  </div>
+                  <div className="ranking-entry-row ranking-entry-row-skill">
+                    <span>최종 스킬</span>
+                    <SkillSetPreview
+                      category={endedSeasonSummary.category}
+                      skillSet={endedSeasonSummary.current_skills}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="primary-btn ranking-roll-modal-action modal-choice-btn"
+                  onClick={() => {
+                    void setLastSeenSettlementSeasonId(endedSeasonSummary.season_id).catch(() => {});
+                    setEndedSeasonSummary(null);
+                  }}
+                >
+                  확인
+                </button>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showLoginPrompt && (
         <div className="modal-backdrop" role="presentation" onClick={() => setShowLoginPrompt(false)}>
           <div
@@ -894,6 +1154,62 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         </div>
       )}
 
+      {initialRevealSkillSet && initialRevealCategory && (
+        <div className="modal-backdrop" role="presentation">
+          <div
+            className="modal-card ranking-roll-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ranking-initial-reveal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="modal-eyebrow">Season Entry</p>
+            <h2 id="ranking-initial-reveal-title">초기 스킬 공개</h2>
+            <p className="modal-copy">
+              이번 시즌에 배정된 시작 스킬입니다. 한 칸씩 열어서 초기 조합을 확인하세요.
+            </p>
+
+            <div className="ranking-roll-modal-stack">
+              <section className="ranking-roll-modal-section">
+                <div className="ranking-roll-modal-head">
+                  <span>{CATEGORY_LABELS[initialRevealCategory]} 시작 조합</span>
+                  <div className="ranking-roll-modal-score-wrap">
+                    <strong>
+                      {visibleInitialRevealScore !== null ? `${visibleInitialRevealScore}점` : "-점"}
+                    </strong>
+                  </div>
+                </div>
+                <SkillSetPreview
+                  category={initialRevealCategory}
+                  skillSet={initialRevealSkillSet}
+                  revealedCount={revealedInitialSkillCount}
+                  highlightedRevealIndex={highlightedInitialRevealIndex}
+                  interactive={revealedInitialSkillCount < 3}
+                  onRevealNext={() => {
+                    setRevealedInitialSkillCount((count) => {
+                      const nextCount = Math.min(count + 1, 3);
+                      setHighlightedInitialRevealIndex(nextCount - 1);
+                      return nextCount;
+                    });
+                  }}
+                />
+                <button
+                  type="button"
+                  className="primary-btn ranking-roll-modal-action modal-choice-btn"
+                  onClick={() => {
+                    setInitialRevealSkillSet(null);
+                    setInitialRevealCategory(null);
+                  }}
+                  disabled={revealedInitialSkillCount < 3}
+                >
+                  {revealedInitialSkillCount < 3 ? "모든 스킬 공개 후 확인 가능" : "확인"}
+                </button>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
+
       {authSession && entry && rolledSkillSet && rolledScore !== null && (
         <div className="modal-backdrop" role="presentation">
           <div
@@ -937,7 +1253,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                 <div className="ranking-roll-modal-head">
                   <span>변경 스킬</span>
                   <div className="ranking-roll-modal-score-wrap">
-                    <strong>{rolledScore}점</strong>
+                    <strong>{visibleRolledScore !== null ? `${visibleRolledScore}점` : "-점"}</strong>
                     {rollScoreDelta !== null && (
                       <span
                         className={`ranking-roll-delta ${
@@ -953,17 +1269,32 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                     )}
                   </div>
                 </div>
-                <SkillSetPreview category={entry.category} skillSet={rolledSkillSet} />
+                <SkillSetPreview
+                  category={entry.category}
+                  skillSet={rolledSkillSet}
+                  revealedCount={revealedRollSkillCount}
+                  highlightedRevealIndex={highlightedRevealIndex}
+                  interactive={revealedRollSkillCount < 3}
+                  onRevealNext={() => {
+                    setRevealedRollSkillCount((count) => {
+                      const nextCount = Math.min(count + 1, 3);
+                      setHighlightedRevealIndex(nextCount - 1);
+                      return nextCount;
+                    });
+                  }}
+                />
                 <button
                   type="button"
                   className="primary-btn ranking-roll-modal-action modal-choice-btn"
                   onClick={() => void handleSelectResult("replace")}
-                  disabled={isChoosing || showSettlementNotice}
+                  disabled={isChoosing || showSettlementNotice || revealedRollSkillCount < 3}
                 >
                   {showSettlementNotice
                     ? "집계 중"
                     : isChoosing
                     ? "처리 중..."
+                    : revealedRollSkillCount < 3
+                    ? "모든 스킬 공개 후 채택 가능"
                     : "변경 스킬 채택"}
                 </button>
               </section>
