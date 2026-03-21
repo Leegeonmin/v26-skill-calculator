@@ -194,7 +194,8 @@ export async function getSeasonRankings(
     .select("*")
     .eq("season_id", seasonId)
     .eq("category", category)
-    .order("rank_position", { ascending: true });
+    .order("rank_position", { ascending: true })
+    .limit(10);
 
   if (error) {
     throw error;

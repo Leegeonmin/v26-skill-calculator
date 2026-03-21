@@ -111,9 +111,6 @@ function formatReachedAt(value: string): string {
   return new Date(value).toLocaleString("ko-KR", {
     month: "numeric",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
     timeZone: "Asia/Seoul",
   });
 }
@@ -188,16 +185,30 @@ function SkillSetList({
   skillSet: StoredSkillSet;
 }) {
   const items = getSkillDisplayItems(category, skillSet);
+  const primaryItem = items[0];
+  const extraCount = Math.max(items.length - 1, 0);
+  const tooltipLabel = items.map((item) => `${item.name} (${item.scoreLabel})`).join("\n");
 
   return (
-    <div className="ranking-skill-list">
-      {items.map((item) => (
-        <div key={item.key} className="ranking-skill-list-item">
-          <strong style={{ color: item.color }}>{item.name}</strong>
-          <span>{item.scoreLabel}</span>
+    <details className="ranking-skill-disclosure">
+      <summary className="ranking-skill-summary" title={tooltipLabel}>
+        <div className="ranking-skill-summary-main">
+          <strong style={{ color: primaryItem?.color ?? "#172033" }}>
+            {primaryItem?.name ?? "-"}
+          </strong>
         </div>
-      ))}
-    </div>
+        <span className="ranking-skill-summary-tail">{extraCount > 0 ? `+${extraCount}` : "보기"}</span>
+      </summary>
+
+      <div className="ranking-skill-list">
+        {items.map((item) => (
+          <div key={item.key} className="ranking-skill-list-item">
+            <strong style={{ color: item.color }}>{item.name}</strong>
+            <span>{item.scoreLabel}</span>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -838,9 +849,12 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                   </tr>
                 ) : (
                   rankings.map((row) => (
-                    <tr key={row.entry_id}>
+                    <tr
+                      key={row.entry_id}
+                      className={row.user_id === userId ? "ranking-row-highlight" : ""}
+                    >
                       <td>{row.rank_position}</td>
-                      <td>{row.display_name ?? "자동 닉네임"}</td>
+                      <td className="ranking-nickname-cell">{row.display_name ?? "자동 닉네임"}</td>
                       <td>{row.current_score}</td>
                       <td className="ranking-skill-cell">
                         <SkillSetList category={row.category} skillSet={row.current_skills} />
