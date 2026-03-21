@@ -272,6 +272,38 @@ export async function getSeasonRankings(
   return (data ?? []) as RankingRow[];
 }
 
+export async function getSeasonParticipantCounts(
+  seasonId: string
+): Promise<Record<RankingCategory, number>> {
+  const supabase = requireSupabase();
+
+  const [hitterResponse, pitcherResponse] = await Promise.all([
+    supabase
+      .from("season_entries")
+      .select("id", { count: "exact", head: true })
+      .eq("season_id", seasonId)
+      .eq("category", "hitter"),
+    supabase
+      .from("season_entries")
+      .select("id", { count: "exact", head: true })
+      .eq("season_id", seasonId)
+      .eq("category", "pitcher_starter"),
+  ]);
+
+  if (hitterResponse.error) {
+    throw hitterResponse.error;
+  }
+
+  if (pitcherResponse.error) {
+    throw pitcherResponse.error;
+  }
+
+  return {
+    hitter: hitterResponse.count ?? 0,
+    pitcher_starter: pitcherResponse.count ?? 0,
+  };
+}
+
 export async function getMySeasonRanking(
   seasonId: string,
   category: RankingCategory

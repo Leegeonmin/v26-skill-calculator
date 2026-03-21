@@ -9,6 +9,7 @@ import {
   getLatestEndedSeasonSummary,
   getLastSeenSettlementSeasonId,
   getMySeasonRanking,
+  getSeasonParticipantCounts,
   getSeasonWithFallback,
   getMySeasonEntry,
   getSeasonRankings,
@@ -105,8 +106,10 @@ function formatSeasonRange(startsAt: string, endsAt: string): string {
 
 function formatReachedAt(value: string): string {
   return new Date(value).toLocaleString("ko-KR", {
-    month: "numeric",
     day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
     timeZone: "Asia/Seoul",
   });
 }
@@ -366,6 +369,10 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [myRankingRow, setMyRankingRow] = useState<RankingRow | null>(null);
   const [endedSeasonSummary, setEndedSeasonSummary] = useState<EndedSeasonSummary | null>(null);
+  const [participantCounts, setParticipantCounts] = useState<Record<RankingCategory, number>>({
+    hitter: 0,
+    pitcher_starter: 0,
+  });
   const userId = authSession?.user.id ?? null;
   const activeParticipationCategory = entry?.category ?? participationCategory;
   const showSettlementNotice = useMemo(() => isSettlementWindowKst(), []);
@@ -481,10 +488,11 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
           return;
         }
 
-        const [nextEntry, nextRankings, nextMyRankingRow] = await Promise.all([
+        const [nextEntry, nextRankings, nextMyRankingRow, nextParticipantCounts] = await Promise.all([
           authSession ? getMySeasonEntry(season.id) : Promise.resolve(null),
           getSeasonRankings(season.id, leaderboardCategory),
           authSession ? getMySeasonRanking(season.id, leaderboardCategory) : Promise.resolve(null),
+          getSeasonParticipantCounts(season.id),
         ]);
 
         if (!isMounted) return;
@@ -492,6 +500,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         setEntry(nextEntry);
         setRankings(nextRankings);
         setMyRankingRow(nextMyRankingRow);
+        setParticipantCounts(nextParticipantCounts);
         if (nextEntry) {
           const [nextTodayRollLog, nextPendingRoll] = await Promise.all([
             getTodayRollLog(nextEntry.id),
@@ -592,15 +601,17 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     try {
       const { skillSet, score } = buildInitialSkillSet(participationCategory);
       const nextEntry = await joinSeason(participationCategory, skillSet, score);
-      const [nextRankings, nextMyRanking] = await Promise.all([
+      const [nextRankings, nextMyRanking, nextParticipantCounts] = await Promise.all([
         getSeasonRankings(currentSeason.id, leaderboardCategory),
         getMySeasonRanking(currentSeason.id, leaderboardCategory),
+        getSeasonParticipantCounts(currentSeason.id),
       ]);
 
       setEntry(nextEntry);
       setParticipationCategory(nextEntry.category);
       setRankings(nextRankings);
       setMyRankingRow(nextMyRanking);
+      setParticipantCounts(nextParticipantCounts);
       setTodayRollLogId(null);
       setPendingRoll(null);
       setRolledSkillSet(null);
@@ -765,6 +776,12 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             <div className="ranking-season-meta-item">
               <span>진행 방식</span>
               <strong>매주 월요일 시작 / 일요일 종료</strong>
+            </div>
+            <div className="ranking-season-meta-item">
+              <span>참가 현황</span>
+              <strong>
+                타자 {participantCounts.hitter}명 / 투수 {participantCounts.pitcher_starter}명
+              </strong>
             </div>
           </div>
         )}

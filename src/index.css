@@ -764,6 +764,8 @@ select {
 
 .ranking-table-wrap {
   overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 88px;
 }
 
 .ranking-table {
@@ -771,7 +773,7 @@ select {
   table-layout: fixed;
   border-collapse: collapse;
   margin-top: 16px;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 18px;
   background: rgba(248, 250, 255, 0.74);
 }
