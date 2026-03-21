@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { CARD_TYPE_LABELS } from "./data/cardTypes";
 import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS, SKILL_GRADE_COLORS } from "./data/uiColors";
@@ -817,6 +818,7 @@ function App() {
             onGoHome={handleGoHome}
           />
           <Analytics />
+          <SpeedInsights  />
         </div>
       </div>
     );
