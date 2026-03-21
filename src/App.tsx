@@ -239,6 +239,7 @@ function App() {
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
   const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
   const loggedToolViewsRef = useRef<Set<string>>(new Set());
+  const lastProfileSyncKeyRef = useRef<string | null>(null);
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -410,6 +411,36 @@ function App() {
     }
 
     let isMounted = true;
+    const syncProfileForSession = async (session: Session | null) => {
+      if (!session) {
+        lastProfileSyncKeyRef.current = null;
+        setProfileDisplayName(null);
+        return;
+      }
+
+      const syncKey = `${session.user.id}:${session.access_token}`;
+      if (lastProfileSyncKeyRef.current === syncKey) {
+        return;
+      }
+
+      lastProfileSyncKeyRef.current = syncKey;
+
+      try {
+        await ensureProfile(session);
+        const profile = await getMyProfile();
+        if (!isMounted) return;
+        setAuthError(null);
+        setProfileDisplayName(profile?.display_name?.trim() || null);
+      } catch (profileError) {
+        if (!isMounted) return;
+        lastProfileSyncKeyRef.current = null;
+        setAuthError(
+          profileError instanceof Error
+            ? profileError.message
+            : "프로필 정보를 저장하지 못했습니다."
+        );
+      }
+    };
 
     supabase.auth.getSession().then(({ data, error }) => {
       if (!isMounted) return;
@@ -420,26 +451,7 @@ function App() {
       }
 
       setAuthSession(data.session);
-
-      if (data.session) {
-        void (async () => {
-          try {
-            await ensureProfile(data.session);
-            const profile = await getMyProfile();
-            if (!isMounted) return;
-            setProfileDisplayName(profile?.display_name?.trim() || null);
-          } catch (profileError) {
-            if (!isMounted) return;
-            setAuthError(
-              profileError instanceof Error
-                ? profileError.message
-                : "프로필 정보를 저장하지 못했습니다."
-            );
-          }
-        })();
-      } else {
-        setProfileDisplayName(null);
-      }
+      void syncProfileForSession(data.session);
     });
 
     const {
@@ -447,26 +459,7 @@ function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
       setAuthSession(session);
-
-      if (session) {
-        void (async () => {
-          try {
-            await ensureProfile(session);
-            const profile = await getMyProfile();
-            if (!isMounted) return;
-            setProfileDisplayName(profile?.display_name?.trim() || null);
-          } catch (profileError) {
-            if (!isMounted) return;
-            setAuthError(
-              profileError instanceof Error
-                ? profileError.message
-                : "프로필 정보를 저장하지 못했습니다."
-            );
-          }
-        })();
-      } else {
-        setProfileDisplayName(null);
-      }
+      void syncProfileForSession(session);
     });
 
     return () => {

@@ -125,20 +125,6 @@ export default function AdminView({
         </section>
 
         <section className="admin-panel">
-          <h2>방문 세션</h2>
-          <p className="admin-metric">{statsLoading ? "-" : stats?.unique_sessions ?? 0}</p>
-          <p>브라우저 세션 기준으로 몇 번 들어왔는지 집계한 값입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>세션당 평균 시뮬</h2>
-          <p className="admin-metric">
-            {statsLoading ? "-" : stats?.avg_actions_per_session?.toFixed(2) ?? "-"}
-          </p>
-          <p>한 번 들어온 사용자가 평균적으로 몇 번 시뮬 버튼을 눌렀는지 보여줍니다.</p>
-        </section>
-
-        <section className="admin-panel">
           <h2>수동 고스변</h2>
           <p className="admin-metric">{statsLoading ? "-" : stats?.advanced_manual_rolls ?? 0}</p>
           <p>고스변 시뮬에서 직접 1회 실행 버튼이 눌린 누적 횟수입니다.</p>
