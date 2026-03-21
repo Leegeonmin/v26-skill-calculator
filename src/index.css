@@ -1813,6 +1813,32 @@ input {
   font-size: 0.86rem;
 }
 
+.support-contact-banner {
+  position: fixed;
+  left: 20px;
+  bottom: 18px;
+  z-index: 40;
+  padding: 10px 14px;
+  border: 1px solid rgba(185, 198, 224, 0.9);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(29, 44, 77, 0.08);
+  color: #4c5f83;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  backdrop-filter: blur(10px);
+}
+
+.support-contact-banner a {
+  color: #1769c7;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.support-contact-banner a:hover {
+  text-decoration: underline;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2411,5 +2437,13 @@ input {
   .rolled-skill-score {
     margin-top: 4px;
     font-size: 0.8rem;
+  }
+
+  .support-contact-banner {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    font-size: 0.82rem;
+    text-align: center;
   }
 }

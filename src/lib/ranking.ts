@@ -160,7 +160,12 @@ export async function getPendingDailyRoll(entryId: string): Promise<PendingDaily
   }
 
   const pending = Array.isArray(data) ? data[0] : data;
-  return (pending as PendingDailyRoll | null) ?? null;
+
+  if (!pending || typeof pending !== "object" || !("id" in pending) || !pending.id) {
+    return null;
+  }
+
+  return pending as PendingDailyRoll;
 }
 
 export async function joinSeason(

@@ -905,6 +905,10 @@ function App() {
           )}
         </AppChrome>
 
+        <div className="support-contact-banner">
+          버그나 필요한 기능이 있으면 <a href="mailto:leeqwezxcasd@gmail.com">leeqwezxcasd@gmail.com</a>
+          로 보내주세요.
+        </div>
         <footer className="app-footer">made by 우주</footer>
         <Analytics />
       </div>

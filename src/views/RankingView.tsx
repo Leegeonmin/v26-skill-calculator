@@ -111,6 +111,14 @@ function formatReachedAt(value: string): string {
   });
 }
 
+function formatScore(value: number | null | undefined): string {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "-";
+  }
+
+  return Number(value.toFixed(2)).toString();
+}
+
 function getSkillDisplayItems(category: RankingCategory, skillSet: StoredSkillSet) {
   const gameData = getGameDataSet({
     playerType: category === "hitter" ? "hitter" : "pitcher",
@@ -136,7 +144,7 @@ function getSkillDisplayItems(category: RankingCategory, skillSet: StoredSkillSe
       key: `${skillId}-${index}`,
       label: `스킬 ${index + 1}`,
       name: skill?.name ?? skillId ?? "-",
-      scoreLabel: score !== null ? `점수 ${score}` : "점수 -",
+      scoreLabel: score !== null ? `점수 ${formatScore(score)}` : "점수 -",
       color: skill ? SKILL_GRADE_COLORS[skill.grade] : "#172033",
     };
   });
@@ -564,42 +572,16 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
       !authSession ||
       !entry ||
       todayRollLogId ||
-      rolledSkillSet ||
       pendingRoll.entry_id !== entry.id ||
       pendingRoll.roll_date_kst !== getCurrentKstDateKey()
     ) {
       return;
     }
 
-    void (async () => {
-      try {
-        const nextEntry = await resolvePendingDailyRankRoll(entry.id, "keep");
-
-        const [nextRankings, nextTodayRollLog, nextPendingRoll, nextMyRanking] = await Promise.all([
-          getSeasonRankings(entry.season_id, leaderboardCategory),
-          getTodayRollLog(entry.id),
-          getPendingDailyRoll(entry.id),
-          getMySeasonRanking(entry.season_id, leaderboardCategory),
-        ]);
-
-        setEntry(nextEntry);
-        setRankings(nextRankings);
-        setMyRankingRow(nextMyRanking);
-        setTodayRollLogId(nextTodayRollLog?.id ?? null);
-        setPendingRoll(nextPendingRoll);
-        setRolledSkillSet(null);
-        setRolledScore(null);
-        setError("다른 탭 또는 새로고침이 감지되어 기존 스킬 유지로 처리되었습니다.");
-      } catch (nextError) {
-        setPendingRoll(null);
-        setError(
-          nextError instanceof Error
-            ? nextError.message
-            : "보류 중인 스킬 변경을 기존 스킬 유지로 처리하지 못했습니다."
-        );
-      }
-    })();
-  }, [authSession, entry, leaderboardCategory, pendingRoll, rolledSkillSet, todayRollLogId]);
+    setRolledSkillSet(pendingRoll.rolled_skills);
+    setRolledScore(pendingRoll.rolled_score);
+    setError(null);
+  }, [authSession, entry, pendingRoll, todayRollLogId]);
 
   const handleJoinSeason = async () => {
     if (!currentSeason) return;
@@ -904,7 +886,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
               </div>
               <div className="ranking-entry-row">
                 <span>현재 점수</span>
-                <strong>{entry.current_score}</strong>
+                <strong>{formatScore(entry.current_score)}</strong>
               </div>
               <div className="ranking-entry-row">
                 <span>오늘 사용 여부</span>
@@ -975,7 +957,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             <div className="ranking-my-card">
               <span>내 순위</span>
               <strong>
-                {myRankingRow.rank_position}위 / {myRankingRow.current_score}점
+                {myRankingRow.rank_position}위 / {formatScore(myRankingRow.current_score)}점
               </strong>
             </div>
           )}
@@ -1006,7 +988,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                     >
                       <td>{row.rank_position}</td>
                       <td className="ranking-nickname-cell">{row.display_name ?? "자동 닉네임"}</td>
-                      <td>{row.current_score}</td>
+                      <td>{formatScore(row.current_score)}</td>
                       <td className="ranking-skill-cell">
                         <SkillSetList category={row.category} skillSet={row.current_skills} />
                       </td>
@@ -1048,7 +1030,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                   </div>
                   <div className="ranking-entry-row">
                     <span>최종 점수</span>
-                    <strong>{endedSeasonSummary.current_score}점</strong>
+                    <strong>{formatScore(endedSeasonSummary.current_score)}점</strong>
                   </div>
                   <div className="ranking-entry-row">
                     <span>시즌 기간</span>
@@ -1232,7 +1214,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
               <section className="ranking-roll-modal-section">
                 <div className="ranking-roll-modal-head">
                   <span>이전 스킬</span>
-                  <strong>{entry.current_score}점</strong>
+                  <strong>{formatScore(entry.current_score)}점</strong>
                 </div>
                 <SkillSetPreview category={entry.category} skillSet={entry.current_skills} />
                 <button
@@ -1253,7 +1235,9 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                 <div className="ranking-roll-modal-head">
                   <span>변경 스킬</span>
                   <div className="ranking-roll-modal-score-wrap">
-                    <strong>{visibleRolledScore !== null ? `${visibleRolledScore}점` : "-점"}</strong>
+                    <strong>
+                      {visibleRolledScore !== null ? `${formatScore(visibleRolledScore)}점` : "-점"}
+                    </strong>
                     {rollScoreDelta !== null && (
                       <span
                         className={`ranking-roll-delta ${

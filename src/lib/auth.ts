@@ -99,16 +99,9 @@ export async function ensureProfile(session: Session | null) {
     provider,
   };
 
-  const { error } = existingProfile
-    ? await supabase
-        .from("profiles")
-        .update({
-          display_name: currentDisplayName ?? nextDisplayName,
-          avatar_url: avatarUrl,
-          provider,
-        })
-        .eq("id", user.id)
-    : await supabase.from("profiles").insert(payload);
+  const { error } = await supabase.from("profiles").upsert(payload, {
+    onConflict: "id",
+  });
 
   if (error) {
     throw error;
