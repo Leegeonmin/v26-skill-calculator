@@ -514,6 +514,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
 
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: number | null = null;
 
     async function loadEndedSeasonSummary() {
       if (!supabaseReady || !authSession || showSettlementNotice) {
@@ -540,10 +541,15 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
       }
     }
 
-    void loadEndedSeasonSummary();
+    timeoutId = window.setTimeout(() => {
+      void loadEndedSeasonSummary();
+    }, 900);
 
     return () => {
       isMounted = false;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, [authSession, showSettlementNotice, supabaseReady]);
 
