@@ -243,6 +243,18 @@ export const SKILL_SCORES: SkillScoreTable = {
     7: 9.31,
     8: 10.64,
   },
+  hitter_lefty_specialist_left: {
+    5: 19.51,
+    6: 21.96,
+    7: 23.86,
+    8: 26.31,
+  },
+  hitter_lefty_specialist_switch: {
+    5: 17.31,
+    6: 19.02,
+    7: 20.92,
+    8: 22.64,
+  },
   hitter_pinch_hit_specialist: {
     5: 5.88,
     6: 7.05,
@@ -260,6 +272,12 @@ export const SKILL_SCORES: SkillScoreTable = {
     6: 5.7,
     7: 5.7,
     8: 7.6,
+  },
+  hitter_table_setter_captain_on: {
+    5: 12.05,
+    6: 14.17,
+    7: 19.47,
+    8: 22.88,
   },
   hitter_leadoff_on: {
     5: 4.8,
@@ -315,6 +333,12 @@ export const SKILL_SCORES: SkillScoreTable = {
     7: 3.99,
     8: 4.56,
   },
+  hitter_lefty_specialist_right: {
+    5: 12.16,
+    6: 12.16,
+    7: 14.06,
+    8: 14.06,
+  },
   hitter_first_pitch_attack: {
     5: 2.82,
     6: 3.38,
@@ -350,6 +374,12 @@ export const SKILL_SCORES: SkillScoreTable = {
     6: 2.4,
     7: 2.7,
     8: 3.0,
+  },
+  hitter_table_setter_captain_off: {
+    5: 6.35,
+    6: 8.47,
+    7: 11.87,
+    8: 15.28,
   },
   hitter_pull_hitting: {
     5: 2.0,

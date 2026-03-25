@@ -264,6 +264,18 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
+    id: "hitter_lefty_specialist_left",
+    name: "좌타해결사(좌타)",
+    grade: "nationalOnly",
+    availableCardTypes: NATIONAL_ONLY,
+  },
+  {
+    id: "hitter_lefty_specialist_switch",
+    name: "좌타해결사(양타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
     id: "hitter_pinch_hit_specialist",
     name: "대타스페셜",
     grade: "major",
@@ -278,6 +290,12 @@ export const SKILLS: SkillMeta[] = [
   {
     id: "hitter_hidden_card",
     name: "히든카드",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_table_setter_captain_on",
+    name: "선봉장(타순배치O)",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
   },
@@ -336,6 +354,12 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
+    id: "hitter_lefty_specialist_right",
+    name: "좌타해결사(우타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
     id: "hitter_first_pitch_attack",
     name: "초구공략",
     grade: "rookie",
@@ -368,6 +392,12 @@ export const SKILLS: SkillMeta[] = [
   {
     id: "hitter_leadoff_off",
     name: "리드오프(타순배치X)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_table_setter_captain_off",
+    name: "선봉장(타순배치X)",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
   },
@@ -470,4 +500,3 @@ export const SKILL_MAP_BY_ID = Object.fromEntries(
 export const SKILL_GRADE_BY_ID = Object.fromEntries(
   SKILLS.map((skill) => [skill.id, skill.grade])
 );
-
