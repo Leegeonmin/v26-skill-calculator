@@ -64,6 +64,8 @@ export default function ImpactSimulatorView({
   onImpactRoll,
   getSkillScoreLabel,
 }: ImpactSimulatorViewProps) {
+  const hasSimulationResult = impactSessionRollCount > 0;
+
   return (
     <div className="simulation-stack">
       <div className="simulation-actions">
@@ -98,21 +100,25 @@ export default function ImpactSimulatorView({
       <div className="mobile-live-summary">
         <div className="mobile-live-summary-head">
           <strong>현재 결과</strong>
-          <span style={{ color: resultGradeColor }}>{judgeGrade}</span>
+          <span style={{ color: hasSimulationResult ? resultGradeColor : "#7b879c" }}>
+            {hasSimulationResult ? judgeGrade : "-"}
+          </span>
         </div>
         <div className="mobile-live-summary-stats">
-          <div>점수 {totalScore}</div>
-          <div>확률 {matchedPercentLabel}</div>
+          <div>점수 {hasSimulationResult ? totalScore : "-"}</div>
+          <div>확률 {hasSimulationResult ? matchedPercentLabel : "-"}</div>
         </div>
         <div className="mobile-skill-chip-list">
           <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
             {selectedSkillMeta.skill1?.name ?? "-"} · 고정
           </span>
           <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
-            {selectedSkillMeta.skill2?.name ?? "-"} · {skillScores.skill2 ?? "-"}
+            {hasSimulationResult ? selectedSkillMeta.skill2?.name ?? "-" : "-"} ·{" "}
+            {hasSimulationResult ? skillScores.skill2 ?? "-" : "-"}
           </span>
           <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
-            {selectedSkillMeta.skill3?.name ?? "-"} · {skillScores.skill3 ?? "-"}
+            {hasSimulationResult ? selectedSkillMeta.skill3?.name ?? "-" : "-"} ·{" "}
+            {hasSimulationResult ? skillScores.skill3 ?? "-" : "-"}
           </span>
         </div>
       </div>
@@ -132,9 +138,11 @@ export default function ImpactSimulatorView({
           <div className="rolled-skill-card">
             <div className="rolled-skill-label">롤 결과 스킬 2</div>
             <strong style={{ color: rolledSkillColors.skill2 }}>
-              {selectedSkillMeta.skill2?.name ?? "-"}
+              {hasSimulationResult ? selectedSkillMeta.skill2?.name ?? "-" : "-"}
             </strong>
-            <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill2)}</div>
+            <div className="rolled-skill-score">
+              {hasSimulationResult ? getSkillScoreLabel(skillScores.skill2) : "점수 -"}
+            </div>
           </div>
           <select value={level2} onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}>
             {[5, 6, 7, 8].map((level) => (
@@ -149,9 +157,11 @@ export default function ImpactSimulatorView({
           <div className="rolled-skill-card">
             <div className="rolled-skill-label">롤 결과 스킬 3</div>
             <strong style={{ color: rolledSkillColors.skill3 }}>
-              {selectedSkillMeta.skill3?.name ?? "-"}
+              {hasSimulationResult ? selectedSkillMeta.skill3?.name ?? "-" : "-"}
             </strong>
-            <div className="rolled-skill-score">{getSkillScoreLabel(skillScores.skill3)}</div>
+            <div className="rolled-skill-score">
+              {hasSimulationResult ? getSkillScoreLabel(skillScores.skill3) : "점수 -"}
+            </div>
           </div>
           <select value={level3} onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}>
             {[5, 6, 7, 8].map((level) => (

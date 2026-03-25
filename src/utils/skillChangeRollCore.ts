@@ -18,8 +18,10 @@ const FAMILY_ALIAS_RULES: Array<[RegExp, string]> = [
   [/^컨택트히터/, "컨택트히터"],
   [/^공포의하위타선/, "공포의하위타선"],
   [/^리드오프/, "리드오프"],
+  [/^선봉장/, "선봉장"],
   [/^수비안정성/, "수비안정성"],
   [/^핵타선/, "핵타선"],
+  [/^좌타해결사/, "좌타해결사"],
 ];
 
 export function normalizeSkillBaseName(name: string): string {
