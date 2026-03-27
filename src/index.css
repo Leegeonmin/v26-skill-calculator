@@ -1535,6 +1535,152 @@ input {
   font-size: 0.9rem;
 }
 
+.mobile-current-skill-list {
+  display: grid;
+  gap: 8px;
+}
+
+.mobile-current-skill-empty {
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.mobile-current-skill-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.mobile-current-skill-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.mobile-current-skill-copy strong,
+.mobile-current-skill-copy span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-current-skill-copy span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.mobile-current-skill-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #64748b;
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mobile-calc-builder {
+  display: none;
+}
+
+.mobile-calc-search {
+  display: grid;
+  gap: 10px;
+}
+
+.mobile-calc-search-results {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.mobile-skill-search-option {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  text-align: left;
+  font-weight: 700;
+}
+
+.mobile-skill-search-option.selected {
+  border-color: #8bbcff;
+  background: #eff6ff;
+}
+
+.mobile-pending-skill-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.mobile-pending-skill-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.mobile-pending-skill-copy span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.mobile-pending-skill-reset {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.mobile-calc-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.mobile-calc-add-btn {
+  min-width: 82px;
+  justify-content: center;
+}
+
+.mobile-calc-add-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.mobile-calc-add-meta strong {
+  color: #1d4ed8;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .mobile-skill-chip-list {
   display: flex;
   gap: 8px;
@@ -2293,10 +2439,24 @@ input {
     padding: 12px;
   }
 
+  .mobile-calc-builder {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px solid #dfe5f0;
+    border-radius: 16px;
+    background: #ffffff;
+  }
+
   .mobile-live-summary-stats {
     gap: 10px;
     margin-bottom: 8px;
     font-size: 0.84rem;
+  }
+
+  .skill-grid {
+    display: none;
   }
 
   .result-grade-guide-item {

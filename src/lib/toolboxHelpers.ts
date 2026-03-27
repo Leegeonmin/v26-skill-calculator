@@ -35,6 +35,10 @@ export function pickValidSkill(
   candidates: string[],
   excluded: string[] = []
 ): string {
+  if (!desired) {
+    return "";
+  }
+
   if (desired && candidates.includes(desired) && !excluded.includes(desired)) {
     return desired;
   }
