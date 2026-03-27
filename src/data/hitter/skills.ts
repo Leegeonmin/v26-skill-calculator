@@ -266,8 +266,8 @@ export const SKILLS: SkillMeta[] = [
   {
     id: "hitter_lefty_specialist_left",
     name: "좌타해결사(좌타)",
-    grade: "nationalOnly",
-    availableCardTypes: NATIONAL_ONLY,
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
   },
   {
     id: "hitter_lefty_specialist_switch",
