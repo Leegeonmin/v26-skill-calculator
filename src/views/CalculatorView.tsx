@@ -20,7 +20,7 @@ interface CalculatorViewProps {
   activeCardType: CardType;
   resultGradeColor: string;
   judgeGrade: string;
-  totalScore: number;
+  totalScore: number | string;
   matchedPercentLabel: string;
   selectedSkillMeta: SelectedSkillMetaMap;
   rolledSkillColors: {
@@ -48,12 +48,6 @@ interface CalculatorViewProps {
   setLevel3: (level: SkillLevel) => void;
   getSkillScoreLabel: (score: number | undefined) => string;
 }
-
-const MOBILE_DEFAULT_SKILLS = [
-  "hitter_precision_hit",
-  "hitter_big_game_hunter",
-  "hitter_batting_machine",
-] as const;
 
 function getMobileDefaultLevel(cardType: CardType, selectedCount: number): SkillLevel {
   if (cardType === "goldenGlove") {
@@ -131,28 +125,26 @@ export default function CalculatorView({
       skillScores.skill3,
     ]
   );
-
-  const isDefaultSelection =
-    resolvedSkill1 === MOBILE_DEFAULT_SKILLS[0] &&
-    resolvedSkill2 === MOBILE_DEFAULT_SKILLS[1] &&
-    resolvedSkill3 === MOBILE_DEFAULT_SKILLS[2] &&
-    level1 === 6 &&
-    level2 === 5 &&
-    level3 === 5;
-
   const [mobileSelectedSkills, setMobileSelectedSkills] = useState<MobileSkillDraft[]>(() =>
-    isDefaultSelection
-      ? []
-      : currentSkills.map((skill) => ({
-          id: skill.id,
-          level: skill.level,
-        }))
+    currentSkills.map((skill) => ({
+      id: skill.id,
+      level: skill.level,
+    }))
   );
   const [mobileKeyword, setMobileKeyword] = useState("");
   const [mobilePendingSkillId, setMobilePendingSkillId] = useState("");
   const [mobilePendingLevel, setMobilePendingLevel] = useState<SkillLevel>(
     getMobileDefaultLevel(activeCardType, 0)
   );
+
+  useEffect(() => {
+    setMobileSelectedSkills(
+      currentSkills.map((skill) => ({
+        id: skill.id,
+        level: skill.level,
+      }))
+    );
+  }, [currentSkills]);
 
   useEffect(() => {
     const nextDefaultLevel = getMobileDefaultLevel(activeCardType, mobileSelectedSkills.length);

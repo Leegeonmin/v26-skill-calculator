@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
+import SimulatorSkillCard from "../components/SimulatorSkillCard";
 import type { SkillLevel, SkillMeta } from "../types";
 
 type SelectedSkillMetaMap = {
@@ -7,17 +9,20 @@ type SelectedSkillMetaMap = {
   skill3?: SkillMeta;
 };
 
+type RollingPreviewCard = {
+  meta?: SkillMeta;
+  name: string;
+  scoreLabel: string;
+  levelLabel?: string;
+  fixed?: boolean;
+};
+
 interface ImpactSimulatorViewProps {
   resultGradeColor: string;
   judgeGrade: string;
   totalScore: number | string;
   matchedPercentLabel: string;
   selectedSkillMeta: SelectedSkillMetaMap;
-  rolledSkillColors: {
-    skill1: string;
-    skill2: string;
-    skill3: string;
-  };
   skillScores: {
     skill1?: number;
     skill2?: number;
@@ -46,7 +51,6 @@ export default function ImpactSimulatorView({
   totalScore,
   matchedPercentLabel,
   selectedSkillMeta,
-  rolledSkillColors,
   skillScores,
   filteredSkills,
   resolvedSkill1,
@@ -54,7 +58,7 @@ export default function ImpactSimulatorView({
   resolvedSkill3,
   impactSessionRollCount,
   impactLastSuccessRollCount,
-  impactLastMessage,
+  impactLastMessage: _impactLastMessage,
   level2,
   level3,
   setSkill1,
@@ -64,112 +68,303 @@ export default function ImpactSimulatorView({
   onImpactRoll,
   getSkillScoreLabel,
 }: ImpactSimulatorViewProps) {
+  const [isRolling, setIsRolling] = useState(false);
+  const [rollingPreview, setRollingPreview] = useState<RollingPreviewCard[]>([]);
+  const intervalRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+
   const hasSimulationResult = impactSessionRollCount > 0;
+  const hasFixedSkill = Boolean(resolvedSkill1 && selectedSkillMeta.skill1);
+  const occurrenceLabel =
+    hasSimulationResult && impactLastSuccessRollCount !== null
+      ? `${impactLastSuccessRollCount}번째`
+      : "-";
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+      }
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const getRandomSkill = () => {
+    if (filteredSkills.length === 0) {
+      return undefined;
+    }
+
+    return filteredSkills[Math.floor(Math.random() * filteredSkills.length)];
+  };
+
+  const getRandomPreviewScore = () => `${(Math.random() * 10).toFixed(2)}점`;
+
+  const buildRollingPreview = (): RollingPreviewCard[] => {
+    const randomSkill2 = getRandomSkill();
+    const randomSkill3 = getRandomSkill();
+
+    return [
+      {
+        meta: selectedSkillMeta.skill1,
+        name: selectedSkillMeta.skill1?.name ?? "-",
+        scoreLabel: "임팩트 1스킬 고정",
+        fixed: true,
+      },
+      {
+        meta: randomSkill2,
+        name: randomSkill2?.name ?? "-",
+        scoreLabel: getRandomPreviewScore(),
+        levelLabel: `Lv.${level2}`,
+      },
+      {
+        meta: randomSkill3,
+        name: randomSkill3?.name ?? "-",
+        scoreLabel: getRandomPreviewScore(),
+        levelLabel: `Lv.${level3}`,
+      },
+    ];
+  };
+
+  const startRolling = (complete: () => void, duration = 720) => {
+    if (!hasFixedSkill) {
+      return;
+    }
+
+    if (intervalRef.current !== null) {
+      window.clearInterval(intervalRef.current);
+    }
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    setIsRolling(true);
+    setRollingPreview(buildRollingPreview());
+
+    intervalRef.current = window.setInterval(() => {
+      setRollingPreview(buildRollingPreview());
+    }, 80);
+
+    timeoutRef.current = window.setTimeout(() => {
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      setRollingPreview([]);
+      complete();
+      setIsRolling(false);
+      timeoutRef.current = null;
+    }, duration);
+  };
+
+  const previewSkill1 = rollingPreview[0];
+  const previewSkill2 = rollingPreview[1];
+  const previewSkill3 = rollingPreview[2];
 
   return (
-    <div className="simulation-stack">
-      <div className="simulation-actions">
-        <div className="impact-fixed-skill impact-fixed-skill-full">
-          <SkillSelect
-            label="고정 스킬 1"
-            value={resolvedSkill1}
-            options={filteredSkills}
-            excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
-            onChange={(nextSkillId) => {
-              setSkill1(nextSkillId);
-              resetImpactChangeSession();
-            }}
-            metaText="임팩트 1스킬 고정"
-          />
-        </div>
+    <div className="simulator-content-shell">
+      <div className="simulation-stack">
+        <div className="simulation-actions">
+          <div className="impact-fixed-skill impact-fixed-skill-full impact-fixed-skill-compact">
+            <SkillSelect
+              label="고정 스킬 1"
+              value={resolvedSkill1}
+              options={filteredSkills}
+              excludedSkillIds={[resolvedSkill2, resolvedSkill3]}
+              onChange={(nextSkillId) => {
+                setSkill1(nextSkillId);
+                resetImpactChangeSession();
+              }}
+              metaText="임팩트 1스킬 고정"
+            />
+          </div>
 
-        <div className="simulation-action-buttons simulation-action-buttons-single">
-          <button type="button" className="roll-btn" onClick={onImpactRoll}>
-            2, 3번 메이저까지 자동 롤
-          </button>
-        </div>
-      </div>
-
-      <div className="simulation-summary">
-        <span>누적 사용 횟수 <strong>{impactSessionRollCount}회</strong></span>
-        <span>마지막 성공 횟수 <strong>{impactLastSuccessRollCount ?? "-"}</strong></span>
-      </div>
-
-      <p className="tool-note tool-note-strong">{impactLastMessage}</p>
-
-      <div className="mobile-live-summary">
-        <div className="mobile-live-summary-head">
-          <strong>현재 결과</strong>
-          <span style={{ color: hasSimulationResult ? resultGradeColor : "#7b879c" }}>
-            {hasSimulationResult ? judgeGrade : "-"}
-          </span>
-        </div>
-        <div className="mobile-live-summary-stats">
-          <div>점수 {hasSimulationResult ? totalScore : "-"}</div>
-          <div>확률 {hasSimulationResult ? matchedPercentLabel : "-"}</div>
-        </div>
-        <div className="mobile-skill-chip-list">
-          <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill1 }}>
-            {selectedSkillMeta.skill1?.name ?? "-"} · 고정
-          </span>
-          <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill2 }}>
-            {hasSimulationResult ? selectedSkillMeta.skill2?.name ?? "-" : "-"} ·{" "}
-            {hasSimulationResult ? skillScores.skill2 ?? "-" : "-"}
-          </span>
-          <span className="mobile-skill-chip" style={{ color: rolledSkillColors.skill3 }}>
-            {hasSimulationResult ? selectedSkillMeta.skill3?.name ?? "-" : "-"} ·{" "}
-            {hasSimulationResult ? skillScores.skill3 ?? "-" : "-"}
-          </span>
-        </div>
-      </div>
-
-      <div className="skill-grid">
-        <div className="skill-col">
-          <div className="rolled-skill-card">
-            <div className="rolled-skill-label">고정 스킬 1</div>
-            <strong style={{ color: rolledSkillColors.skill1 }}>
-              {selectedSkillMeta.skill1?.name ?? "-"}
-            </strong>
-            <div className="rolled-skill-score">임팩트 1스킬 고정</div>
+          <div className="simulation-action-buttons simulation-action-buttons-single">
+            <button
+              type="button"
+              className="primary-btn simulation-cta-btn"
+              onClick={() => startRolling(onImpactRoll)}
+              disabled={!hasFixedSkill || isRolling}
+            >
+              {isRolling ? "롤링 중..." : "2, 3번 메이저까지 자동 롤"}
+            </button>
           </div>
         </div>
 
-        <div className="skill-col">
-          <div className="rolled-skill-card">
-            <div className="rolled-skill-label">롤 결과 스킬 2</div>
-            <strong style={{ color: rolledSkillColors.skill2 }}>
-              {hasSimulationResult ? selectedSkillMeta.skill2?.name ?? "-" : "-"}
-            </strong>
-            <div className="rolled-skill-score">
-              {hasSimulationResult ? getSkillScoreLabel(skillScores.skill2) : "점수 -"}
+        <div className="simulation-current-score-card">
+          <div className="simulation-current-score-main">
+            <span>현재 점수</span>
+            <strong>{isRolling ? "..." : hasSimulationResult ? totalScore : "-"}</strong>
+          </div>
+          <div className="simulation-current-score-meta">
+            <div className="simulation-current-score-pill">
+              <span>기준표 확률</span>
+              <strong>{isRolling ? "롤링 중" : hasSimulationResult ? matchedPercentLabel : "-"}</strong>
+            </div>
+            <div className="simulation-current-score-pill">
+              <span>등장 횟수</span>
+              <strong>{isRolling ? "..." : occurrenceLabel}</strong>
             </div>
           </div>
-          <select value={level2} onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}>
-            {[5, 6, 7, 8].map((level) => (
-              <option key={level} value={level}>
-                {level} 레벨
-              </option>
-            ))}
-          </select>
         </div>
 
-        <div className="skill-col">
-          <div className="rolled-skill-card">
-            <div className="rolled-skill-label">롤 결과 스킬 3</div>
-            <strong style={{ color: rolledSkillColors.skill3 }}>
-              {hasSimulationResult ? selectedSkillMeta.skill3?.name ?? "-" : "-"}
-            </strong>
-            <div className="rolled-skill-score">
-              {hasSimulationResult ? getSkillScoreLabel(skillScores.skill3) : "점수 -"}
-            </div>
+        <div className="mobile-live-summary">
+          <div className="mobile-live-summary-head">
+            <strong>현재 결과</strong>
+            <span style={{ color: hasSimulationResult && !isRolling ? resultGradeColor : "#7b879c" }}>
+              {isRolling ? "..." : hasSimulationResult ? judgeGrade : "-"}
+            </span>
           </div>
-          <select value={level3} onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}>
-            {[5, 6, 7, 8].map((level) => (
-              <option key={level} value={level}>
-                {level} 레벨
-              </option>
-            ))}
-          </select>
+          <div className="mobile-live-summary-stats">
+            <div>점수 {isRolling ? "..." : hasSimulationResult ? totalScore : "-"}</div>
+            <div>확률 {isRolling ? "롤링 중" : hasSimulationResult ? matchedPercentLabel : "-"}</div>
+            <div>등장 {isRolling ? "..." : occurrenceLabel}</div>
+          </div>
+          <div className="mobile-simulator-card-list">
+            <SimulatorSkillCard
+              slot={1}
+              label="고정 스킬"
+              meta={isRolling ? previewSkill1?.meta : selectedSkillMeta.skill1}
+              name={isRolling ? previewSkill1?.name ?? "-" : selectedSkillMeta.skill1?.name ?? "-"}
+              scoreLabel={isRolling ? previewSkill1?.scoreLabel ?? "점수 -" : "임팩트 1스킬 고정"}
+              fixed
+              compact
+              hideLabel
+            />
+            <SimulatorSkillCard
+              slot={2}
+              label="롤 결과 스킬"
+              meta={isRolling ? previewSkill2?.meta : hasSimulationResult ? selectedSkillMeta.skill2 : undefined}
+              name={
+                isRolling
+                  ? previewSkill2?.name ?? "-"
+                  : hasSimulationResult
+                    ? selectedSkillMeta.skill2?.name ?? "-"
+                    : "-"
+              }
+              scoreLabel={
+                isRolling
+                  ? previewSkill2?.scoreLabel ?? "점수 -"
+                  : hasSimulationResult
+                    ? getSkillScoreLabel(skillScores.skill2)
+                    : "점수 -"
+              }
+              levelLabel={isRolling ? previewSkill2?.levelLabel : `Lv.${level2}`}
+              hidden={!hasSimulationResult && !isRolling}
+              compact
+              hideLabel
+            />
+            <SimulatorSkillCard
+              slot={3}
+              label="롤 결과 스킬"
+              meta={isRolling ? previewSkill3?.meta : hasSimulationResult ? selectedSkillMeta.skill3 : undefined}
+              name={
+                isRolling
+                  ? previewSkill3?.name ?? "-"
+                  : hasSimulationResult
+                    ? selectedSkillMeta.skill3?.name ?? "-"
+                    : "-"
+              }
+              scoreLabel={
+                isRolling
+                  ? previewSkill3?.scoreLabel ?? "점수 -"
+                  : hasSimulationResult
+                    ? getSkillScoreLabel(skillScores.skill3)
+                    : "점수 -"
+              }
+              levelLabel={isRolling ? previewSkill3?.levelLabel : `Lv.${level3}`}
+              hidden={!hasSimulationResult && !isRolling}
+              compact
+              hideLabel
+            />
+          </div>
+        </div>
+
+        <div className="skill-grid">
+          <div className="skill-col">
+            <SimulatorSkillCard
+              slot={1}
+              label="고정 스킬"
+              meta={isRolling ? previewSkill1?.meta : selectedSkillMeta.skill1}
+              name={isRolling ? previewSkill1?.name ?? "-" : selectedSkillMeta.skill1?.name ?? "-"}
+              scoreLabel={isRolling ? previewSkill1?.scoreLabel ?? "점수 -" : "임팩트 1스킬 고정"}
+              fixed
+            />
+          </div>
+
+          <div className="skill-col">
+            <SimulatorSkillCard
+              slot={2}
+              label="롤 결과 스킬"
+              meta={isRolling ? previewSkill2?.meta : hasSimulationResult ? selectedSkillMeta.skill2 : undefined}
+              name={
+                isRolling
+                  ? previewSkill2?.name ?? "-"
+                  : hasSimulationResult
+                    ? selectedSkillMeta.skill2?.name ?? "-"
+                    : "-"
+              }
+              scoreLabel={
+                isRolling
+                  ? previewSkill2?.scoreLabel ?? "점수 -"
+                  : hasSimulationResult
+                    ? getSkillScoreLabel(skillScores.skill2)
+                    : "점수 -"
+              }
+              levelLabel={isRolling ? previewSkill2?.levelLabel : `Lv.${level2}`}
+              hidden={!hasSimulationResult && !isRolling}
+              hideLabel
+            />
+            <select
+              value={level2}
+              onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
+              disabled={isRolling}
+            >
+              {[5, 6, 7, 8].map((level) => (
+                <option key={level} value={level}>
+                  {level} 레벨
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="skill-col">
+            <SimulatorSkillCard
+              slot={3}
+              label="롤 결과 스킬"
+              meta={isRolling ? previewSkill3?.meta : hasSimulationResult ? selectedSkillMeta.skill3 : undefined}
+              name={
+                isRolling
+                  ? previewSkill3?.name ?? "-"
+                  : hasSimulationResult
+                    ? selectedSkillMeta.skill3?.name ?? "-"
+                    : "-"
+              }
+              scoreLabel={
+                isRolling
+                  ? previewSkill3?.scoreLabel ?? "점수 -"
+                  : hasSimulationResult
+                    ? getSkillScoreLabel(skillScores.skill3)
+                    : "점수 -"
+              }
+              levelLabel={isRolling ? previewSkill3?.levelLabel : `Lv.${level3}`}
+              hidden={!hasSimulationResult && !isRolling}
+              hideLabel
+            />
+            <select
+              value={level3}
+              onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
+              disabled={isRolling}
+            >
+              {[5, 6, 7, 8].map((level) => (
+                <option key={level} value={level}>
+                  {level} 레벨
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>

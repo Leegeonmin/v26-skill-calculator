@@ -22,9 +22,7 @@ import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import {
   formatMatchedPercent,
   getDefaultLevels,
-  getEncouragementMessage,
   getOrCreateToolUsageSessionId,
-  getResultSummaryMessage,
   getSkillScoreLabel,
   gradeRank,
   pickValidSkill,
@@ -52,9 +50,6 @@ const DEFAULT_MODE: CalculatorMode = "hitter";
 const DEFAULT_VIEW: ToolView = "calculator";
 const DEFAULT_HITTER_POSITION_GROUP: HitterPositionGroup = "fielder";
 const DEFAULT_CARD_TYPE: CardType = "signature";
-const DEFAULT_SKILL_1 = "hitter_precision_hit";
-const DEFAULT_SKILL_2 = "hitter_big_game_hunter";
-const DEFAULT_SKILL_3 = "hitter_batting_machine";
 const DEFAULT_LEVEL_1: SkillLevel = 6;
 const DEFAULT_LEVEL_2: SkillLevel = 5;
 const DEFAULT_LEVEL_3: SkillLevel = 5;
@@ -84,11 +79,11 @@ const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
 ];
 
 const RESULT_GRADE_GUIDE: Array<{ grade: ResultGrade; title: string; description: string }> = [
-  { grade: "F", title: "F", description: "기준표 최저점 미만이거나 흔한 구간" },
-  { grade: "C", title: "C", description: "무난하게는 쓸 수 있는 구간" },
-  { grade: "A", title: "A", description: "실사용 가능한 상급 조합" },
-  { grade: "S", title: "S", description: "준종결권으로 볼 만한 고점 조합" },
-  { grade: "SSR+", title: "SSR+", description: "사실상 종결권으로 보는 최상위 구간" },
+  { grade: "F", title: "F", description: "일스변도 이렇게는 안나오겠다" },
+  { grade: "C", title: "C", description: "카드가 제성능을 발휘하기엔 모자람" },
+  { grade: "A", title: "A", description: "타협" },
+  { grade: "S", title: "S", description: "사장님 아니면 스탑" },
+  { grade: "SSR+", title: "SSR+", description: "종결" },
 ];
 
 const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, string]>).map(
@@ -119,9 +114,9 @@ function App() {
     useState<HitterPositionGroup>(DEFAULT_HITTER_POSITION_GROUP);
 
   const [cardType, setCardType] = useState<CardType>(DEFAULT_CARD_TYPE);
-  const [skill1, setSkill1] = useState(DEFAULT_SKILL_1);
-  const [skill2, setSkill2] = useState(DEFAULT_SKILL_2);
-  const [skill3, setSkill3] = useState(DEFAULT_SKILL_3);
+  const [skill1, setSkill1] = useState("");
+  const [skill2, setSkill2] = useState("");
+  const [skill3, setSkill3] = useState("");
 
   const [level1, setLevel1] = useState<SkillLevel>(DEFAULT_LEVEL_1);
   const [level2, setLevel2] = useState<SkillLevel>(DEFAULT_LEVEL_2);
@@ -129,9 +124,7 @@ function App() {
 
   const [simRollCount, setSimRollCount] = useState(0);
   const [simBestScore, setSimBestScore] = useState<number | null>(null);
-  const [simLastMessage, setSimLastMessage] = useState(
-    "버튼을 누르면 1회 사용 결과가 바로 나옵니다."
-  );
+  const [simAutoRollOccurrenceCount, setSimAutoRollOccurrenceCount] = useState<number | null>(null);
   const [targetGrade, setTargetGrade] = useState<ResultGrade>("S");
   const [impactSessionRollCount, setImpactSessionRollCount] = useState(0);
   const [impactLastSuccessRollCount, setImpactLastSuccessRollCount] = useState<number | null>(null);
@@ -205,22 +198,29 @@ function App() {
     skill3: gameData?.scoreTable[resolvedSkill3]?.[level3],
   };
 
-  const totalScore = gameData
-    ? calculateSkillTotal({
-        cardType: activeCardType,
-        skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
-        skillLevels: [level1, level2, level3],
-        scoreTable: gameData.scoreTable,
-      })
-    : 0;
+  const hasAnySkillSelection = Boolean(resolvedSkill1 || resolvedSkill2 || resolvedSkill3);
 
-  const judgeResult = gameData
-    ? judgeSkillResult(gameData.thresholds, activeCardType, totalScore)
-    : null;
+  const totalScore =
+    gameData && hasAnySkillSelection
+      ? calculateSkillTotal({
+          cardType: activeCardType,
+          skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
+          skillLevels: [level1, level2, level3],
+          scoreTable: gameData.scoreTable,
+        })
+      : null;
+
+  const judgeResult =
+    gameData && totalScore !== null
+      ? judgeSkillResult(gameData.thresholds, activeCardType, totalScore)
+      : null;
 
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
-  const encouragementMessage = getEncouragementMessage(judgeResult?.matchedPercent ?? null);
-  const summaryMessage = getResultSummaryMessage(judgeResult?.matchedPercent ?? null);
+  const judgeGrade = judgeResult?.grade ?? "-";
+  const matchedPercentLabel = hasAnySkillSelection
+    ? formatMatchedPercent(judgeResult?.matchedPercent ?? null)
+    : "-";
+  const totalScoreDisplay = totalScore ?? "-";
   const authDisplayName = profileDisplayName;
   const supabaseReady = isSupabaseConfigured();
   const activeService: ServiceView = toolView === "ranking" ? "ranking" : "toolbox";
@@ -391,7 +391,7 @@ function App() {
   const resetSimulationSession = () => {
     setSimRollCount(0);
     setSimBestScore(null);
-    setSimLastMessage("버튼을 누르면 1회 사용 결과가 바로 나옵니다.");
+    setSimAutoRollOccurrenceCount(null);
   };
 
   const resetImpactChangeSession = () => {
@@ -411,13 +411,9 @@ function App() {
 
     const [defaultLevel1, defaultLevel2, defaultLevel3] = getDefaultLevels(resetCardType);
 
-    const resetSkills = gameData.skills
-      .filter((skill) => skill.availableCardTypes.includes(resetCardType))
-      .map((skill) => skill.id);
-
-    setSkill1(resetSkills[0] ?? "");
-    setSkill2(resetSkills[1] ?? resetSkills[0] ?? "");
-    setSkill3(resetSkills[2] ?? resetSkills[0] ?? "");
+    setSkill1("");
+    setSkill2("");
+    setSkill3("");
 
     setLevel1(defaultLevel1);
     setLevel2(defaultLevel2);
@@ -455,7 +451,7 @@ function App() {
     setSimBestScore((bestScore) =>
       bestScore === null ? nextTotalScore : Math.max(bestScore, nextTotalScore)
     );
-    setSimLastMessage(`${simRollCount + 1}회차 결과 반영 완료`);
+    setSimAutoRollOccurrenceCount(null);
 
     void logToolUsageEvent({
       tool: "advanced_manual_roll",
@@ -512,15 +508,10 @@ function App() {
     setSkill3(finalSkillIds[2]);
     setSimRollCount((count) => count + tryCount);
     setSimBestScore(bestScoreInRun);
+    setSimAutoRollOccurrenceCount(tryCount);
 
     const autoRollSuccess =
       finalJudgeResult && gradeRank(finalJudgeResult.grade) >= gradeRank(targetGrade);
-
-    if (autoRollSuccess) {
-      setSimLastMessage(`${tryCount}번 만에 ${targetGrade} 이상 달성`);
-    } else {
-      setSimLastMessage(`${AUTO_ROLL_LIMIT}번 안에 ${targetGrade} 이상이 나오지 않았음`);
-    }
 
     void logToolUsageEvent({
       tool: "advanced_auto_roll",
@@ -773,9 +764,9 @@ function App() {
               gameData={gameData}
               pitcherRole={pitcherRole}
               resultGradeColor={resultGradeColor}
-              judgeGrade={judgeResult?.grade ?? "-"}
-              totalScore={gameData ? totalScore : "-"}
-              matchedPercentLabel={formatMatchedPercent(judgeResult?.matchedPercent ?? null)}
+              judgeGrade={judgeGrade}
+              totalScore={gameData ? totalScoreDisplay : "-"}
+              matchedPercentLabel={matchedPercentLabel}
               selectedSkillMeta={selectedSkillMeta}
               rolledSkillColors={rolledSkillColors}
               skillScores={skillScores}
@@ -787,15 +778,12 @@ function App() {
               level2={level2}
               level3={level3}
               simRollCount={simRollCount}
-              simBestScore={simBestScore}
-              simLastMessage={simLastMessage}
+              simAutoRollOccurrenceCount={simAutoRollOccurrenceCount}
               targetGrade={targetGrade}
               targetGradeOptions={TARGET_GRADE_OPTIONS}
               impactSessionRollCount={impactSessionRollCount}
               impactLastSuccessRollCount={impactLastSuccessRollCount}
               impactLastMessage={impactLastMessage}
-              encouragementMessage={encouragementMessage}
-              summaryMessage={summaryMessage}
               cardTypeOptions={CARD_TYPE_OPTIONS}
               resultGradeGuide={RESULT_GRADE_GUIDE}
               getSkillScoreLabel={getSkillScoreLabel}

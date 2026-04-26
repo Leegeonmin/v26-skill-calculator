@@ -1,3 +1,4 @@
+﻿import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
@@ -6,7 +7,14 @@ import { IconGlyph } from "../components/AppChrome";
 import type { GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import type { ResultGrade } from "../utils/judge";
-import type { CalculatorMode, CardType, HitterPositionGroup, SkillLevel, SkillMeta, ToolView } from "../types";
+import type {
+  CalculatorMode,
+  CardType,
+  HitterPositionGroup,
+  SkillLevel,
+  SkillMeta,
+  ToolView,
+} from "../types";
 
 type ToolboxStageProps = {
   toolView: Exclude<ToolView, "ranking">;
@@ -43,15 +51,12 @@ type ToolboxStageProps = {
   level2: SkillLevel;
   level3: SkillLevel;
   simRollCount: number;
-  simBestScore: number | null;
-  simLastMessage: string;
+  simAutoRollOccurrenceCount: number | null;
   targetGrade: ResultGrade;
   targetGradeOptions: Array<{ value: ResultGrade; label: string }>;
   impactSessionRollCount: number;
   impactLastSuccessRollCount: number | null;
   impactLastMessage: string;
-  encouragementMessage: string | null;
-  summaryMessage: string;
   cardTypeOptions: Array<{ value: CardType; label: string }>;
   resultGradeGuide: Array<{ grade: ResultGrade; title: string; description: string }>;
   getSkillScoreLabel: (score: number | undefined) => string;
@@ -72,6 +77,21 @@ type ToolboxStageProps = {
   onImpactRoll: () => void;
   resetImpactChangeSession: () => void;
 };
+
+function getModeLabel(mode: CalculatorMode): string {
+  switch (mode) {
+    case "hitter":
+      return "타자";
+    case "starter":
+      return "선발";
+    case "middle":
+      return "중계";
+    case "closer":
+      return "마무리";
+    default:
+      return mode;
+  }
+}
 
 export default function ToolboxStage({
   toolView,
@@ -96,15 +116,12 @@ export default function ToolboxStage({
   level2,
   level3,
   simRollCount,
-  simBestScore,
-  simLastMessage,
+  simAutoRollOccurrenceCount,
   targetGrade,
   targetGradeOptions,
   impactSessionRollCount,
   impactLastSuccessRollCount,
   impactLastMessage,
-  encouragementMessage,
-  summaryMessage,
   cardTypeOptions,
   resultGradeGuide,
   getSkillScoreLabel,
@@ -125,17 +142,201 @@ export default function ToolboxStage({
   onImpactRoll,
   resetImpactChangeSession,
 }: ToolboxStageProps) {
+  const [simulatorSetupComplete, setSimulatorSetupComplete] = useState(false);
+
+  useEffect(() => {
+    if (toolView !== "simulator") {
+      setSimulatorSetupComplete(false);
+    }
+  }, [toolView]);
+
+  const modeLabel = getModeLabel(mode);
+  const hitterPositionLabel =
+    mode === "hitter" ? (hitterPositionGroup === "fielder" ? "야수" : "포수") : null;
+  const cardTypeLabel =
+    cardTypeOptions.find((option) => option.value === cardType)?.label ?? cardType;
+
+  const simulatorSetupCard = (
+    <>
+      <div className="panel-head">
+        <h2>고스변 시뮬 설정</h2>
+      </div>
+
+      <div className="input-config-card input-config-card-compact simulation-setup-card">
+        <p className="simulation-setup-intro">
+          먼저 조건을 고른 뒤 시뮬 화면으로 들어가요.
+        </p>
+
+        <div className="control-row">
+          <div className="control-section">
+            <label>계산 대상</label>
+            <div className="toggle-row toggle-row-modes">
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "hitter" ? "active" : ""}`}
+                onClick={() => onModeChange("hitter")}
+              >
+                타자              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "starter" ? "active" : ""}`}
+                onClick={() => onModeChange("starter")}
+              >
+                선발
+              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "middle" ? "active" : ""}`}
+                onClick={() => onModeChange("middle")}
+              >
+                중계
+              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "closer" ? "active" : ""}`}
+                onClick={() => onModeChange("closer")}
+              >
+                마무리              </button>
+            </div>
+          </div>
+
+          {mode === "hitter" && (
+            <div className="control-section">
+              <label>타자 구분</label>
+              <div className="toggle-row">
+                <button
+                  type="button"
+                  className={`toggle-btn ${hitterPositionGroup === "fielder" ? "active" : ""}`}
+                  onClick={() => onHitterPositionGroupChange("fielder")}
+                >
+                  야수
+                </button>
+                <button
+                  type="button"
+                  className={`toggle-btn ${hitterPositionGroup === "catcher" ? "active" : ""}`}
+                  onClick={() => onHitterPositionGroupChange("catcher")}
+                >
+                  포수
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="control-section">
+            <label>카드 타입</label>
+            <div className="toggle-row toggle-row-cards">
+              {cardTypeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
+                  onClick={() => onCardTypeChange(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="control-section simulation-setup-action-section">
+            <label aria-hidden="true">&nbsp;</label>
+            <div className="simulation-setup-inline-action">
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => setSimulatorSetupComplete(true)}
+              >
+                시뮬 시작
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  const impactControlCard = (
+    <>
+      <div className="panel-head">
+        <h2>임팩트 스킬 변경 설정</h2>
+      </div>
+
+      <div className="input-config-card input-config-card-compact simulation-setup-card">
+        <p className="simulation-setup-intro">
+          먼저 조건을 정한 뒤 고정 스킬을 선택해서 임팩트 변경 시뮬을 진행해요.
+        </p>
+
+        <div className="control-row">
+          <div className="control-section">
+            <label>계산 대상</label>
+            <div className="toggle-row toggle-row-modes">
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "hitter" ? "active" : ""}`}
+                onClick={() => onModeChange("hitter")}
+              >
+                타자              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "starter" ? "active" : ""}`}
+                onClick={() => onModeChange("starter")}
+              >
+                선발
+              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "middle" ? "active" : ""}`}
+                onClick={() => onModeChange("middle")}
+              >
+                중계
+              </button>
+              <button
+                type="button"
+                className={`toggle-btn ${mode === "closer" ? "active" : ""}`}
+                onClick={() => onModeChange("closer")}
+              >
+                마무리              </button>
+            </div>
+          </div>
+
+          {mode === "hitter" && (
+            <div className="control-section">
+              <label>타자 구분</label>
+              <div className="toggle-row">
+                <button
+                  type="button"
+                  className={`toggle-btn ${hitterPositionGroup === "fielder" ? "active" : ""}`}
+                  onClick={() => onHitterPositionGroupChange("fielder")}
+                >
+                  야수
+                </button>
+                <button
+                  type="button"
+                  className={`toggle-btn ${hitterPositionGroup === "catcher" ? "active" : ""}`}
+                  onClick={() => onHitterPositionGroupChange("catcher")}
+                >
+                  포수
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+      </div>
+    </>
+  );
+
   return (
     <div className="main-stage">
       <div className="tool-tabs-bar">
-        <div className="tool-tabs" role="tablist" aria-label="도구 선택">
+        <div className="tool-tabs" role="tablist" aria-label="?꾧뎄 ?좏깮">
           <button
             type="button"
             className={`tool-tab ${toolView === "calculator" ? "active" : ""}`}
             onClick={() => onToolViewChange("calculator")}
           >
             <IconGlyph name="calculator" className="ui-icon" />
-            <span>스킬점수 계산기</span>
+            <span>스킬 점수 계산기</span>
           </button>
           <button
             type="button"
@@ -151,13 +352,19 @@ export default function ToolboxStage({
             onClick={() => onToolViewChange("impactChange")}
           >
             <IconGlyph name="flame" className="ui-icon" />
-            <span>임팩트 스변 시뮬</span>
+            <span>임팩트 변경 시뮬</span>
           </button>
         </div>
       </div>
 
       <main className="layout-grid">
-        <section className={toolView === "calculator" ? "calculator-shell" : "panel panel-main"}>
+        <section
+          className={
+            toolView === "calculator"
+              ? "calculator-shell"
+              : `panel panel-main ${toolView === "simulator" ? "simulator-stage-shell" : ""}`
+          }
+        >
           {toolView === "calculator" ? (
             <>
               <div className="input-config-card">
@@ -174,8 +381,7 @@ export default function ToolboxStage({
                         className={`toggle-btn ${mode === "hitter" ? "active" : ""}`}
                         onClick={() => onModeChange("hitter")}
                       >
-                        타자
-                      </button>
+                        타자                      </button>
                       <button
                         type="button"
                         className={`toggle-btn ${mode === "starter" ? "active" : ""}`}
@@ -195,8 +401,7 @@ export default function ToolboxStage({
                         className={`toggle-btn ${mode === "closer" ? "active" : ""}`}
                         onClick={() => onModeChange("closer")}
                       >
-                        마무리
-                      </button>
+                        마무리                      </button>
                     </div>
                   </div>
 
@@ -227,8 +432,7 @@ export default function ToolboxStage({
                         />
                       </svg>
                     </span>
-                    초기화
-                  </button>
+                    초기화                  </button>
                 </div>
               </div>
 
@@ -237,7 +441,7 @@ export default function ToolboxStage({
                   <div className="empty-box">
                     {mode === "hitter"
                       ? "데이터를 불러오지 못했습니다."
-                      : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
+                      : `${pitcherRole} 데이터는 아직 연결 준비 중입니다.`}
                   </div>
                 </div>
               ) : (
@@ -246,7 +450,7 @@ export default function ToolboxStage({
                   activeCardType={activeCardType}
                   resultGradeColor={resultGradeColor}
                   judgeGrade={judgeGrade}
-                  totalScore={Number(totalScore)}
+                  totalScore={totalScore}
                   matchedPercentLabel={matchedPercentLabel}
                   selectedSkillMeta={selectedSkillMeta}
                   rolledSkillColors={rolledSkillColors}
@@ -270,146 +474,57 @@ export default function ToolboxStage({
             </>
           ) : (
             <>
-              <div className="panel-head">
-                <h2>{toolView === "simulator" ? "시뮬 설정" : "임팩트 스변 설정"}</h2>
-              </div>
-
-              <div className="input-config-card input-config-card-compact">
-                <div className="control-row">
-                  <div className="control-section">
-                    <label>계산 대상</label>
-                    <div className="toggle-row toggle-row-modes">
-                      <button
-                        type="button"
-                        className={`toggle-btn ${mode === "hitter" ? "active" : ""}`}
-                        onClick={() => onModeChange("hitter")}
-                      >
-                        타자
-                      </button>
-                      <button
-                        type="button"
-                        className={`toggle-btn ${mode === "starter" ? "active" : ""}`}
-                        onClick={() => onModeChange("starter")}
-                      >
-                        선발
-                      </button>
-                      <button
-                        type="button"
-                        className={`toggle-btn ${mode === "middle" ? "active" : ""}`}
-                        onClick={() => onModeChange("middle")}
-                      >
-                        중계
-                      </button>
-                      <button
-                        type="button"
-                        className={`toggle-btn ${mode === "closer" ? "active" : ""}`}
-                        onClick={() => onModeChange("closer")}
-                      >
-                        마무리
-                      </button>
-                    </div>
-                  </div>
-
-                  {mode === "hitter" && (
-                    <div className="control-section">
-                      <label>타자 포지션</label>
-                      <div className="toggle-row">
-                        <button
-                          type="button"
-                          className={`toggle-btn ${hitterPositionGroup === "fielder" ? "active" : ""}`}
-                          onClick={() => onHitterPositionGroupChange("fielder")}
-                        >
-                          야수
-                        </button>
-                        <button
-                          type="button"
-                          className={`toggle-btn ${hitterPositionGroup === "catcher" ? "active" : ""}`}
-                          onClick={() => onHitterPositionGroupChange("catcher")}
-                        >
-                          포수
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {toolView !== "impactChange" ? (
-                    <div className="control-section">
-                      <label>카드 타입</label>
-                      <div className="toggle-row toggle-row-cards">
-                        {cardTypeOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
-                            onClick={() => onCardTypeChange(option.value)}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="control-section">
-                      <label>카드 타입</label>
-                      <div className="impact-card-lock">
-                        <span className="impact-card-pill">임팩트 고정</span>
-                      </div>
-                    </div>
-                  )}
+              {toolView === "simulator" ? (
+                <div className="simulator-content-shell">
+                  {!simulatorSetupComplete ? simulatorSetupCard : null}
                 </div>
-
-                <div className="control-reset-row">
-                  <button type="button" className="ghost-btn control-reset-btn" onClick={onReset}>
-                    <span className="control-reset-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" className="ui-icon">
-                        <path
-                          d="M12 5a7 7 0 1 1-6.56 9.47 1 1 0 1 1 1.88-.68A5 5 0 1 0 12 7h-1.59l1.3 1.29a1 1 0 1 1-1.42 1.42L6.59 6l3.7-3.71a1 1 0 0 1 1.42 1.42L10.41 5H12Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </span>
-                    초기화
-                  </button>
-                </div>
-              </div>
+              ) : toolView === "impactChange" ? (
+                <div className="simulator-content-shell">{impactControlCard}</div>
+              ) : null}
 
               {!gameData ? (
                 <div className="empty-box">
                   {mode === "hitter"
                     ? "데이터를 불러오지 못했습니다."
-                    : `${pitcherRole} 데이터는 아직 연결 전입니다.`}
+                    : `${pitcherRole} 데이터는 아직 연결 준비 중입니다.`}
                 </div>
               ) : toolView === "simulator" ? (
-                <AdvancedSimulatorView
-                  activeCardType={activeCardType}
-                  resultGradeColor={resultGradeColor}
-                  judgeGrade={judgeGrade}
-                  totalScore={totalScore}
-                  matchedPercentLabel={matchedPercentLabel}
-                  selectedSkillMeta={selectedSkillMeta}
-                  rolledSkillColors={rolledSkillColors}
-                  skillScores={skillScores}
-                  filteredSkills={filteredSkills}
-                  resolvedSkill1={resolvedSkill1}
-                  resolvedSkill2={resolvedSkill2}
-                  resolvedSkill3={resolvedSkill3}
-                  level1={level1}
-                  level2={level2}
-                  level3={level3}
-                  simRollCount={simRollCount}
-                  simBestScore={simBestScore}
-                  simLastMessage={simLastMessage}
-                  targetGrade={targetGrade}
-                  targetGradeOptions={targetGradeOptions}
-                  setTargetGrade={setTargetGrade}
-                  setSkill1={setSkill1}
-                  setLevel1={setLevel1}
-                  setLevel2={setLevel2}
-                  setLevel3={setLevel3}
-                  onRollOnce={onRollOnce}
-                  onAutoRoll={onAutoRoll}
-                  getSkillScoreLabel={getSkillScoreLabel}
-                />
+                simulatorSetupComplete ? (
+                  <div className="simulator-content-shell">
+                    <AdvancedSimulatorView
+                      modeLabel={modeLabel}
+                      cardTypeLabel={cardTypeLabel}
+                      hitterPositionLabel={hitterPositionLabel}
+                      activeCardType={activeCardType}
+                      resultGradeColor={resultGradeColor}
+                      judgeGrade={judgeGrade}
+                      totalScore={totalScore}
+                      matchedPercentLabel={matchedPercentLabel}
+                      selectedSkillMeta={selectedSkillMeta}
+                      skillScores={skillScores}
+                      filteredSkills={filteredSkills}
+                      resolvedSkill1={resolvedSkill1}
+                      resolvedSkill2={resolvedSkill2}
+                      resolvedSkill3={resolvedSkill3}
+                      level1={level1}
+                      level2={level2}
+                      level3={level3}
+                      simRollCount={simRollCount}
+                      simAutoRollOccurrenceCount={simAutoRollOccurrenceCount}
+                      targetGrade={targetGrade}
+                      targetGradeOptions={targetGradeOptions}
+                      setTargetGrade={setTargetGrade}
+                      setSkill1={setSkill1}
+                      setLevel1={setLevel1}
+                      setLevel2={setLevel2}
+                      setLevel3={setLevel3}
+                      onBackToSetup={() => setSimulatorSetupComplete(false)}
+                      onRollOnce={onRollOnce}
+                      onAutoRoll={onAutoRoll}
+                      getSkillScoreLabel={getSkillScoreLabel}
+                    />
+                  </div>
+                ) : null
               ) : (
                 <ImpactSimulatorView
                   resultGradeColor={resultGradeColor}
@@ -417,7 +532,6 @@ export default function ToolboxStage({
                   totalScore={totalScore}
                   matchedPercentLabel={matchedPercentLabel}
                   selectedSkillMeta={selectedSkillMeta}
-                  rolledSkillColors={rolledSkillColors}
                   skillScores={skillScores}
                   filteredSkills={filteredSkills}
                   resolvedSkill1={resolvedSkill1}
@@ -445,27 +559,33 @@ export default function ToolboxStage({
             <h2>결과</h2>
           </div>
 
-          <div className="result-stat">
-            <span>총 스킬 점수</span>
-            <strong>{gameData ? totalScore : "-"}</strong>
+          <div className="result-hero-card" style={{ borderColor: resultGradeColor }}>
+            <div className="result-hero-eyebrow">총 스킬 점수</div>
+            <div className="result-hero-score">{gameData ? totalScore : "-"}</div>
+            <div className="result-hero-meta">
+              <div className="result-hero-pill">
+                <span>등급</span>
+                <strong style={{ color: resultGradeColor }}>{judgeGrade}</strong>
+              </div>
+              <div className="result-hero-pill">
+                <span>기준표 확률</span>
+                <strong>{matchedPercentLabel}</strong>
+              </div>
+            </div>
           </div>
 
           <div className="result-stat">
-            <span>판정 등급</span>
+            <span>등급</span>
             <strong style={{ color: resultGradeColor }}>{judgeGrade}</strong>
           </div>
 
           <div className="result-stat">
-            <span>기준 확률</span>
+            <span>기준표 확률</span>
             <strong>{matchedPercentLabel}</strong>
           </div>
 
-          <p className="result-summary">{summaryMessage}</p>
-
-          {encouragementMessage && <div className="result-badge">{encouragementMessage}</div>}
-
           <div className="result-grade-guide">
-            <div className="result-grade-guide-title">판정등급 기준</div>
+            <div className="result-grade-guide-title">등급 기준</div>
             <div className="result-grade-guide-list">
               {resultGradeGuide.map((item) => (
                 <div key={item.grade} className="result-grade-guide-item">
@@ -477,20 +597,25 @@ export default function ToolboxStage({
           </div>
 
           {toolView === "simulator" && (
-            <p className="tool-note">현재 버전은 앱에 등록된 스킬 데이터를 기준으로 1회 롤을 재현합니다.</p>
+            <p className="tool-note">
+              설정 화면에서 조건을 정한 뒤 시뮬 화면으로 들어가면 고스변 결과를 바로 확인할 수 있습니다.
+            </p>
           )}
 
           {toolView === "impactChange" && (
             <p className="tool-note">
-              일반 스킬변경권 확률표 기준으로 임팩트 카드의 2, 3번 슬롯을 메이저 2개가 나올 때까지 자동으로 돌립니다.
+              일반 스킬 변경 확률을 기준으로 임팩트 카드의 2, 3번 슬롯이 모두 메이저가 나올 때까지 자동으로 굴립니다.
             </p>
           )}
 
           {activeCardType === "impact" && (
-            <p className="impact-note">임팩트 카드는 1스킬 고정 + 2, 3스킬만 합산합니다.</p>
+            <p className="impact-note">임팩트 카드는 1번 스킬 고정 + 2, 3번 스킬만 계산합니다.</p>
           )}
         </aside>
       </main>
     </div>
   );
 }
+
+
+

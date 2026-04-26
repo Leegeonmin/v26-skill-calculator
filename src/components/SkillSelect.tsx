@@ -70,7 +70,9 @@ function SkillSelect({
 
       <div className="selected-skill-row">
         <p>현재 선택:</p>
-        <span style={{ color: selectedColor }}>{selectedSkill?.name ?? "-"}</span>
+        <span style={{ color: selectedSkill ? selectedColor : "#7b879c" }}>
+          {selectedSkill?.name ?? "선택 안 됨"}
+        </span>
         {metaText ? <small>{metaText.replace("점수 ", "기본 점수 ")}</small> : null}
       </div>
 

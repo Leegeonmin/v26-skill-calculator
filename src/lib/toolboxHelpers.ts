@@ -43,8 +43,7 @@ export function pickValidSkill(
     return desired;
   }
 
-  const fallback = candidates.find((id) => !excluded.includes(id));
-  return fallback ?? "";
+  return "";
 }
 
 export function formatMatchedPercent(percent: number | null): string {
