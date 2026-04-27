@@ -119,10 +119,21 @@ export default function AdvancedSimulatorView({
 
   const getRandomPreviewScore = () => `${(Math.random() * 10).toFixed(2)}점`;
 
-  const buildRollingPreview = (): RollingPreviewCard[] => {
+  const getMajorPreviewSkill = () => {
+    const majorSkills = filteredSkills.filter((skill) => skill.grade === "major");
+
+    if (majorSkills.length === 0) {
+      return getRandomSkill();
+    }
+
+    return majorSkills[Math.floor(Math.random() * majorSkills.length)];
+  };
+
+  const buildRollingPreview = (keepMajorFirst = false): RollingPreviewCard[] => {
     const randomSkill1 = getRandomSkill();
     const randomSkill2 = getRandomSkill();
     const randomSkill3 = getRandomSkill();
+    const majorSkill = getMajorPreviewSkill();
 
     return [
       activeCardType === "impact"
@@ -133,6 +144,13 @@ export default function AdvancedSimulatorView({
             levelLabel: `Lv.${level1}`,
             fixed: true,
           }
+        : keepMajorFirst
+          ? {
+              meta: majorSkill,
+              name: majorSkill?.name ?? "-",
+              scoreLabel: getRandomPreviewScore(),
+              levelLabel: `Lv.${level1}`,
+            }
         : {
             meta: randomSkill1,
             name: randomSkill1?.name ?? "-",
@@ -154,7 +172,11 @@ export default function AdvancedSimulatorView({
     ];
   };
 
-  const startRolling = (complete: () => void, duration = 640) => {
+  const startRolling = (
+    complete: () => void,
+    duration = 640,
+    options?: { keepMajorFirst?: boolean },
+  ) => {
     if (intervalRef.current !== null) {
       window.clearInterval(intervalRef.current);
     }
@@ -163,10 +185,10 @@ export default function AdvancedSimulatorView({
     }
 
     setIsRolling(true);
-    setRollingPreview(buildRollingPreview());
+    setRollingPreview(buildRollingPreview(options?.keepMajorFirst));
 
     intervalRef.current = window.setInterval(() => {
-      setRollingPreview(buildRollingPreview());
+      setRollingPreview(buildRollingPreview(options?.keepMajorFirst));
     }, 80);
 
     timeoutRef.current = window.setTimeout(() => {
@@ -207,24 +229,21 @@ export default function AdvancedSimulatorView({
           <button
             type="button"
             className="primary-btn simulation-cta-btn"
-            onClick={() => startRolling(onRollOnce)}
-            disabled={isRolling}
+            onClick={onRollOnce}
           >
-            <span className="mobile-hidden-label">
-              {isRolling ? "롤링 중..." : "고스변 1회 사용"}
-            </span>
-            <span className="desktop-hidden-label">{isRolling ? "롤링중" : "고스변1회"}</span>
+            <span className="mobile-hidden-label">고스변 1회 사용</span>
+            <span className="desktop-hidden-label">고스변1회</span>
           </button>
           <button
             type="button"
             className="primary-btn auto-roll-btn simulation-cta-btn"
-            onClick={() => startRolling(onAutoRoll, 720)}
+            onClick={() => startRolling(onAutoRoll, 720, { keepMajorFirst: true })}
             disabled={isRolling}
           >
             <span className="mobile-hidden-label">
-              {isRolling ? "롤링 중..." : "목표 등급까지 자동 롤"}
+              {isRolling ? "변경 중..." : "목표 등급까지 자동 롤"}
             </span>
-            <span className="desktop-hidden-label">{isRolling ? "롤링중" : "자동롤"}</span>
+            <span className="desktop-hidden-label">{isRolling ? "변경중" : "자동롤"}</span>
           </button>
         </div>
         <div className="auto-roll-compact">
@@ -254,7 +273,7 @@ export default function AdvancedSimulatorView({
         <div className="simulation-current-score-meta">
           <div className="simulation-current-score-pill">
             <span>기준표 확률</span>
-            <strong>{isRolling ? "롤링 중" : hasSimulationResult ? matchedPercentLabel : "-"}</strong>
+            <strong>{isRolling ? "변경 중" : hasSimulationResult ? matchedPercentLabel : "-"}</strong>
           </div>
           <div className="simulation-current-score-pill">
             <span>등장 횟수</span>
@@ -272,7 +291,7 @@ export default function AdvancedSimulatorView({
         </div>
         <div className="mobile-live-summary-stats">
           <div>점수 {isRolling ? "..." : hasSimulationResult ? totalScore : "-"}</div>
-          <div>확률 {isRolling ? "롤링 중" : hasSimulationResult ? matchedPercentLabel : "-"}</div>
+          <div>확률 {isRolling ? "변경 중" : hasSimulationResult ? matchedPercentLabel : "-"}</div>
           <div>등장 {isRolling ? "..." : occurrenceLabel}</div>
         </div>
         <div className="mobile-simulator-card-list">

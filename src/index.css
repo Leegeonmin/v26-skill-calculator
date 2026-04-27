@@ -2307,19 +2307,16 @@ input {
 }
 
 .support-contact-banner {
-  position: fixed;
-  left: 20px;
-  bottom: 18px;
-  z-index: 40;
+  margin: 0;
   padding: 10px 14px;
   border: 1px solid rgba(185, 198, 224, 0.9);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 24px rgba(29, 44, 77, 0.08);
-  color: #4c5f83;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+  color: #41506a;
   font-size: 0.88rem;
-  line-height: 1.45;
-  backdrop-filter: blur(10px);
+  line-height: 1.6;
+  backdrop-filter: none;
 }
 
 .support-contact-banner a {
@@ -2330,6 +2327,43 @@ input {
 
 .support-contact-banner a:hover {
   text-decoration: underline;
+}
+
+.seo-panel {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.seo-copy,
+.seo-faq {
+  display: grid;
+  gap: 12px;
+}
+
+.seo-copy h2,
+.seo-faq h3,
+.seo-faq-item h4 {
+  margin: 0;
+}
+
+.seo-copy p,
+.seo-faq-item p {
+  margin: 0;
+  color: #41506a;
+  line-height: 1.7;
+}
+
+.seo-faq-list {
+  display: grid;
+  gap: 14px;
+}
+
+.seo-faq-item {
+  padding: 16px 18px;
+  border: 1px solid rgba(216, 224, 238, 0.92);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .modal-backdrop {
@@ -3004,10 +3038,16 @@ input {
   }
 
   .support-contact-banner {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
     font-size: 0.82rem;
     text-align: center;
+  }
+
+  .seo-panel {
+    margin-top: 18px;
+    gap: 18px;
+  }
+
+  .seo-faq-item {
+    padding: 14px;
   }
 }

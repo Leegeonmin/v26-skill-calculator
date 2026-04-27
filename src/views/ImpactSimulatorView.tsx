@@ -91,19 +91,21 @@ export default function ImpactSimulatorView({
     };
   }, []);
 
-  const getRandomSkill = () => {
-    if (filteredSkills.length === 0) {
+  const getRandomSkill = (excludeMajor = false) => {
+    const pool = excludeMajor ? filteredSkills.filter((skill) => skill.grade !== "major") : filteredSkills;
+
+    if (pool.length === 0) {
       return undefined;
     }
 
-    return filteredSkills[Math.floor(Math.random() * filteredSkills.length)];
+    return pool[Math.floor(Math.random() * pool.length)];
   };
 
   const getRandomPreviewScore = () => `${(Math.random() * 10).toFixed(2)}점`;
 
   const buildRollingPreview = (): RollingPreviewCard[] => {
     const randomSkill2 = getRandomSkill();
-    const randomSkill3 = getRandomSkill();
+    const randomSkill3 = randomSkill2?.grade === "major" ? getRandomSkill(true) : getRandomSkill();
 
     return [
       {
@@ -188,7 +190,7 @@ export default function ImpactSimulatorView({
               onClick={() => startRolling(onImpactRoll)}
               disabled={!hasFixedSkill || isRolling}
             >
-              {isRolling ? "롤링 중..." : "2, 3번 메이저까지 자동 롤"}
+              {isRolling ? "변경 중..." : "2, 3번 메이저까지 자동 롤"}
             </button>
           </div>
         </div>
@@ -201,7 +203,7 @@ export default function ImpactSimulatorView({
           <div className="simulation-current-score-meta">
             <div className="simulation-current-score-pill">
               <span>기준표 확률</span>
-              <strong>{isRolling ? "롤링 중" : hasSimulationResult ? matchedPercentLabel : "-"}</strong>
+              <strong>{isRolling ? "변경 중" : hasSimulationResult ? matchedPercentLabel : "-"}</strong>
             </div>
             <div className="simulation-current-score-pill">
               <span>등장 횟수</span>
@@ -219,7 +221,7 @@ export default function ImpactSimulatorView({
           </div>
           <div className="mobile-live-summary-stats">
             <div>점수 {isRolling ? "..." : hasSimulationResult ? totalScore : "-"}</div>
-            <div>확률 {isRolling ? "롤링 중" : hasSimulationResult ? matchedPercentLabel : "-"}</div>
+            <div>확률 {isRolling ? "변경 중" : hasSimulationResult ? matchedPercentLabel : "-"}</div>
             <div>등장 {isRolling ? "..." : occurrenceLabel}</div>
           </div>
           <div className="mobile-simulator-card-list">

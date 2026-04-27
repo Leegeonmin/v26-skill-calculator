@@ -93,6 +93,29 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
   })
 );
 
+const SEO_FAQ = [
+  {
+    question: "V26 스킬 계산기는 무엇을 계산하나요?",
+    answer:
+      "타자와 투수 카드의 스킬 조합 점수, 기준표 확률, 등급을 계산합니다. 카드 타입별 점수 차이와 등급 기준도 함께 확인할 수 있습니다.",
+  },
+  {
+    question: "고스변 시뮬은 어떤 용도인가요?",
+    answer:
+      "고급 스킬 변경권 사용 결과를 빠르게 확인하는 시뮬레이터입니다. 1회 사용 결과와 목표 등급까지 자동 롤 결과를 함께 볼 수 있습니다.",
+  },
+  {
+    question: "임팩트 변경 시뮬은 무엇을 확인하나요?",
+    answer:
+      "임팩트 카드에서 1번 스킬을 고정한 상태로 2번과 3번 스킬이 원하는 조건에 도달하는지 시뮬레이션합니다.",
+  },
+  {
+    question: "타자와 투수 계산 기준은 같은가요?",
+    answer:
+      "기본 계산 방식은 같지만 사용되는 스킬 데이터와 기준표는 타자, 선발, 중계, 마무리마다 다르게 적용됩니다.",
+  },
+] as const;
+
 function App() {
   const isAdminRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
@@ -227,6 +250,22 @@ function App() {
   const toolboxToolView: Exclude<ToolView, "ranking"> =
     toolView === "ranking" ? "calculator" : toolView;
   const serviceInfo = SERVICE_INFO[activeService];
+  const faqStructuredData = useMemo(
+    () =>
+      JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: SEO_FAQ.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer,
+          },
+        })),
+      }),
+    []
+  );
 
   useEffect(() => {
     if (!isAdminRoute) {
@@ -807,10 +846,47 @@ function App() {
           )}
         </AppChrome>
 
-        <div className="support-contact-banner">
-          버그나 필요한 기능이 있으면 <a href="mailto:leeqwezxcasd@gmail.com">leeqwezxcasd@gmail.com</a>
-          로 보내주세요.
-        </div>
+        {activeService === "toolbox" && (
+          <section className="panel panel-main panel-wide seo-panel" aria-labelledby="seo-guide-title">
+            <div className="seo-copy">
+              <h2 id="seo-guide-title">V26 스킬 계산기 안내</h2>
+              <p>
+                V26 스킬 계산기는 타자와 투수 카드의 스킬 점수, 기준표 확률, 등급을 빠르게
+                확인하기 위한 계산기다. 시그니처, 골든글러브, 국가대표, 임팩트 카드 기준을
+                함께 비교할 수 있다.
+              </p>
+              <p>
+                고스변 시뮬에서는 고급 스킬 변경권 결과를 1회 사용 또는 목표 등급까지 자동 롤로
+                확인할 수 있고, 임팩트 변경 시뮬에서는 1번 고정 스킬 기준으로 2번과 3번
+                스킬 조합을 확인할 수 있다.
+              </p>
+            </div>
+
+            <div className="seo-faq">
+              <h3>자주 묻는 질문</h3>
+              <div className="seo-faq-list">
+                {SEO_FAQ.map((item) => (
+                  <article key={item.question} className="seo-faq-item">
+                    <h4>{item.question}</h4>
+                    <p>{item.answer}</p>
+                  </article>
+                ))}
+              </div>
+
+              <p className="support-contact-banner">
+                버그나 필요한 기능이 있으면{" "}
+                <a href="mailto:leeqwezxcasd@gmail.com">leeqwezxcasd@gmail.com</a>
+                로 보내주세요.
+              </p>
+            </div>
+
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: faqStructuredData }}
+            />
+          </section>
+        )}
+
         <footer className="app-footer">made by 우주</footer>
         <Analytics />
         <SpeedInsights  />
