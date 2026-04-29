@@ -1,6 +1,7 @@
-﻿import type { SkillGrade, SkillMeta, SkillScoreTable } from "../../../types";
-import { resolveAvailableCardTypes } from "../../cardAvailability";
+﻿import type { CardType, SkillGrade, SkillMeta, SkillScoreTable } from "../../../types";
 
+const ALL_CARD_TYPES: CardType[] = ["impact", "signature", "goldenGlove", "national"];
+const NATIONAL_ONLY_CARD_TYPES: CardType[] = ["national"];
 
 type CloserSkillRow = {
   id: string;
@@ -35,12 +36,12 @@ const CLOSER_SKILL_ROWS: CloserSkillRow[] = [
   { id: "closer_skill_024", rawName: "워크에식", score: { 5: 16.53, 6: 16.53, 7: 18.98, 8: 18.98 } },
   { id: "closer_skill_025", rawName: "승리의함성", score: { 5: 13.91, 6: 16.23, 7: 18.55, 8: 20.88 } },
   { id: "closer_skill_026", rawName: "홈어드밴티지", score: { 5: 12.62, 6: 15.07, 7: 17.52, 8: 19.97 } },
-  { id: "closer_skill_027", rawName: "국대에이스", score: { 5: 12.25, 6: 14.7 } },
+  { id: "closer_skill_027", rawName: "국대에이스(중복)", score: { 5: 12.25, 6: 14.7 } },
   { id: "closer_skill_028", rawName: "도전정신(5성)", score: { 5: 12.25, 6: 14.7, 7: 17.15, 8: 19.6 } },
   { id: "closer_skill_029", rawName: "에이스", score: { 5: 12.25, 6: 14.7, 7: 17.15, 8: 19.6 } },
   { id: "closer_skill_030", rawName: "약속의8회", score: { 5: 12.25, 6: 14.7 } },
   { id: "closer_skill_031", rawName: "가을사나이", score: { 5: 12.38, 6: 14.64, 7: 16.9, 8: 19.15 } },
-  { id: "closer_skill_032", rawName: "부동심★1", score: { 5: 12.47, 6: 14.48, 7: 17.12, 8: 19.75 } },
+  { id: "closer_skill_032", rawName: "부동심", score: { 5: 12.47, 6: 14.48, 7: 17.12, 8: 19.75 } },
   { id: "closer_skill_033", rawName: "난세의영웅", score: { 5: 9.8, 6: 13.72, 7: 15.19, 8: 19.11 } },
   { id: "closer_skill_034", rawName: "원포인트릴리프", score: { 5: 11.07, 6: 12.83, 7: 14.6, 8: 16.36 } },
   { id: "closer_skill_035", rawName: "베스트포지션", score: { 5: 9.8, 6: 12.25, 7: 17.15, 8: 22.05 } },
@@ -51,11 +52,13 @@ const CLOSER_SKILL_ROWS: CloserSkillRow[] = [
   { id: "closer_skill_040", rawName: "백전노장", score: { 5: 8.6, 6: 10.69, 7: 12.32, 8: 13.95 } },
   { id: "closer_skill_041", rawName: "아티스트", score: { 5: 9.4, 6: 10.58, 7: 11.75, 8: 12.93 } },
   { id: "closer_skill_042", rawName: "언터쳐블", score: { 5: 9.4, 6: 10.58, 7: 11.75, 8: 12.93 } },
+  { id: "closer_skill_043", rawName: "원투펀치", score: { 5: 7.65, 6: 10.2, 7: 12.75, 8: 15.3 } },
   { id: "closer_skill_044", rawName: "승부사", score: { 5: 8.77, 6: 10.04, 7: 11.32, 8: 12.59 } },
   { id: "closer_skill_045", rawName: "오버페이스", score: { 5: 9.65, 6: 9.65, 7: 12.1, 8: 12.1 } },
   { id: "closer_skill_046", rawName: "라이징스타", score: { 5: 7.05, 6: 8.23, 7: 9.4, 8: 10.58 } },
   { id: "closer_skill_047", rawName: "평정심", score: { 5: 6.38, 6: 7.65, 7: 8.93, 8: 10.2 } },
-  { id: "closer_skill_049", rawName: "위닝샷★1", score: { 5: 4.64, 6: 7.45, 7: 7.82, 8: 8.18 } },
+  { id: "closer_skill_048", rawName: "첫단추", score: { 5: 6.38, 6: 7.65, 7: 8.93, 8: 10.2 } },
+  { id: "closer_skill_049", rawName: "위닝샷", score: { 5: 4.64, 6: 7.45, 7: 7.82, 8: 8.18 } },
   { id: "closer_skill_050", rawName: "우타킬러", score: { 5: 5.7, 6: 6.84, 7: 7.98, 8: 9.12 } },
   { id: "closer_skill_051", rawName: "완급조절", score: { 5: 4.53, 6: 5.44, 7: 6.35, 8: 7.25 } },
   { id: "closer_skill_052", rawName: "긴급투입", score: { 5: 4.8, 6: 5.04, 7: 5.29, 8: 5.53 } },
@@ -70,7 +73,7 @@ const CLOSER_SKILL_ROWS: CloserSkillRow[] = [
   { id: "closer_skill_061", rawName: "진검승부", score: { 5: 0.59, 6: 0.71, 7: 0.82, 8: 0.94 } },
   { id: "closer_skill_062", rawName: "리그의강자", score: { 5: 0, 6: 0, 7: 0, 8: 0 } },
   { id: "closer_skill_063", rawName: "타선지원", score: { 5: 0, 6: 0, 7: 0, 8: 0 } },
-  { id: "closer_skill_064", rawName: "사고방지★2", score: { 5: 0, 6: 0, 7: 0, 8: 0 } },
+  { id: "closer_skill_064", rawName: "사고방지", score: { 5: 0, 6: 0, 7: 0, 8: 0 } },
   { id: "closer_skill_065", rawName: "이닝이터", score: { 5: 0, 6: 0, 7: 0, 8: 0 } },
 ];
 
@@ -85,6 +88,7 @@ const NATIONAL_ONLY_SKILLS = new Set([
   "해결사",
   "국민계투",
   "국대에이스",
+  "패기",
 ]);
 
 function cleanDisplayName(rawName: string): string {
@@ -112,7 +116,7 @@ export const CLOSER_SKILLS: SkillMeta[] = CLOSER_SKILL_ROWS.map((row) => {
     id: row.id,
     name: cleanedName,
     grade,
-    availableCardTypes: resolveAvailableCardTypes(cleanedName, grade),
+    availableCardTypes: grade === "nationalOnly" ? NATIONAL_ONLY_CARD_TYPES : ALL_CARD_TYPES,
   };
 });
 

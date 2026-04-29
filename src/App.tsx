@@ -18,6 +18,20 @@ import {
   adminValidateSession,
   type AdminUsageSummary,
 } from "./lib/admin";
+import {
+  recognizeSkillImage,
+  skillOcrListUploads,
+  skillOcrLogin,
+  skillOcrLogout,
+  skillOcrSaveUpload,
+  skillOcrValidateSession,
+} from "./lib/skillOcr";
+import {
+  calculateSkillOcrSummary,
+  getPitcherModeFromPosition,
+  recalculateSkillOcrPlayer,
+  transformSkillOcrResponse,
+} from "./lib/skillOcrTransform";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import {
   formatMatchedPercent,
@@ -30,6 +44,7 @@ import {
 import AppChrome from "./components/AppChrome";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
+import SkillOcrView from "./views/SkillOcrView";
 import ToolboxStage from "./views/ToolboxStage";
 import type {
   CalculatorMode,
@@ -40,6 +55,13 @@ import type {
   SkillLevel,
   ToolView,
 } from "./types";
+import type {
+  SkillOcrApiResponse,
+  SkillOcrRole,
+  SkillOcrSavedUpload,
+  SkillOcrSelectedPlayer,
+  SkillOcrSession,
+} from "./types/ocr";
 import { calculateSkillTotal } from "./utils/calculate";
 import { judgeSkillResult, type ResultGrade } from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
@@ -57,6 +79,10 @@ const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
 const ADMIN_PATH = "/admin";
 const ADMIN_SESSION_KEY = "v26-admin-session";
+const OCR_PATH = "/tyrant";
+const OCR_SESSION_KEY = "v26-skill-ocr-session";
+const OCR_FIXED_USERNAME = "tyrant";
+const OCR_FIXED_PASSWORD = "tttt1199";
 
 type ServiceView = "toolbox" | "ranking";
 
@@ -119,6 +145,8 @@ const SEO_FAQ = [
 function App() {
   const isAdminRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
+  const isOcrRoute =
+    typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === OCR_PATH;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toolView, setToolView] = useState<ToolView>(() => {
     if (typeof window === "undefined") {
@@ -172,6 +200,23 @@ function App() {
   const [adminStats, setAdminStats] = useState<AdminUsageSummary | null>(null);
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
+  const [ocrPasswordInput, setOcrPasswordInput] = useState("");
+  const [ocrAuthError, setOcrAuthError] = useState<string | null>(null);
+  const [ocrCheckingSession, setOcrCheckingSession] = useState(isOcrRoute);
+  const [ocrSession, setOcrSession] = useState<SkillOcrSession | null>(null);
+  const [ocrUploads, setOcrUploads] = useState<SkillOcrSavedUpload[]>([]);
+  const [ocrUploadsLoading, setOcrUploadsLoading] = useState(false);
+  const [ocrUploadsError, setOcrUploadsError] = useState<string | null>(null);
+  const [ocrUploadBusyRole, setOcrUploadBusyRole] = useState<SkillOcrRole | null>(null);
+  const [ocrUploadError, setOcrUploadError] = useState<string | null>(null);
+  const [ocrDraftPlayers, setOcrDraftPlayers] = useState<SkillOcrSelectedPlayer[]>([]);
+  const [ocrDraftImageName, setOcrDraftImageName] = useState<string | null>(null);
+  const [ocrDraftRole, setOcrDraftRole] = useState<SkillOcrRole | null>(null);
+  const [ocrDraftRawResponse, setOcrDraftRawResponse] = useState<SkillOcrApiResponse | null>(null);
+  const [ocrDraftTotalScore, setOcrDraftTotalScore] = useState(0);
+  const [ocrDraftAverageScore, setOcrDraftAverageScore] = useState(0);
+  const [ocrSaving, setOcrSaving] = useState(false);
+  const [ocrSavedUpload, setOcrSavedUpload] = useState<SkillOcrSavedUpload | null>(null);
   const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
   const loggedToolViewsRef = useRef<Set<string>>(new Set());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
@@ -302,6 +347,61 @@ function App() {
   }, [isAdminRoute]);
 
   useEffect(() => {
+    if (!isOcrRoute) {
+      return;
+    }
+
+    const storedSessionToken = window.localStorage.getItem(OCR_SESSION_KEY);
+
+    if (!storedSessionToken) {
+      setOcrCheckingSession(false);
+      setOcrSession(null);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const session = await skillOcrValidateSession(storedSessionToken);
+
+        if (!session) {
+          window.localStorage.removeItem(OCR_SESSION_KEY);
+          setOcrSession(null);
+          setOcrCheckingSession(false);
+          return;
+        }
+
+        setOcrSession(session);
+      } catch {
+        window.localStorage.removeItem(OCR_SESSION_KEY);
+        setOcrSession(null);
+      } finally {
+        setOcrCheckingSession(false);
+      }
+    })();
+  }, [isOcrRoute]);
+
+  useEffect(() => {
+    if (!isOcrRoute || !ocrSession) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        setOcrUploadsLoading(true);
+        setOcrUploadsError(null);
+        const uploads = await skillOcrListUploads(ocrSession.session_token, 20);
+        setOcrUploads(uploads);
+      } catch (error) {
+        setOcrUploadsError(
+          error instanceof Error ? error.message : "OCR 저장 기록을 불러오지 못했습니다."
+        );
+      } finally {
+        setOcrUploadsLoading(false);
+      }
+    })();
+  }, [isOcrRoute, ocrSession]);
+
+  useEffect(() => {
     if (!isAdminRoute || !adminUnlocked) {
       return;
     }
@@ -328,17 +428,23 @@ function App() {
   }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
-    if (isAdminRoute) {
+    if (isAdminRoute || isOcrRoute) {
       return;
     }
 
     const url = new URL(window.location.href);
     url.searchParams.set("view", toolView);
     window.history.replaceState({}, "", url.toString());
-  }, [isAdminRoute, toolView]);
+  }, [isAdminRoute, isOcrRoute, toolView]);
 
   useEffect(() => {
-    if (isAdminRoute || toolView === "ranking" || !supabaseReady || !toolUsageSessionId) {
+    if (
+      isAdminRoute ||
+      isOcrRoute ||
+      toolView === "ranking" ||
+      !supabaseReady ||
+      !toolUsageSessionId
+    ) {
       return;
     }
 
@@ -360,7 +466,7 @@ function App() {
     }).catch(() => {
       loggedToolViewsRef.current.delete(viewKey);
     });
-  }, [activeCardType, isAdminRoute, mode, supabaseReady, toolUsageSessionId, toolView]);
+  }, [activeCardType, isAdminRoute, isOcrRoute, mode, supabaseReady, toolUsageSessionId, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -726,6 +832,227 @@ function App() {
     window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
   };
 
+  const handleOcrLogin = async () => {
+    if (!ocrPasswordInput.trim()) {
+      setOcrAuthError("비밀번호를 입력해주세요.");
+      return;
+    }
+
+    if (ocrPasswordInput !== OCR_FIXED_PASSWORD) {
+      setOcrAuthError("비밀번호가 올바르지 않습니다.");
+      return;
+    }
+
+    try {
+      const session = await skillOcrLogin(OCR_FIXED_USERNAME, ocrPasswordInput);
+      setOcrAuthError(null);
+      setOcrSession(session);
+      window.localStorage.setItem(OCR_SESSION_KEY, session.session_token);
+    } catch (error) {
+      setOcrAuthError(error instanceof Error ? error.message : "OCR 로그인에 실패했습니다.");
+    }
+  };
+
+  const handleOcrLogout = async () => {
+    const sessionToken = ocrSession?.session_token ?? window.localStorage.getItem(OCR_SESSION_KEY);
+
+    if (sessionToken) {
+      try {
+        await skillOcrLogout(sessionToken);
+      } catch {
+        // Clear the client session even if the server-side token is already invalid.
+      }
+    }
+
+    setOcrSession(null);
+    setOcrPasswordInput("");
+    setOcrAuthError(null);
+    setOcrUploads([]);
+    setOcrUploadError(null);
+    setOcrDraftPlayers([]);
+    setOcrDraftImageName(null);
+    setOcrDraftRole(null);
+    setOcrDraftRawResponse(null);
+    setOcrDraftTotalScore(0);
+    setOcrDraftAverageScore(0);
+    setOcrSaving(false);
+    setOcrSavedUpload(null);
+    window.localStorage.removeItem(OCR_SESSION_KEY);
+  };
+
+  const handleOcrUploadImage = async (role: SkillOcrRole, file: File) => {
+    setOcrUploadBusyRole(role);
+    setOcrUploadError(null);
+    setOcrDraftPlayers([]);
+    setOcrDraftImageName(file.name);
+    setOcrDraftRole(role);
+    setOcrDraftRawResponse(null);
+    setOcrDraftTotalScore(0);
+    setOcrDraftAverageScore(0);
+    setOcrSavedUpload(null);
+
+    try {
+      const response = await recognizeSkillImage({ role, file });
+      const transformed = transformSkillOcrResponse(response, role);
+
+      setOcrDraftRawResponse(response);
+      setOcrDraftPlayers(transformed.players);
+      setOcrDraftTotalScore(transformed.totalScore);
+      setOcrDraftAverageScore(transformed.averageScore);
+    } catch (error) {
+      setOcrUploadError(
+        error instanceof Error ? error.message : "이미지를 인식하지 못했습니다."
+      );
+    } finally {
+      setOcrUploadBusyRole(null);
+    }
+  };
+
+  const handleOcrSaveDraft = async () => {
+    if (!ocrSession || !ocrDraftRole || !ocrDraftRawResponse) {
+      setOcrUploadError("저장할 OCR 결과가 없습니다.");
+      return;
+    }
+
+    const selectedPlayers = ocrDraftPlayers.filter((player) => player.selected);
+
+    if (selectedPlayers.length === 0) {
+      setOcrUploadError("최소 1명 이상 선택해야 저장할 수 있습니다.");
+      return;
+    }
+
+    try {
+      setOcrSaving(true);
+      setOcrUploadError(null);
+      const savedUpload = await skillOcrSaveUpload({
+        sessionToken: ocrSession.session_token,
+        role: ocrDraftRole,
+        imageName: ocrDraftImageName,
+        requestId: ocrDraftRawResponse.request_id,
+        rawResponse: ocrDraftRawResponse,
+        selectedPlayers,
+        totalScore: ocrDraftTotalScore,
+        averageScore: ocrDraftAverageScore,
+      });
+      const uploads = await skillOcrListUploads(ocrSession.session_token, 20);
+
+      setOcrSavedUpload(savedUpload);
+      setOcrUploads(uploads);
+      setOcrDraftPlayers([]);
+      setOcrDraftImageName(null);
+      setOcrDraftRole(null);
+      setOcrDraftRawResponse(null);
+      setOcrDraftTotalScore(0);
+      setOcrDraftAverageScore(0);
+    } catch (error) {
+      setOcrUploadError(error instanceof Error ? error.message : "OCR 결과 저장에 실패했습니다.");
+    } finally {
+      setOcrSaving(false);
+    }
+  };
+
+  const updateOcrDraftPlayers = (
+    updater: (players: SkillOcrSelectedPlayer[]) => SkillOcrSelectedPlayer[]
+  ) => {
+    setOcrDraftPlayers((currentPlayers) => {
+      const nextPlayers = updater(currentPlayers);
+      const summary = calculateSkillOcrSummary(nextPlayers);
+      setOcrDraftTotalScore(summary.totalScore);
+      setOcrDraftAverageScore(summary.averageScore);
+      return nextPlayers;
+    });
+  };
+
+  const handleOcrPlayerSelectedChange = (playerIndex: number, selected: boolean) => {
+    updateOcrDraftPlayers((players) => {
+      const selectedCount = players.filter((player) => player.selected).length;
+
+      if (selected && selectedCount >= 9 && !players[playerIndex]?.selected) {
+        setOcrUploadError("최대 9명까지만 선택할 수 있습니다.");
+        return players;
+      }
+
+      setOcrUploadError(null);
+      return players.map((player, index) =>
+        index === playerIndex ? { ...player, selected } : player
+      );
+    });
+  };
+
+  const handleOcrPlayerCardTypeChange = (playerIndex: number, nextCardType: CardType) => {
+    updateOcrDraftPlayers((players) =>
+      players.map((player, index) =>
+        index === playerIndex
+          ? recalculateSkillOcrPlayer({ ...player, cardType: nextCardType })
+          : player
+      )
+    );
+  };
+
+  const handleOcrPlayerPositionChange = (playerIndex: number, nextPosition: string) => {
+    updateOcrDraftPlayers((players) =>
+      players.map((player, index) =>
+        index === playerIndex
+          ? recalculateSkillOcrPlayer({
+              ...player,
+              position: nextPosition,
+              calculatorMode: getPitcherModeFromPosition(nextPosition),
+            })
+          : player
+      )
+    );
+  };
+
+  const handleOcrSkillChange = (
+    playerIndex: number,
+    slot: number,
+    skillId: string,
+    skillName: string
+  ) => {
+    updateOcrDraftPlayers((players) =>
+      players.map((player, index) => {
+        if (index !== playerIndex) {
+          return player;
+        }
+
+        return recalculateSkillOcrPlayer({
+          ...player,
+          skills: player.skills.map((skill) =>
+            skill.slot === slot
+              ? {
+                  ...skill,
+                  skillId: skillId || null,
+                  skillName: skillName || null,
+                  matched: Boolean(skillId),
+                }
+              : skill
+          ),
+        });
+      })
+    );
+  };
+
+  const handleOcrSkillLevelChange = (
+    playerIndex: number,
+    slot: number,
+    level: SkillLevel
+  ) => {
+    updateOcrDraftPlayers((players) =>
+      players.map((player, index) => {
+        if (index !== playerIndex) {
+          return player;
+        }
+
+        return recalculateSkillOcrPlayer({
+          ...player,
+          skills: player.skills.map((skill) =>
+            skill.slot === slot ? { ...skill, level } : skill
+          ),
+        });
+      })
+    );
+  };
+
   const handleGoHome = () => {
     window.location.href = `${window.location.origin}/?view=ranking`;
   };
@@ -761,6 +1088,51 @@ function App() {
           />
           <Analytics />
           <SpeedInsights  />
+        </div>
+      </div>
+    );
+  }
+
+  if (isOcrRoute) {
+    return (
+      <div className="app-bg">
+        <div className="app-shell">
+          <SkillOcrView
+            session={ocrSession}
+            checkingSession={ocrCheckingSession}
+            passwordInput={ocrPasswordInput}
+            authError={ocrAuthError}
+            uploads={ocrUploads}
+            uploadsLoading={ocrUploadsLoading}
+            uploadsError={ocrUploadsError}
+            uploadBusyRole={ocrUploadBusyRole}
+            uploadError={ocrUploadError}
+            draftPlayers={ocrDraftPlayers}
+            draftTotalScore={ocrDraftTotalScore}
+            draftAverageScore={ocrDraftAverageScore}
+            saving={ocrSaving}
+            savedUpload={ocrSavedUpload}
+            onPasswordChange={(value) => {
+              setOcrPasswordInput(value);
+              if (ocrAuthError) {
+                setOcrAuthError(null);
+              }
+            }}
+            onLogin={() => void handleOcrLogin()}
+            onLogout={() => void handleOcrLogout()}
+            onUploadImage={(role, file) => void handleOcrUploadImage(role, file)}
+            onPlayerSelectedChange={handleOcrPlayerSelectedChange}
+            onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
+            onPlayerPositionChange={handleOcrPlayerPositionChange}
+            onSkillChange={handleOcrSkillChange}
+            onSkillLevelChange={handleOcrSkillLevelChange}
+            onSaveDraft={() => void handleOcrSaveDraft()}
+            onSelectSavedUpload={setOcrSavedUpload}
+            onClearSavedUpload={() => setOcrSavedUpload(null)}
+            onGoHome={handleGoHome}
+          />
+          <Analytics />
+          <SpeedInsights />
         </div>
       </div>
     );
