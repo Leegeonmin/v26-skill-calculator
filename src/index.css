@@ -1407,6 +1407,31 @@ select {
   align-items: center;
 }
 
+.ocr-skill-edit-row-unmatched {
+  grid-template-columns: auto minmax(0, 1fr) 74px;
+  padding: 7px;
+  border: 1px solid rgba(220, 38, 38, 0.26);
+  border-radius: 12px;
+  background: rgba(254, 242, 242, 0.7);
+}
+
+.ocr-match-fail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  color: #dc2626;
+  font-size: 0.72rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.ocr-match-fail-badge .ocr-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
+}
+
 .ocr-player-controls select,
 .ocr-skill-edit-row select {
   width: 100%;
@@ -1423,6 +1448,10 @@ select {
 .ocr-skill-edit-row span {
   text-align: right;
   font-weight: 700;
+}
+
+.ocr-validation-error {
+  scroll-margin-top: 96px;
 }
 
 .ocr-player-score {
@@ -1719,7 +1748,7 @@ select {
   background: rgba(255, 255, 255, 0.62);
 }
 
-.ocr-skill-edit-row select:first-child {
+.ocr-skill-edit-row select:first-of-type {
   border-color: currentColor;
 }
 
@@ -5810,6 +5839,16 @@ input {
   .ocr-skill-edit-row {
     grid-template-columns: minmax(0, 1fr) 56px;
     gap: 5px;
+  }
+
+  .ocr-skill-edit-row-unmatched {
+    grid-template-columns: minmax(0, 1fr) 56px;
+    padding: 6px;
+  }
+
+  .ocr-skill-edit-row-unmatched .ocr-match-fail-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 
   .ocr-skill-edit-row select {

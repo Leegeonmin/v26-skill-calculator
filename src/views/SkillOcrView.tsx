@@ -64,7 +64,8 @@ type OcrIconName =
   | "logout"
   | "save"
   | "upload"
-  | "user";
+  | "user"
+  | "warning";
 
 function formatRole(role: SkillOcrSavedUpload["role"]): string {
   return role === "hitter" ? "타자" : "투수";
@@ -139,6 +140,7 @@ function OcrIcon({ name }: { name: OcrIconName }) {
     save: "M5 3h12l2 2v16H5V3Zm3 0v6h8V3M8 17h8",
     upload: "M12 16V4m0 0 5 5m-5-5-5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3",
     user: "M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z",
+    warning: "M12 3 2 21h20L12 3Zm1 13h-2v2h2v-2Zm0-7h-2v5h2V9Z",
   };
 
   return (
@@ -182,6 +184,7 @@ export default function SkillOcrView({
   const [activeTab, setActiveTab] = useState<OcrPanelTab>("upload");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [exampleOpen, setExampleOpen] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
   if (checkingSession) {
     return (
@@ -249,6 +252,44 @@ export default function SkillOcrView({
       : null;
   const hitterSavedCount = hitterUploads.length;
   const pitcherSavedCount = pitcherUploads.length;
+
+  const scrollToReviewPanel = () => {
+    document
+      .querySelector<HTMLElement>(".ocr-review-panel")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const scrollToRequiredSkill = (playerIndex: number, slot: number) => {
+    const element = document.querySelector<HTMLElement>(
+      `[data-ocr-required-skill="${playerIndex}-${slot}"]`
+    );
+    element?.scrollIntoView({ behavior: "smooth", block: "center" });
+    element?.focus();
+  };
+
+  const validateDraftPlayers = () => {
+    if (selectedDraftPlayers.length === 0) {
+      setValidationMessage("저장하거나 복사할 선수를 최소 1명 이상 선택해주세요.");
+      window.setTimeout(scrollToReviewPanel, 0);
+      return false;
+    }
+
+    const playerIndex = draftPlayers.findIndex(
+      (player) => player.selected && player.skills.some((skill) => !skill.skillId)
+    );
+    const missingSkill =
+      playerIndex >= 0 ? draftPlayers[playerIndex].skills.find((skill) => !skill.skillId) : null;
+
+    if (playerIndex >= 0 && missingSkill) {
+      setValidationMessage("필수값을 채워주세요. 매칭실패 스킬을 선택해야 저장/복사할 수 있습니다.");
+      window.setTimeout(() => scrollToRequiredSkill(playerIndex, missingSkill.slot), 0);
+      return false;
+    }
+
+    setValidationMessage(null);
+    return true;
+  };
+
   const copyAnalysisText = async (params: {
     id: string;
     role: SkillOcrRole | null;
@@ -266,6 +307,28 @@ export default function SkillOcrView({
     setCopiedId(params.id);
     window.setTimeout(() => setCopiedId((currentId) => (currentId === params.id ? null : currentId)), 1400);
   };
+
+  const copyDraftAnalysisText = async () => {
+    if (!validateDraftPlayers()) {
+      return;
+    }
+
+    await copyAnalysisText({
+      id: "draft",
+      role: draftRole,
+      averageScore: draftAverageScore,
+      players: selectedDraftPlayers,
+    });
+  };
+
+  const saveDraft = () => {
+    if (!validateDraftPlayers()) {
+      return;
+    }
+
+    onSaveDraft();
+  };
+
   const savedUploadPanel = savedUpload ? (
     <section className="ocr-saved-panel">
       <div className="ocr-section-head">
@@ -297,7 +360,7 @@ export default function SkillOcrView({
                   key={`${player.sourceRow}-${skill.slot}`}
                   className={`ocr-saved-skill ${getSkillToneClass(skill)}`}
                 >
-                  {skill.skillName ?? "미매칭"} Lv.{skill.level}
+                  {skill.skillName ?? "매칭실패"} Lv.{skill.level}
                 </span>
               ))}
             </div>
@@ -635,7 +698,7 @@ export default function SkillOcrView({
                       key={`${player.sourceRow}-${skill.slot}`}
                       className={`ocr-saved-skill ${getSkillToneClass(skill)}`}
                     >
-                      {skill.skillName ?? "미매칭"} Lv.{skill.level}
+                      {skill.skillName ?? "매칭실패"} Lv.{skill.level}
                     </span>
                   ))}
                 </div>
@@ -697,9 +760,10 @@ export default function SkillOcrView({
                     <input
                       type="checkbox"
                       checked={player.selected}
-                      onChange={(event) =>
-                        onPlayerSelectedChange(playerIndex, event.target.checked)
-                      }
+                      onChange={(event) => {
+                        setValidationMessage(null);
+                        onPlayerSelectedChange(playerIndex, event.target.checked);
+                      }}
                     />
                     <strong>{player.playerName}</strong>
                   </label>
@@ -744,14 +808,24 @@ export default function SkillOcrView({
                   {player.skills.map((skill) => (
                     <div
                       key={`${player.sourceRow}-${skill.slot}`}
-                      className={`ocr-skill-edit-row ${getSkillToneClass(skill)}`}
+                      className={`ocr-skill-edit-row ${getSkillToneClass(skill)} ${
+                        skill.skillId ? "" : "ocr-skill-edit-row-unmatched"
+                      }`}
                     >
+                      {!skill.skillId && (
+                        <span className="ocr-match-fail-badge" title="매칭실패">
+                          <OcrIcon name="warning" />
+                          매칭실패
+                        </span>
+                      )}
                       <select
+                        data-ocr-required-skill={`${playerIndex}-${skill.slot}`}
                         value={skill.skillId ?? ""}
                         onChange={(event) => {
                           const option = skillOptions.find(
                             (candidate) => candidate.skillId === event.target.value
                           );
+                          setValidationMessage(null);
                           onSkillChange(
                             playerIndex,
                             skill.slot,
@@ -760,7 +834,7 @@ export default function SkillOcrView({
                           );
                         }}
                       >
-                        <option value="">미매칭</option>
+                        <option value="">매칭실패</option>
                         {skillOptions.map((option) => (
                           <option key={option.skillId} value={option.skillId}>
                             {option.skillName}
@@ -796,19 +870,13 @@ export default function SkillOcrView({
             현재 {selectedDraftPlayers.length}명이 선택되어 있습니다. 최대 9명까지 저장할 수 있습니다.
           </p>
 
+          {validationMessage && <p className="modal-error ocr-validation-error">{validationMessage}</p>}
+
           <div className="ocr-save-actions">
             <button
               type="button"
               className="ghost-btn"
-              disabled={selectedDraftPlayers.length === 0}
-              onClick={() =>
-                void copyAnalysisText({
-                  id: "draft",
-                  role: draftRole,
-                  averageScore: draftAverageScore,
-                  players: selectedDraftPlayers,
-                })
-              }
+              onClick={() => void copyDraftAnalysisText()}
             >
               <OcrIcon name={copiedId === "draft" ? "check" : "clipboard"} />
               {copiedId === "draft" ? "복사됨" : "복사"}
@@ -816,8 +884,8 @@ export default function SkillOcrView({
             <button
               type="button"
               className="primary-btn"
-              disabled={saving || selectedDraftPlayers.length === 0}
-              onClick={onSaveDraft}
+              disabled={saving}
+              onClick={saveDraft}
             >
               <OcrIcon name="save" />
               {saving ? "저장 중" : "저장"}
