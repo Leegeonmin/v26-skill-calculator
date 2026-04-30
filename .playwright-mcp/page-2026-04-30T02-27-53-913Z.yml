@@ -1,0 +1,41 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]:
+          - heading "v26-lab" [level=1] [ref=e12]
+          - paragraph [ref=e13]: 계산기, 시뮬레이터, 랭킹챌린지를 한 화면에서 선택
+      - generic [ref=e15]: Supabase 설정 필요
+  - main "v26-lab" [ref=e17]:
+    - generic [ref=e18]:
+      - img [ref=e20]
+      - generic [ref=e22]:
+        - heading "v26-lab" [level=1] [ref=e23]
+        - paragraph [ref=e24]: 계산기, 시뮬레이터, 랭킹챌린지를 한 화면에서 바로 선택하세요.
+    - region "도구 선택" [ref=e25]:
+      - button "Skill Score 스킬 점수 계산기 타자, 선발, 중계, 마무리 스킬 조합 점수와 등급 확인" [ref=e26] [cursor=pointer]:
+        - img [ref=e28]
+        - generic [ref=e30]:
+          - generic [ref=e31]: Skill Score
+          - strong [ref=e32]: 스킬 점수 계산기
+          - generic [ref=e33]: 타자, 선발, 중계, 마무리 스킬 조합 점수와 등급 확인
+      - button "Advanced Roll 고스변 시뮬 고급 스킬 변경권 결과와 목표 등급까지의 자동 롤 확인" [ref=e34] [cursor=pointer]:
+        - img [ref=e36]
+        - generic [ref=e38]:
+          - generic [ref=e39]: Advanced Roll
+          - strong [ref=e40]: 고스변 시뮬
+          - generic [ref=e41]: 고급 스킬 변경권 결과와 목표 등급까지의 자동 롤 확인
+      - button "Impact Roll 임팩트 변경 시뮬 1번 스킬 고정 기준으로 2, 3번 메이저 조합 시뮬레이션" [ref=e42] [cursor=pointer]:
+        - img [ref=e44]
+        - generic [ref=e46]:
+          - generic [ref=e47]: Impact Roll
+          - strong [ref=e48]: 임팩트 변경 시뮬
+          - generic [ref=e49]: 1번 스킬 고정 기준으로 2, 3번 메이저 조합 시뮬레이션
+      - button "Leaderboard 고스변 랭킹챌린지 하루 한 번 기록하고 이번 주 최고 점수 경쟁" [ref=e50] [cursor=pointer]:
+        - img [ref=e52]
+        - generic [ref=e54]:
+          - generic [ref=e55]: Leaderboard
+          - strong [ref=e56]: 고스변 랭킹챌린지
+          - generic [ref=e57]: 하루 한 번 기록하고 이번 주 최고 점수 경쟁
+  - contentinfo [ref=e58]: made by 우주

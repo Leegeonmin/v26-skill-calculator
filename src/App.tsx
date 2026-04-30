@@ -7,9 +7,6 @@ import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS, SKILL_GRADE_COLORS } from "./data/uiColors";
 import {
   ensureProfile,
-  getMyProfile,
-  signInWithGoogle,
-  signOut,
 } from "./lib/auth";
 import {
   adminGetToolUsageSummary,
@@ -42,6 +39,7 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
+import HomeView from "./views/HomeView";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
 import SkillOcrView from "./views/SkillOcrView";
@@ -69,7 +67,7 @@ import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpac
 import { logToolUsageEvent } from "./lib/toolUsage";
 
 const DEFAULT_MODE: CalculatorMode = "hitter";
-const DEFAULT_VIEW: ToolView = "calculator";
+const DEFAULT_VIEW: ToolView = "home";
 const DEFAULT_HITTER_POSITION_GROUP: HitterPositionGroup = "fielder";
 const DEFAULT_CARD_TYPE: CardType = "signature";
 const DEFAULT_LEVEL_1: SkillLevel = 6;
@@ -84,18 +82,8 @@ const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = "tyrant";
 const OCR_FIXED_PASSWORD = "tttt1199";
 
-type ServiceView = "toolbox" | "ranking";
-
-const SERVICE_INFO: Record<ServiceView, { title: string; subtitle: string }> = {
-  ranking: {
-    title: "고스변 랭킹챌린지",
-    subtitle: "하루 한 번, 이번 주 최고 점수를 겨루는 챌린지",
-  },
-  toolbox: {
-    title: "v26 스킬 계산",
-    subtitle: "스킬 계산기와 시뮬레이터를 한 곳에서 확인",
-  },
-};
+type ServiceView = "home" | "toolbox" | "ranking";
+type ThemePreference = "light" | "dark";
 
 const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
   { value: "C", label: "C 이상" },
@@ -147,18 +135,25 @@ function App() {
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
   const isOcrRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === OCR_PATH;
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toolView, setToolView] = useState<ToolView>(() => {
     if (typeof window === "undefined") {
       return DEFAULT_VIEW;
     }
 
     const requestedView = new URL(window.location.href).searchParams.get("view");
-    const validViews: ToolView[] = ["calculator", "simulator", "impactChange", "ranking"];
+    const validViews: ToolView[] = ["home", "calculator", "simulator", "impactChange", "ranking"];
 
     return requestedView && validViews.includes(requestedView as ToolView)
       ? (requestedView as ToolView)
       : DEFAULT_VIEW;
+  });
+  const [theme, setTheme] = useState<ThemePreference>(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    const storedTheme = window.localStorage.getItem("v26-theme");
+    return storedTheme === "dark" ? "dark" : "light";
   });
   const [mode, setMode] = useState<CalculatorMode>(DEFAULT_MODE);
   const [hitterPositionGroup, setHitterPositionGroup] =
@@ -184,8 +179,6 @@ function App() {
   );
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [isAuthBusy, setIsAuthBusy] = useState(false);
-  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
   const [adminUsernameInput, setAdminUsernameInput] = useState("");
   const [adminPasswordInput, setAdminPasswordInput] = useState("");
   const [adminPasswordError, setAdminPasswordError] = useState<string | null>(null);
@@ -220,6 +213,7 @@ function App() {
   const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
   const loggedToolViewsRef = useRef<Set<string>>(new Set());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
+  const applyingPopStateRef = useRef(false);
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -289,12 +283,11 @@ function App() {
     ? formatMatchedPercent(judgeResult?.matchedPercent ?? null)
     : "-";
   const totalScoreDisplay = totalScore ?? "-";
-  const authDisplayName = profileDisplayName;
   const supabaseReady = isSupabaseConfigured();
-  const activeService: ServiceView = toolView === "ranking" ? "ranking" : "toolbox";
-  const toolboxToolView: Exclude<ToolView, "ranking"> =
-    toolView === "ranking" ? "calculator" : toolView;
-  const serviceInfo = SERVICE_INFO[activeService];
+  const activeService: ServiceView =
+    toolView === "home" ? "home" : toolView === "ranking" ? "ranking" : "toolbox";
+  const toolboxToolView: Exclude<ToolView, "home" | "ranking"> =
+    toolView === "home" || toolView === "ranking" ? "calculator" : toolView;
   const faqStructuredData = useMemo(
     () =>
       JSON.stringify({
@@ -311,6 +304,10 @@ function App() {
       }),
     []
   );
+
+  useEffect(() => {
+    window.localStorage.setItem("v26-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     if (!isAdminRoute) {
@@ -432,9 +429,40 @@ function App() {
       return;
     }
 
+    const handlePopState = () => {
+      const requestedView = new URL(window.location.href).searchParams.get("view");
+      const validViews: ToolView[] = ["home", "calculator", "simulator", "impactChange", "ranking"];
+      applyingPopStateRef.current = true;
+      setToolView(
+        requestedView && validViews.includes(requestedView as ToolView)
+          ? (requestedView as ToolView)
+          : DEFAULT_VIEW
+      );
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isAdminRoute, isOcrRoute]);
+
+  useEffect(() => {
+    if (isAdminRoute || isOcrRoute) {
+      return;
+    }
+
     const url = new URL(window.location.href);
+    if (url.searchParams.get("view") === toolView) {
+      applyingPopStateRef.current = false;
+      return;
+    }
+
     url.searchParams.set("view", toolView);
-    window.history.replaceState({}, "", url.toString());
+    if (applyingPopStateRef.current) {
+      window.history.replaceState({}, "", url.toString());
+      applyingPopStateRef.current = false;
+      return;
+    }
+
+    window.history.pushState({}, "", url.toString());
   }, [isAdminRoute, isOcrRoute, toolView]);
 
   useEffect(() => {
@@ -478,7 +506,6 @@ function App() {
     const syncProfileForSession = async (session: Session | null) => {
       if (!session) {
         lastProfileSyncKeyRef.current = null;
-        setProfileDisplayName(null);
         return;
       }
 
@@ -491,10 +518,8 @@ function App() {
 
       try {
         await ensureProfile(session);
-        const profile = await getMyProfile();
         if (!isMounted) return;
         setAuthError(null);
-        setProfileDisplayName(profile?.display_name?.trim() || null);
       } catch (profileError) {
         if (!isMounted) return;
         lastProfileSyncKeyRef.current = null;
@@ -682,6 +707,11 @@ function App() {
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
+    if (nextToolView === "home" || nextToolView === "ranking") {
+      setToolView(nextToolView);
+      return;
+    }
+
     if (nextToolView === "impactChange") {
       const [impactLevel1, impactLevel2, impactLevel3] = getDefaultLevels("impact");
       setToolView("impactChange");
@@ -693,18 +723,6 @@ function App() {
     }
 
     setToolView(nextToolView);
-  };
-
-  const handleServiceChange = (nextService: ServiceView) => {
-    if (nextService === "ranking") {
-      setToolView("ranking");
-      return;
-    }
-
-    if (toolView === "ranking") {
-      setToolView("calculator");
-      return;
-    }
   };
 
   const handleModeChange = (nextMode: CalculatorMode) => {
@@ -728,36 +746,6 @@ function App() {
     setLevel3(defaultLevel3);
     resetSimulationSession();
   };
-  const handleGoogleSignIn = async () => {
-    setIsAuthBusy(true);
-    setAuthError(null);
-
-    try {
-      const redirectTo =
-        `${window.location.origin}?view=${toolView}`;
-      await signInWithGoogle(redirectTo);
-    } catch (error) {
-      setAuthError(
-        error instanceof Error ? error.message : "Google ??? ? ??? ??????."
-      );
-    } finally {
-      setIsAuthBusy(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    setIsAuthBusy(true);
-    setAuthError(null);
-
-    try {
-      await signOut();
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "???? ? ??? ??????.");
-    } finally {
-      setIsAuthBusy(false);
-    }
-  };
-
   const handleImpactChangeRoll = () => {
     if (!gameData) return;
 
@@ -1054,12 +1042,40 @@ function App() {
   };
 
   const handleGoHome = () => {
-    window.location.href = `${window.location.origin}/?view=ranking`;
+    window.location.href = `${window.location.origin}/?view=home`;
   };
+
+  const themeToggle = (
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={() => setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
+      aria-label={theme === "dark" ? "라이트 테마로 변경" : "다크 테마로 변경"}
+    >
+      <span className="theme-toggle-icon" aria-hidden="true">
+        {theme === "dark" ? (
+          <svg viewBox="0 0 24 24" className="ui-icon">
+            <path
+              d="M12 4V2h2v2h-2Zm0 18v-2h2v2h-2ZM4.22 5.64 5.64 4.22l1.41 1.42-1.41 1.41-1.42-1.41Zm12.73 12.72 1.41-1.41 1.42 1.41-1.42 1.42-1.41-1.42ZM2 14v-2h2v2H2Zm18 0v-2h2v2h-2ZM4.22 18.36l1.42-1.41 1.41 1.41-1.41 1.42-1.42-1.42ZM16.95 5.64l1.41-1.42 1.42 1.42-1.42 1.41-1.41-1.41ZM13 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"
+              fill="currentColor"
+            />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="ui-icon">
+            <path
+              d="M20.2 15.6A8.2 8.2 0 0 1 8.4 3.8 8.2 8.2 0 1 0 20.2 15.6Z"
+              fill="currentColor"
+            />
+          </svg>
+        )}
+      </span>
+      <span>{theme === "dark" ? "라이트" : "다크"}</span>
+    </button>
+  );
 
   if (isAdminRoute) {
     return (
-      <div className="app-bg">
+      <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
           <AdminView
             unlocked={adminUnlocked}
@@ -1095,7 +1111,7 @@ function App() {
 
   if (isOcrRoute) {
     return (
-      <div className="app-bg">
+      <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
           <SkillOcrView
             session={ocrSession}
@@ -1139,28 +1155,30 @@ function App() {
   }
 
   return (
-    <div className="app-bg">
+    <div className="app-bg" data-theme={theme}>
       <div className="app-shell">
-        <AppChrome
-          activeService={activeService}
-          serviceTitle={serviceInfo.title}
-          serviceSubtitle={serviceInfo.subtitle}
-          mobileNavOpen={mobileNavOpen}
-          supabaseReady={supabaseReady}
-          authDisplayName={authDisplayName}
-          isAuthBusy={isAuthBusy}
-          onOpenMobileNav={() => setMobileNavOpen(true)}
-          onCloseMobileNav={() => setMobileNavOpen(false)}
-          onSelectService={handleServiceChange}
-          onGoogleSignIn={() => void handleGoogleSignIn()}
-          onSignOut={() => void handleSignOut()}
-        >
+        <AppChrome>
           {authError && <p className="auth-error">{authError}</p>}
 
-          {toolView === "ranking" ? (
-            <div className="main-stage">
-              <main className="layout-grid">
-                <section className="panel panel-main panel-wide">
+          {toolView === "home" ? (
+            <HomeView onSelectView={handleToolViewChange} themeAction={themeToggle} />
+          ) : toolView === "ranking" ? (
+            <div className="main-stage tool-page ranking-page">
+              <div className="page-toolbar tool-page-hero ranking-page-hero">
+                <div className="page-title-block">
+                  <span className="page-kicker">Leaderboard</span>
+                  <h1>고스변 랭킹챌린지</h1>
+                  <p>하루 한 번 기록하고 이번 주 최고 점수를 경쟁합니다.</p>
+                </div>
+                <div className="page-toolbar-actions">
+                  {themeToggle}
+                  <button type="button" className="ghost-btn page-home-btn" onClick={() => setToolView("home")}>
+                    홈으로
+                  </button>
+                </div>
+              </div>
+              <main className="ranking-page-layout">
+                <section className="ranking-stage">
                   <RankingView authSession={authSession} supabaseReady={supabaseReady} />
                 </section>
               </main>
@@ -1209,7 +1227,8 @@ function App() {
               onHitterPositionGroupChange={handleHitterPositionGroupChange}
               onCardTypeChange={handleCardTypeChange}
               onReset={handleReset}
-              onToolViewChange={handleToolViewChange}
+              onGoHome={() => setToolView("home")}
+              themeAction={themeToggle}
               onRollOnce={handleAdvancedSkillChangeRoll}
               onAutoRoll={handleAutoRollToTarget}
               onImpactRoll={handleImpactChangeRoll}
@@ -1219,7 +1238,7 @@ function App() {
         </AppChrome>
 
         {activeService === "toolbox" && (
-          <section className="panel panel-main panel-wide seo-panel" aria-labelledby="seo-guide-title">
+          <section className="panel panel-main panel-wide seo-panel seo-panel-deferred" aria-labelledby="seo-guide-title">
             <div className="seo-copy">
               <h2 id="seo-guide-title">V26 스킬 계산기 안내</h2>
               <p>

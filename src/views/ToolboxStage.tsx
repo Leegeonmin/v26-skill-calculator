@@ -1,9 +1,8 @@
 ﻿import { useEffect, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
 import ImpactSimulatorView from "./ImpactSimulatorView";
-import { IconGlyph } from "../components/AppChrome";
 import type { GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import type { ResultGrade } from "../utils/judge";
@@ -17,7 +16,7 @@ import type {
 } from "../types";
 
 type ToolboxStageProps = {
-  toolView: Exclude<ToolView, "ranking">;
+  toolView: Exclude<ToolView, "home" | "ranking">;
   mode: CalculatorMode;
   hitterPositionGroup: HitterPositionGroup;
   cardType: CardType;
@@ -71,7 +70,8 @@ type ToolboxStageProps = {
   onHitterPositionGroupChange: (nextGroup: HitterPositionGroup) => void;
   onCardTypeChange: (nextCardType: CardType) => void;
   onReset: () => void;
-  onToolViewChange: (nextView: Exclude<ToolView, "ranking">) => void;
+  onGoHome: () => void;
+  themeAction?: ReactNode;
   onRollOnce: () => void;
   onAutoRoll: () => void;
   onImpactRoll: () => void;
@@ -136,7 +136,8 @@ export default function ToolboxStage({
   onHitterPositionGroupChange,
   onCardTypeChange,
   onReset,
-  onToolViewChange,
+  onGoHome,
+  themeAction,
   onRollOnce,
   onAutoRoll,
   onImpactRoll,
@@ -155,6 +156,30 @@ export default function ToolboxStage({
     mode === "hitter" ? (hitterPositionGroup === "fielder" ? "야수" : "포수") : null;
   const cardTypeLabel =
     cardTypeOptions.find((option) => option.value === cardType)?.label ?? cardType;
+  const pageTitle =
+    toolView === "calculator"
+      ? "스킬 점수 계산기"
+      : toolView === "simulator"
+        ? "고스변 시뮬"
+        : "임팩트 변경 시뮬";
+  const pageKicker =
+    toolView === "calculator"
+      ? "Skill Score"
+      : toolView === "simulator"
+        ? "Advanced Roll"
+        : "Impact Roll";
+  const pageDescription =
+    toolView === "calculator"
+      ? "카드 타입과 포지션을 고른 뒤 세 개의 스킬 점수를 빠르게 계산합니다."
+      : toolView === "simulator"
+        ? "인게임 고급스킬변경권처럼 굴리고, 원하는 등급까지 자동 롤을 실행합니다."
+        : "일반 스킬 변경권 기준으로 2, 3번 메이저 조합까지 필요한 횟수를 시뮬레이션합니다.";
+  const pageClassName =
+    toolView === "calculator"
+      ? "calculator-page"
+      : toolView === "simulator"
+        ? "simulator-page"
+        : "impact-page";
 
   const simulatorSetupCard = (
     <>
@@ -327,37 +352,22 @@ export default function ToolboxStage({
   );
 
   return (
-    <div className="main-stage">
-      <div className="tool-tabs-bar">
-        <div className="tool-tabs" role="tablist" aria-label="?꾧뎄 ?좏깮">
-          <button
-            type="button"
-            className={`tool-tab ${toolView === "calculator" ? "active" : ""}`}
-            onClick={() => onToolViewChange("calculator")}
-          >
-            <IconGlyph name="calculator" className="ui-icon" />
-            <span>스킬 점수 계산기</span>
-          </button>
-          <button
-            type="button"
-            className={`tool-tab ${toolView === "simulator" ? "active" : ""}`}
-            onClick={() => onToolViewChange("simulator")}
-          >
-            <IconGlyph name="sparkles" className="ui-icon" />
-            <span>고스변 시뮬</span>
-          </button>
-          <button
-            type="button"
-            className={`tool-tab ${toolView === "impactChange" ? "active" : ""}`}
-            onClick={() => onToolViewChange("impactChange")}
-          >
-            <IconGlyph name="flame" className="ui-icon" />
-            <span>임팩트 변경 시뮬</span>
+    <div className={`main-stage tool-page ${pageClassName}`}>
+      <div className="page-toolbar tool-page-hero">
+        <div className="page-title-block">
+          <span className="page-kicker">{pageKicker}</span>
+          <h1>{pageTitle}</h1>
+          <p>{pageDescription}</p>
+        </div>
+        <div className="page-toolbar-actions">
+          {themeAction}
+          <button type="button" className="ghost-btn page-home-btn" onClick={onGoHome}>
+            홈으로
           </button>
         </div>
       </div>
 
-      <main className="layout-grid">
+      <main className={`layout-grid ${toolView === "calculator" ? "calculator-layout" : "simulator-layout"}`}>
         <section
           className={
             toolView === "calculator"
@@ -367,9 +377,9 @@ export default function ToolboxStage({
         >
           {toolView === "calculator" ? (
             <>
-              <div className="input-config-card">
+              <div className="input-config-card calculator-config-card">
                 <div className="panel-head">
-                  <h2>입력</h2>
+                  <h2>계산 조건</h2>
                 </div>
 
                 <div className="control-row">
