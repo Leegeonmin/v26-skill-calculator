@@ -1264,11 +1264,6 @@ function App() {
                 ))}
               </div>
 
-              <p className="support-contact-banner">
-                버그나 필요한 기능이 있으면{" "}
-                <a href="mailto:leeqwezxcasd@gmail.com">leeqwezxcasd@gmail.com</a>
-                로 보내주세요.
-              </p>
             </div>
 
             <script

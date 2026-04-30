@@ -1,5 +1,6 @@
 import { IconGlyph } from "../components/AppChrome";
-import type { ReactNode } from "react";
+import { submitNoticeInquiry } from "../lib/notice";
+import { type FormEvent, type ReactNode, useState } from "react";
 import type { ToolView } from "../types";
 
 type HomeViewProps = {
@@ -44,7 +45,57 @@ const HOME_WIDGETS: Array<{
   },
 ];
 
+const NOTICE_ITEMS = [
+  {
+    date: "2026.04.30",
+    title: "OCR 요약/검수 화면 개선",
+    body: "최근 저장한 투수/타자 기록 요약 탭을 추가하고, 검수 화면의 복사/저장 버튼과 스킬 선택 표시를 정리했습니다.",
+  },
+  {
+    date: "2026.04.30",
+    title: "스킬 점수표 업데이트",
+    body: "타자 점수표를 최신 기준으로 개편하고, 투수 보직별 누락 스킬을 0점 항목까지 포함해 보강했습니다.",
+  },
+  {
+    date: "2026.04.30",
+    title: "공지사항 메뉴 추가",
+    body: "업데이트 내역과 문의 저장 기능을 메인 화면에서 바로 확인할 수 있게 했습니다.",
+  },
+];
+
 export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [inquiryContact, setInquiryContact] = useState("");
+  const [inquiryStatus, setInquiryStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [inquiryError, setInquiryError] = useState("");
+
+  async function handleInquirySubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!inquiryMessage.trim()) {
+      setInquiryStatus("error");
+      setInquiryError("문의 내용을 입력해주세요.");
+      return;
+    }
+
+    setInquiryStatus("sending");
+    setInquiryError("");
+
+    try {
+      await submitNoticeInquiry({
+        message: inquiryMessage,
+        contact: inquiryContact,
+      });
+      setInquiryMessage("");
+      setInquiryContact("");
+      setInquiryStatus("sent");
+    } catch (error) {
+      setInquiryStatus("error");
+      setInquiryError(error instanceof Error ? error.message : "문의 저장에 실패했습니다.");
+    }
+  }
+
   return (
     <main className="home-stage" aria-labelledby="home-title">
       <div className="home-gradient-aura" aria-hidden="true" />
@@ -85,7 +136,92 @@ export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
             </span>
           </button>
         ))}
+        <button
+          type="button"
+          className="home-widget home-widget-notice"
+          onClick={() => setNoticeOpen(true)}
+        >
+          <span className="home-widget-icon" aria-hidden="true">
+            <IconGlyph name="notice" className="ui-icon" />
+          </span>
+          <span className="home-widget-copy">
+            <span className="home-widget-meta">Notice</span>
+            <strong>공지사항</strong>
+            <span>업데이트 내역 확인과 버그/기능 문의를 보낼 수 있습니다.</span>
+          </span>
+          <span className="home-widget-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="ui-icon">
+              <path
+                d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+        </button>
       </section>
+
+      {noticeOpen && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setNoticeOpen(false)}>
+          <section
+            className="modal-card notice-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notice-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="notice-modal-head">
+              <div>
+                <p className="modal-eyebrow">Notice</p>
+                <h2 id="notice-modal-title">공지사항</h2>
+              </div>
+              <button type="button" className="notice-modal-close" onClick={() => setNoticeOpen(false)}>
+                닫기
+              </button>
+            </div>
+
+            <div className="notice-list">
+              {NOTICE_ITEMS.map((item) => (
+                <article key={`${item.date}-${item.title}`} className="notice-item">
+                  <span>{item.date}</span>
+                  <strong>{item.title}</strong>
+                  <p>{item.body}</p>
+                </article>
+              ))}
+            </div>
+
+            <form className="notice-inquiry-form" onSubmit={handleInquirySubmit}>
+              <div className="notice-inquiry-copy">
+                <strong>문의하기</strong>
+                <span>버그나 필요한 기능이 있으면 아래에 남겨주세요.</span>
+              </div>
+              <label>
+                <span>연락처 선택 입력</span>
+                <input
+                  value={inquiryContact}
+                  onChange={(event) => setInquiryContact(event.target.value)}
+                  placeholder="이메일 또는 닉네임"
+                  maxLength={120}
+                />
+              </label>
+              <label>
+                <span>문의 내용</span>
+                <textarea
+                  value={inquiryMessage}
+                  onChange={(event) => setInquiryMessage(event.target.value)}
+                  placeholder="버그 상황이나 필요한 기능을 적어주세요."
+                  rows={5}
+                  maxLength={2000}
+                />
+              </label>
+              {inquiryStatus === "sent" && <p className="notice-form-success">문의가 저장됐습니다.</p>}
+              {inquiryStatus === "error" && <p className="modal-error">{inquiryError}</p>}
+              <button type="submit" className="primary-btn notice-submit-btn" disabled={inquiryStatus === "sending"}>
+                {inquiryStatus === "sending" ? "저장 중..." : "문의 저장"}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
