@@ -53,7 +53,7 @@ const CARD_TYPE_OPTIONS: Array<{ value: CardType; label: string }> = [
 const PITCHER_POSITION_OPTIONS = ["SP", "RP", "CP"];
 const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
 const SHOW_UPLOAD_SAVED_PANEL = false;
-type OcrPanelTab = "upload" | "stats";
+type OcrPanelTab = "summary" | "upload" | "stats";
 type OcrIconName =
   | "chart"
   | "check"
@@ -100,6 +100,18 @@ function getDraftRole(players: SkillOcrSelectedPlayer[]): SkillOcrRole | null {
   }
 
   return players.some((player) => player.calculatorMode === "hitter") ? "hitter" : "pitcher";
+}
+
+function getLatestUpload(uploads: SkillOcrSavedUpload[]): SkillOcrSavedUpload | null {
+  return uploads.reduce<SkillOcrSavedUpload | null>((latestUpload, upload) => {
+    if (!latestUpload) {
+      return upload;
+    }
+
+    return new Date(upload.created_at).getTime() > new Date(latestUpload.created_at).getTime()
+      ? upload
+      : latestUpload;
+  }, null);
 }
 
 function buildCopyText(params: {
@@ -181,7 +193,8 @@ export default function SkillOcrView({
 }: SkillOcrViewProps) {
   const pitcherInputRef = useRef<HTMLInputElement | null>(null);
   const hitterInputRef = useRef<HTMLInputElement | null>(null);
-  const [activeTab, setActiveTab] = useState<OcrPanelTab>("upload");
+  const [activeTab, setActiveTab] = useState<OcrPanelTab>("summary");
+  const [showSummarySavedDetail, setShowSummarySavedDetail] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [exampleOpen, setExampleOpen] = useState(false);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
@@ -252,6 +265,8 @@ export default function SkillOcrView({
       : null;
   const hitterSavedCount = hitterUploads.length;
   const pitcherSavedCount = pitcherUploads.length;
+  const latestHitterUpload = getLatestUpload(hitterUploads);
+  const latestPitcherUpload = getLatestUpload(pitcherUploads);
 
   const scrollToReviewPanel = () => {
     document
@@ -327,6 +342,12 @@ export default function SkillOcrView({
     }
 
     onSaveDraft();
+    setShowSummarySavedDetail(false);
+  };
+
+  const openSummarySavedDetail = (upload: SkillOcrSavedUpload) => {
+    setShowSummarySavedDetail(true);
+    onSelectSavedUpload(upload);
   };
 
   const savedUploadPanel = savedUpload ? (
@@ -411,8 +432,22 @@ export default function SkillOcrView({
       <nav className="ocr-tabs ocr-bottom-tabs" aria-label="OCR 화면">
         <button
           type="button"
+          className={activeTab === "summary" ? "active" : ""}
+          onClick={() => {
+            setActiveTab("summary");
+            setShowSummarySavedDetail(false);
+          }}
+        >
+          <OcrIcon name="clipboard" />
+          요약
+        </button>
+        <button
+          type="button"
           className={activeTab === "upload" ? "active" : ""}
-          onClick={() => setActiveTab("upload")}
+          onClick={() => {
+            setActiveTab("upload");
+            setShowSummarySavedDetail(false);
+          }}
         >
           <OcrIcon name="upload" />
           업로드
@@ -420,14 +455,79 @@ export default function SkillOcrView({
         <button
           type="button"
           className={activeTab === "stats" ? "active" : ""}
-          onClick={() => setActiveTab("stats")}
+          onClick={() => {
+            setActiveTab("stats");
+            setShowSummarySavedDetail(false);
+          }}
         >
           <OcrIcon name="chart" />
           통계
         </button>
       </nav>
 
-      {activeTab === "stats" ? (
+      {activeTab === "summary" ? (
+        <>
+          <section className="ocr-latest-panel">
+            <div className="ocr-section-head">
+              <div>
+                <h2>최근 기록 요약</h2>
+                <span>마지막으로 저장한 투수와 타자 결과만 빠르게 확인합니다.</span>
+              </div>
+              {uploadsLoading && <span>불러오는 중</span>}
+            </div>
+
+            {uploadsError && <p className="modal-error">{uploadsError}</p>}
+
+            <div className="ocr-latest-grid">
+              {[
+                { role: "pitcher" as const, upload: latestPitcherUpload },
+                { role: "hitter" as const, upload: latestHitterUpload },
+              ].map(({ role, upload }) => (
+                <article key={role} className={`ocr-latest-card ${role}`}>
+                  <span className="ocr-summary-icon">
+                    <OcrIcon name={role === "pitcher" ? "upload" : "user"} />
+                  </span>
+                  <div>
+                    <strong>최근 {formatRole(role)} 기록</strong>
+                    {upload ? (
+                      <span>{formatDate(upload.created_at)} 갱신</span>
+                    ) : (
+                      <span>저장된 기록 없음</span>
+                    )}
+                  </div>
+
+                  {upload ? (
+                    <div className="ocr-latest-stats">
+                      <span>
+                        전체점수 <strong>{upload.total_score.toFixed(2)}</strong>
+                      </span>
+                      <span>
+                        평균점수 <strong>{upload.average_score.toFixed(2)}</strong>
+                      </span>
+                      <span>
+                        인원 <strong>{upload.player_count}명</strong>
+                      </span>
+                    </div>
+                  ) : (
+                    <p>업로드 탭에서 먼저 {formatRole(role)} 스킬을 분석하고 저장하세요.</p>
+                  )}
+
+                  <button
+                    type="button"
+                    className="ocr-row-link"
+                    disabled={!upload}
+                    onClick={() => upload && openSummarySavedDetail(upload)}
+                  >
+                    <OcrIcon name="eye" />
+                    상세 보기
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+          {showSummarySavedDetail && savedUploadPanel}
+        </>
+      ) : activeTab === "stats" ? (
         <>
           <section className="ocr-summary-grid">
             <article className="ocr-summary-card">
@@ -572,11 +672,15 @@ export default function SkillOcrView({
           <OcrIcon name="check" />
           <div>
             <strong>모바일 캡처 권장</strong>
-            <p>
-              PC 캡처보다 모바일에서 세로로 캡처한 라인업 화면이 더 정확하게 인식됩니다.
-              OCR 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하고 투수/타자는
-              각각 최대 9명만 선택해 저장하세요.
-            </p>
+            <ul className="ocr-guide-list">
+              <li>PC 캡처보다 모바일에서 세로로 캡처한 라인업 화면이 더 정확합니다.</li>
+              <li>
+                게임 환경설정 &gt; 해상도에서 <strong>최고</strong> 또는 <strong>높음</strong>으로
+                설정하세요.
+              </li>
+              <li>OCR 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하세요.</li>
+              <li>투수/타자는 각각 최대 9명만 선택해 저장하세요.</li>
+            </ul>
           </div>
           <button type="button" className="ocr-example-link" onClick={() => setExampleOpen(true)}>
             예시 이미지
@@ -738,6 +842,25 @@ export default function SkillOcrView({
               <h2>인식 결과 검수</h2>
               <span>카드 타입, 스킬, 레벨을 확인하고 저장할 9명만 선택하세요.</span>
             </div>
+            <div className="ocr-review-head-actions">
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => void copyDraftAnalysisText()}
+              >
+                <OcrIcon name={copiedId === "draft" ? "check" : "clipboard"} />
+                {copiedId === "draft" ? "복사됨" : "복사"}
+              </button>
+              <button
+                type="button"
+                className="primary-btn"
+                disabled={saving}
+                onClick={saveDraft}
+              >
+                <OcrIcon name="save" />
+                {saving ? "저장 중" : "저장"}
+              </button>
+            </div>
             <div className="ocr-review-totals">
               <strong>{draftTotalScore.toFixed(2)}</strong>
               <span>평균 {draftAverageScore.toFixed(2)}</span>
@@ -819,6 +942,7 @@ export default function SkillOcrView({
                         </span>
                       )}
                       <select
+                        className={`ocr-skill-name-select ${getSkillToneClass(skill)}`}
                         data-ocr-required-skill={`${playerIndex}-${skill.slot}`}
                         value={skill.skillId ?? ""}
                         onChange={(event) => {
@@ -836,7 +960,11 @@ export default function SkillOcrView({
                       >
                         <option value="">매칭실패</option>
                         {skillOptions.map((option) => (
-                          <option key={option.skillId} value={option.skillId}>
+                          <option
+                            key={option.skillId}
+                            value={option.skillId}
+                            className={`ocr-skill-grade-${option.grade}`}
+                          >
                             {option.skillName}
                           </option>
                         ))}
@@ -872,25 +1000,6 @@ export default function SkillOcrView({
 
           {validationMessage && <p className="modal-error ocr-validation-error">{validationMessage}</p>}
 
-          <div className="ocr-save-actions">
-            <button
-              type="button"
-              className="ghost-btn"
-              onClick={() => void copyDraftAnalysisText()}
-            >
-              <OcrIcon name={copiedId === "draft" ? "check" : "clipboard"} />
-              {copiedId === "draft" ? "복사됨" : "복사"}
-            </button>
-            <button
-              type="button"
-              className="primary-btn"
-              disabled={saving}
-              onClick={saveDraft}
-            >
-              <OcrIcon name="save" />
-              {saving ? "저장 중" : "저장"}
-            </button>
-          </div>
         </section>
       )}
 

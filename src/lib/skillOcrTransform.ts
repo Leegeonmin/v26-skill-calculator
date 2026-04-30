@@ -35,10 +35,9 @@ function normalizeText(value: string | null | undefined): string {
     .normalize("NFKC")
     .toLowerCase()
     .replace(/\s+/g, "")
-    .replace(/[·ㆍ.]/g, "")
+    .replace(/[★☆·ㆍ.]/g, "")
     .trim();
 }
-
 function getBaseSkillName(value: string | null | undefined): string {
   return normalizeText(value).replace(/\([^)]*\)/g, "");
 }
@@ -98,14 +97,17 @@ function getDataSetForMode(mode: CalculatorMode): GameDataSet {
 export function getSkillOcrSkillOptions(player: SkillOcrSelectedPlayer): Array<{
   skillId: string;
   skillName: string;
+  grade: SkillMeta["grade"];
 }> {
   const dataSet = getDataSetForMode(player.calculatorMode);
 
   return dataSet.skills
     .filter((skill) => skill.availableCardTypes.includes(player.cardType))
+    .sort((first, second) => first.name.localeCompare(second.name, "ko"))
     .map((skill) => ({
       skillId: skill.id,
       skillName: skill.name,
+      grade: skill.grade,
     }));
 }
 
@@ -115,8 +117,10 @@ function sortCandidates(
   level: SkillLevel
 ): SkillCandidate[] {
   return [...candidates].sort((first, second) => {
-    const firstPrefersLineupOn = first.skillName.includes("타순배치O") ? 1 : 0;
-    const secondPrefersLineupOn = second.skillName.includes("타순배치O") ? 1 : 0;
+    const firstPrefersLineupOn =
+      first.skillName.includes("타순배치O") || first.skillName.includes("배치O") ? 1 : 0;
+    const secondPrefersLineupOn =
+      second.skillName.includes("타순배치O") || second.skillName.includes("배치O") ? 1 : 0;
 
     if (firstPrefersLineupOn !== secondPrefersLineupOn) {
       return secondPrefersLineupOn - firstPrefersLineupOn;
