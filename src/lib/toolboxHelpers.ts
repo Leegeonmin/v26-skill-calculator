@@ -1,5 +1,6 @@
-import type { CardType, SkillLevel } from "../types";
+import type { CardType, SkillLevel, SkillMeta } from "../types";
 import type { ResultGrade } from "../utils/judge";
+import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 export const TOOL_USAGE_SESSION_KEY = "v26-tool-usage-session";
 
@@ -33,17 +34,35 @@ export function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, S
 export function pickValidSkill(
   desired: string,
   candidates: string[],
-  excluded: string[] = []
+  excluded: string[] = [],
+  skillMap?: Map<string, SkillMeta>
 ): string {
   if (!desired) {
     return "";
   }
 
-  if (desired && candidates.includes(desired) && !excluded.includes(desired)) {
-    return desired;
+  if (!candidates.includes(desired) || excluded.includes(desired)) {
+    return "";
   }
 
-  return "";
+  if (skillMap) {
+    const desiredSkill = skillMap.get(desired);
+    const desiredBaseName = desiredSkill ? normalizeSkillBaseName(desiredSkill.name) : null;
+    const hasExcludedFamily = excluded.some((skillId) => {
+      const excludedSkill = skillMap.get(skillId);
+      return (
+        desiredBaseName &&
+        excludedSkill &&
+        normalizeSkillBaseName(excludedSkill.name) === desiredBaseName
+      );
+    });
+
+    if (hasExcludedFamily) {
+      return "";
+    }
+  }
+
+  return desired;
 }
 
 export function formatMatchedPercent(percent: number | null): string {

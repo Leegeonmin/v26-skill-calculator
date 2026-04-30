@@ -1,6 +1,7 @@
 ﻿import { useMemo, useState } from "react";
 import type { SkillMeta } from "../types";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 interface SkillSelectProps {
   label: string;
@@ -27,9 +28,18 @@ function SkillSelect({
 
   const filteredOptions = useMemo(() => {
     const lowerKeyword = keyword.trim().toLowerCase();
+    const excludedBaseNames = new Set(
+      excludedSkillIds
+        .map((skillId) => options.find((skill) => skill.id === skillId))
+        .filter((skill): skill is SkillMeta => Boolean(skill))
+        .map((skill) => normalizeSkillBaseName(skill.name))
+    );
 
     return options.filter((skill) => {
-      const isExcluded = excludedSkillIds.includes(skill.id) && skill.id !== value;
+      const isExcluded =
+        skill.id !== value &&
+        (excludedSkillIds.includes(skill.id) ||
+          excludedBaseNames.has(normalizeSkillBaseName(skill.name)));
       if (isExcluded) return false;
       if (!lowerKeyword) return true;
       return skill.name.toLowerCase().includes(lowerKeyword);

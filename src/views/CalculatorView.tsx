@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import type { GameDataSet } from "../data/gameData";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 type SelectedSkillMetaMap = {
   skill1?: SkillMeta;
@@ -138,17 +139,21 @@ export default function CalculatorView({
   );
 
   useEffect(() => {
-    setMobileSelectedSkills(
-      currentSkills.map((skill) => ({
-        id: skill.id,
-        level: skill.level,
-      }))
-    );
+    startTransition(() => {
+      setMobileSelectedSkills(
+        currentSkills.map((skill) => ({
+          id: skill.id,
+          level: skill.level,
+        }))
+      );
+    });
   }, [currentSkills]);
 
   useEffect(() => {
     const nextDefaultLevel = getMobileDefaultLevel(activeCardType, mobileSelectedSkills.length);
-    setMobilePendingLevel(nextDefaultLevel);
+    startTransition(() => {
+      setMobilePendingLevel(nextDefaultLevel);
+    });
   }, [activeCardType, mobileSelectedSkills.length]);
 
   const mobileExcludedIds = useMemo(
@@ -158,9 +163,18 @@ export default function CalculatorView({
 
   const mobileSearchResults = useMemo(() => {
     const lowerKeyword = mobileKeyword.trim().toLowerCase();
+    const selectedBaseNames = new Set(
+      mobileSelectedSkills
+        .map((selectedSkill) => filteredSkills.find((skill) => skill.id === selectedSkill.id))
+        .filter((skill): skill is SkillMeta => Boolean(skill))
+        .map((skill) => normalizeSkillBaseName(skill.name))
+    );
 
     return filteredSkills.filter((skill) => {
-      if (mobileExcludedIds.includes(skill.id)) {
+      if (
+        mobileExcludedIds.includes(skill.id) ||
+        selectedBaseNames.has(normalizeSkillBaseName(skill.name))
+      ) {
         return false;
       }
 
@@ -170,7 +184,7 @@ export default function CalculatorView({
 
       return skill.name.toLowerCase().includes(lowerKeyword);
     });
-  }, [filteredSkills, mobileExcludedIds, mobileKeyword]);
+  }, [filteredSkills, mobileExcludedIds, mobileKeyword, mobileSelectedSkills]);
 
   const mobilePendingSkill = filteredSkills.find((skill) => skill.id === mobilePendingSkillId);
   const mobilePendingScore = mobilePendingSkillId
@@ -192,6 +206,19 @@ export default function CalculatorView({
 
   const handleMobileAdd = () => {
     if (!mobilePendingSkillId || mobileSelectedSkills.length >= 3) {
+      return;
+    }
+
+    const pendingSkill = filteredSkills.find((skill) => skill.id === mobilePendingSkillId);
+    const selectedBaseNames = new Set(
+      mobileSelectedSkills
+        .map((selectedSkill) => filteredSkills.find((skill) => skill.id === selectedSkill.id))
+        .filter((skill): skill is SkillMeta => Boolean(skill))
+        .map((skill) => normalizeSkillBaseName(skill.name))
+    );
+
+    if (pendingSkill && selectedBaseNames.has(normalizeSkillBaseName(pendingSkill.name))) {
+      setMobilePendingSkillId("");
       return;
     }
 

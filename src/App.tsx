@@ -40,6 +40,7 @@ import {
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
 import HomeView from "./views/HomeView";
+import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
 import SkillOcrView from "./views/SkillOcrView";
@@ -81,6 +82,12 @@ const OCR_PATH = "/tyrant";
 const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = "tyrant";
 const OCR_FIXED_PASSWORD = "tttt1199";
+const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
+  "/about": "about",
+  "/guide": "guide",
+  "/privacy": "privacy",
+  "/contact": "contact",
+};
 
 type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
@@ -135,6 +142,10 @@ function App() {
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
   const isOcrRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === OCR_PATH;
+  const infoPageKey =
+    typeof window !== "undefined"
+      ? INFO_PAGE_PATHS[window.location.pathname.replace(/\/+$/, "") || "/"] ?? null
+      : null;
   const [toolView, setToolView] = useState<ToolView>(() => {
     if (typeof window === "undefined") {
       return DEFAULT_VIEW;
@@ -233,20 +244,32 @@ function App() {
     () => filteredSkills.map((skill) => skill.id),
     [filteredSkills]
   );
+  const filteredSkillMap = useMemo(
+    () => new Map(filteredSkills.map((skill) => [skill.id, skill])),
+    [filteredSkills]
+  );
 
-  const resolvedSkill1 = pickValidSkill(skill1, filteredSkillIds);
-  const resolvedSkill2 = pickValidSkill(skill2, filteredSkillIds, [resolvedSkill1]);
-  const resolvedSkill3 = pickValidSkill(skill3, filteredSkillIds, [resolvedSkill1, resolvedSkill2]);
+  const resolvedSkill1 = pickValidSkill(skill1, filteredSkillIds, [], filteredSkillMap);
+  const resolvedSkill2 = pickValidSkill(
+    skill2,
+    filteredSkillIds,
+    [resolvedSkill1],
+    filteredSkillMap
+  );
+  const resolvedSkill3 = pickValidSkill(
+    skill3,
+    filteredSkillIds,
+    [resolvedSkill1, resolvedSkill2],
+    filteredSkillMap
+  );
 
   const selectedSkillMeta = useMemo(() => {
-    const skillMap = new Map(filteredSkills.map((skill) => [skill.id, skill]));
-
     return {
-      skill1: skillMap.get(resolvedSkill1),
-      skill2: skillMap.get(resolvedSkill2),
-      skill3: skillMap.get(resolvedSkill3),
+      skill1: filteredSkillMap.get(resolvedSkill1),
+      skill2: filteredSkillMap.get(resolvedSkill2),
+      skill3: filteredSkillMap.get(resolvedSkill3),
     };
-  }, [filteredSkills, resolvedSkill1, resolvedSkill2, resolvedSkill3]);
+  }, [filteredSkillMap, resolvedSkill1, resolvedSkill2, resolvedSkill3]);
 
   const rolledSkillColors = {
     skill1: selectedSkillMeta.skill1 ? SKILL_GRADE_COLORS[selectedSkillMeta.skill1.grade] : "#111827",
@@ -425,7 +448,7 @@ function App() {
   }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
-    if (isAdminRoute || isOcrRoute) {
+    if (isAdminRoute || isOcrRoute || infoPageKey) {
       return;
     }
 
@@ -442,10 +465,10 @@ function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [isAdminRoute, isOcrRoute]);
+  }, [infoPageKey, isAdminRoute, isOcrRoute]);
 
   useEffect(() => {
-    if (isAdminRoute || isOcrRoute) {
+    if (isAdminRoute || isOcrRoute || infoPageKey) {
       return;
     }
 
@@ -463,12 +486,13 @@ function App() {
     }
 
     window.history.pushState({}, "", url.toString());
-  }, [isAdminRoute, isOcrRoute, toolView]);
+  }, [infoPageKey, isAdminRoute, isOcrRoute, toolView]);
 
   useEffect(() => {
     if (
       isAdminRoute ||
       isOcrRoute ||
+      infoPageKey ||
       toolView === "ranking" ||
       !supabaseReady ||
       !toolUsageSessionId
@@ -494,7 +518,16 @@ function App() {
     }).catch(() => {
       loggedToolViewsRef.current.delete(viewKey);
     });
-  }, [activeCardType, isAdminRoute, isOcrRoute, mode, supabaseReady, toolUsageSessionId, toolView]);
+  }, [
+    activeCardType,
+    infoPageKey,
+    isAdminRoute,
+    isOcrRoute,
+    mode,
+    supabaseReady,
+    toolUsageSessionId,
+    toolView,
+  ]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -1154,6 +1187,29 @@ function App() {
     );
   }
 
+  if (infoPageKey) {
+    return (
+      <div className="app-bg" data-theme={theme}>
+        <div className="app-shell">
+          <AppChrome>
+            <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
+          </AppChrome>
+          <footer className="app-footer">
+            <nav className="footer-links" aria-label="사이트 정보">
+              <a href="/about">소개</a>
+              <a href="/guide">사용 가이드</a>
+              <a href="/privacy">개인정보처리방침</a>
+              <a href="/contact">문의</a>
+            </nav>
+            <span>made by 우주</span>
+          </footer>
+          <Analytics />
+          <SpeedInsights />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-bg" data-theme={theme}>
       <div className="app-shell">
@@ -1273,7 +1329,15 @@ function App() {
           </section>
         )}
 
-        <footer className="app-footer">made by 우주</footer>
+        <footer className="app-footer">
+          <nav className="footer-links" aria-label="사이트 정보">
+            <a href="/about">소개</a>
+            <a href="/guide">사용 가이드</a>
+            <a href="/privacy">개인정보처리방침</a>
+            <a href="/contact">문의</a>
+          </nav>
+          <span>made by 우주</span>
+        </footer>
         <Analytics />
         <SpeedInsights  />
       </div>
