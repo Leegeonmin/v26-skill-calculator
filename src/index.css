@@ -852,6 +852,700 @@ select {
   gap: 18px;
 }
 
+/* Final priority fixes for skill compare OCR. Keep after all responsive overrides. */
+.skill-compare-score-summary > div.positive {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.skill-compare-score-summary > div.negative {
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.skill-compare-score-summary > div.positive strong {
+  color: #059669;
+}
+
+.skill-compare-score-summary > div.negative strong {
+  color: #f43f5e;
+}
+
+.skill-compare-upload-label {
+  justify-self: center;
+}
+
+.skill-compare-guide-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-guide-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.skill-compare-guide-card ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.skill-compare-example-link {
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.08);
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.skill-compare-example-modal {
+  width: min(100%, 420px);
+  max-height: min(92vh, 860px);
+  overflow: auto;
+}
+
+.skill-compare-example-modal img {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-guide-card,
+.app-bg[data-theme="dark"] .skill-compare-example-modal {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-guide-card strong,
+.app-bg[data-theme="dark"] .skill-compare-example-modal h2 {
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-guide-card ul {
+  color: var(--muted);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.positive {
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.negative {
+  background: rgba(244, 63, 94, 0.14);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.positive strong {
+  color: #34d399;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.negative strong {
+  color: #fb7185;
+}
+
+.skill-compare-control-group:first-child .toggle-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.skill-compare-control-group:first-child .toggle-btn {
+  width: 100%;
+}
+
+.skill-compare-control-group:nth-child(2) .toggle-row {
+  display: grid;
+  width: max-content;
+  grid-template-columns: repeat(2, minmax(56px, 1fr));
+  border-radius: 999px;
+}
+
+.skill-compare-control-group:nth-child(2) .toggle-btn {
+  min-height: 30px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-row select {
+  background: #0f172a;
+  color: #e5f0ff;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-row select option {
+  background: #0f172a;
+  color: #e5f0ff;
+}
+
+@media (max-width: 900px) {
+  .tool-page-hero {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .tool-page-hero .page-title-block {
+    width: 100%;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .tool-page-hero .page-title-block p {
+    max-width: 34em;
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+  }
+
+  .skill-compare-page .page-title-block {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .skill-compare-page .page-title-block p {
+    max-width: 320px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .skill-compare-control-group:first-child .toggle-row {
+    width: 100%;
+  }
+
+  .skill-compare-upload-label {
+    justify-self: center;
+  }
+}
+
+/* Skill compare OCR final layout, adapted from the provided reference. */
+.skill-compare-page {
+  width: min(100%, 768px);
+  gap: 16px;
+  padding: 0 0 24px;
+  color: var(--text);
+}
+
+.skill-compare-page::before {
+  opacity: 0.42;
+}
+
+.skill-compare-page .tool-page-hero {
+  padding: 20px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-page .page-kicker {
+  width: max-content;
+  padding: 2px 8px;
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.1);
+  color: #0f9f8d;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.skill-compare-page .page-title-block {
+  gap: 8px;
+}
+
+.skill-compare-page .page-toolbar h1,
+.skill-compare-page .page-title-block h1 {
+  color: var(--text);
+  font-size: clamp(1.25rem, 4vw, 1.9rem);
+  line-height: 1.2;
+}
+
+.skill-compare-page .page-toolbar p,
+.skill-compare-page .page-title-block p {
+  color: var(--muted);
+  font-size: clamp(0.78rem, 2.4vw, 0.9rem);
+  line-height: 1.6;
+}
+
+.skill-compare-controls {
+  gap: 16px;
+  padding: 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-control-group,
+.skill-compare-card-select {
+  gap: 10px;
+}
+
+.skill-compare-control-group > span,
+.skill-compare-card-select > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.skill-compare-controls .toggle-row {
+  gap: 4px;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(102, 116, 143, 0.1);
+}
+
+.skill-compare-controls .toggle-btn {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.skill-compare-controls .toggle-btn.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.skill-compare-card-select select {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(102, 116, 143, 0.1);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.skill-compare-upload-card {
+  display: flex;
+  min-height: 248px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 40px 24px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-upload-copy {
+  order: 2;
+  justify-items: center;
+  gap: 6px;
+}
+
+.skill-compare-upload-card strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.skill-compare-upload-copy > span {
+  max-width: 260px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.skill-compare-upload-icon {
+  order: 1;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0f9f8d, #14b8a6);
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(20, 184, 166, 0.24);
+}
+
+.skill-compare-upload-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+
+
+
+
+.skill-compare-upload-label {
+  position: static;
+  order: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin-top: 24px;
+  padding: 8px 16px;
+  transform: none;
+  border-radius: 999px;
+  background: rgba(102, 116, 143, 0.1);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.skill-compare-upload-label::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #0f9f8d;
+}
+
+.skill-compare-score-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-score-summary > div {
+  display: grid;
+  min-height: 106px;
+  place-content: center;
+  gap: 6px;
+  padding: 18px 12px;
+}
+
+.skill-compare-score-summary > div:nth-child(2) {
+  border-left: 1px solid var(--line);
+  background: transparent;
+}
+
+.skill-compare-score-summary > div:nth-child(3) {
+  grid-column: 1 / -1;
+  min-height: 78px;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: center;
+  column-gap: 10px;
+  border-top: 1px solid var(--line);
+  background: rgba(100, 116, 139, 0.08);
+}
+
+.skill-compare-score-summary .positive {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.skill-compare-score-summary .negative {
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.skill-compare-score-summary span {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.skill-compare-score-summary strong {
+  color: var(--text);
+  font-size: clamp(1.72rem, 6vw, 2rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.skill-compare-score-summary > div:nth-child(1) strong::after,
+.skill-compare-score-summary > div:nth-child(2) strong::after {
+  content: "점";
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.skill-compare-score-summary > div:nth-child(3) span {
+  display: block;
+}
+
+.skill-compare-score-summary > div:nth-child(3) strong {
+  color: #f43f5e;
+  font-size: clamp(1.45rem, 5vw, 1.8rem);
+}
+
+.skill-compare-score-summary .positive strong {
+  color: #059669;
+}
+
+.skill-compare-score-summary .negative strong {
+  color: #f43f5e;
+}
+
+.skill-compare-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.skill-compare-panel,
+.skill-compare-panel-next {
+  min-height: auto;
+  gap: 12px;
+  padding: 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-panel-next {
+  background:
+    linear-gradient(135deg, transparent, rgba(20, 184, 166, 0.05)),
+    var(--panel);
+}
+
+.skill-compare-panel-head {
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-compare-panel-head span {
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  background: var(--muted);
+}
+
+.skill-compare-panel-next .skill-compare-panel-head span {
+  background: #0f9f8d;
+}
+
+.skill-compare-panel-head h2 {
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.skill-compare-list {
+  gap: 8px;
+}
+
+.skill-compare-row {
+  grid-template-columns: 26px minmax(0, 1fr) 64px auto;
+  gap: 8px;
+  min-height: 58px;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(102, 116, 143, 0.1);
+}
+
+.skill-compare-row:hover {
+  background: rgba(102, 116, 143, 0.14);
+  transform: none;
+}
+
+.skill-compare-row span {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(102, 116, 143, 0.16);
+  color: var(--muted);
+  font-size: 0.64rem;
+}
+
+.skill-compare-row strong {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.skill-compare-row select {
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--accent);
+  padding: 3px 7px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.skill-compare-row em {
+  min-width: 42px;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.skill-compare-row.unmatched {
+  background: rgba(244, 63, 94, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.18);
+}
+
+.skill-compare-row.unmatched span {
+  background: rgba(244, 63, 94, 0.16);
+  color: #e11d48;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-page {
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-page .tool-page-hero,
+.app-bg[data-theme="dark"] .skill-compare-controls,
+.app-bg[data-theme="dark"] .skill-compare-upload-card,
+.app-bg[data-theme="dark"] .skill-compare-score-summary,
+.app-bg[data-theme="dark"] .skill-compare-panel,
+.app-bg[data-theme="dark"] .skill-compare-panel-next {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-page .page-toolbar h1,
+.app-bg[data-theme="dark"] .skill-compare-page .page-title-block h1,
+.app-bg[data-theme="dark"] .skill-compare-upload-card strong,
+.app-bg[data-theme="dark"] .skill-compare-score-summary strong,
+.app-bg[data-theme="dark"] .skill-compare-panel-head h2,
+.app-bg[data-theme="dark"] .skill-compare-row strong,
+.app-bg[data-theme="dark"] .skill-compare-row em {
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-page .page-toolbar p,
+.app-bg[data-theme="dark"] .skill-compare-page .page-title-block p,
+.app-bg[data-theme="dark"] .skill-compare-upload-copy > span,
+.app-bg[data-theme="dark"] .skill-compare-score-summary span,
+.app-bg[data-theme="dark"] .skill-compare-control-group > span,
+.app-bg[data-theme="dark"] .skill-compare-card-select > span {
+  color: var(--muted);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-controls .toggle-row,
+.app-bg[data-theme="dark"] .skill-compare-card-select select,
+.app-bg[data-theme="dark"] .skill-compare-row,
+.app-bg[data-theme="dark"] .skill-compare-row select,
+.app-bg[data-theme="dark"] .skill-compare-upload-label {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-controls .toggle-btn {
+  color: var(--muted);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-controls .toggle-btn.active {
+  background: rgba(139, 164, 255, 0.18);
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary .positive {
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary .negative {
+  background: rgba(244, 63, 94, 0.14);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary .positive strong {
+  color: #34d399;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary .negative strong {
+  color: #fb7185;
+}
+
+@media (max-width: 900px) {
+  .skill-compare-page {
+    width: min(100%, 576px);
+    gap: 14px;
+  }
+
+  .skill-compare-page .tool-page-hero {
+    padding: 16px;
+  }
+
+  .skill-compare-controls {
+    padding: 14px;
+  }
+
+  .skill-compare-controls .toggle-btn {
+    min-height: 34px;
+    font-size: 0.78rem;
+  }
+
+  .skill-compare-upload-card {
+    min-height: 236px;
+    padding: 34px 18px;
+  }
+
+  .skill-compare-upload-icon {
+    width: 76px;
+    height: 76px;
+    margin-bottom: 18px;
+  }
+
+  .skill-compare-score-summary > div {
+    min-height: 96px;
+  }
+
+  .skill-compare-score-summary > div:nth-child(3) {
+    min-height: 74px;
+  }
+
+  .skill-compare-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .skill-compare-panel,
+  .skill-compare-panel-next {
+    padding: 12px;
+  }
+
+  .skill-compare-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 6px;
+    min-height: 68px;
+    padding: 8px;
+  }
+
+  .skill-compare-row select,
+  .skill-compare-row em {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .skill-compare-row select {
+    width: 62px;
+  }
+}
+
 .home-widget {
   position: relative;
   min-height: 240px;
@@ -910,6 +1604,10 @@ select {
   background: rgba(37, 99, 235, 0.28);
 }
 
+.home-widget-ocr::before {
+  background: rgba(20, 184, 166, 0.32);
+}
+
 .home-widget:hover {
   transform: translateY(-6px);
   border-color: rgba(154, 169, 202, 0.92);
@@ -954,6 +1652,10 @@ select {
   background: linear-gradient(135deg, #1e3a8a, #60a5fa);
 }
 
+.home-widget-ocr .home-widget-icon {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+}
+
 .home-widget:hover .home-widget-icon {
   transform: scale(1.08);
 }
@@ -979,9 +1681,30 @@ select {
 }
 
 .home-widget-copy strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   color: var(--text);
   font-size: 1.12rem;
   line-height: 1.25;
+}
+
+.home-widget-copy strong em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(20, 184, 166, 0.14);
+  color: #0f766e;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.home-widget-beta {
+  color: #0f766e;
 }
 
 .home-widget-copy span:last-child {
@@ -1555,8 +2278,15 @@ select {
 
 .ocr-player-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(74px, 0.45fr);
   gap: 8px;
+}
+
+.ocr-player-controls-hitter {
+  grid-template-columns: minmax(132px, 1fr);
+}
+
+.ocr-player-controls-pitcher {
+  grid-template-columns: minmax(116px, 1fr) minmax(64px, 0.45fr) minmax(64px, 0.45fr);
 }
 
 .ocr-player-controls label {
@@ -1809,12 +2539,56 @@ select {
   text-align: center;
 }
 
+.ocr-pitcher-score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.ocr-pitcher-score-chip {
+  display: grid;
+  gap: 2px;
+  min-height: 48px;
+  padding: 8px 9px;
+  border: 1px solid rgba(216, 224, 238, 0.95);
+  border-radius: 13px;
+  background: rgba(246, 248, 252, 0.78);
+  color: #315987;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ocr-pitcher-score-chip span {
+  color: inherit;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.ocr-pitcher-score-chip strong {
+  color: #031426;
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.ocr-pitcher-score-chip.active {
+  border-color: rgba(31, 111, 235, 0.72);
+  background: rgba(220, 238, 255, 0.8);
+  color: #0b63ce;
+  box-shadow: 0 8px 18px rgba(31, 111, 235, 0.12);
+}
+
+.ocr-pitcher-score-chip.active strong {
+  color: #00295d;
+}
+
 .ocr-card-control select {
   font-weight: 850;
 }
 
 .ocr-card-control {
   position: relative;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   border: 2px solid currentColor;
   border-radius: 13px;
@@ -1844,6 +2618,7 @@ select {
   font-size: 0.7rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .ocr-card-control select {
@@ -5330,6 +6105,665 @@ input {
   gap: 18px;
 }
 
+.skill-compare-page {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  display: grid;
+  gap: 30px;
+  position: relative;
+  padding: 8px 0 28px;
+  color: #f7fbff;
+}
+
+.skill-compare-page::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -70px -130px auto auto;
+  width: min(560px, 74vw);
+  height: 280px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 42%, rgba(20, 184, 166, 0.2), transparent 34%),
+    radial-gradient(circle at 62% 38%, rgba(37, 99, 235, 0.13), transparent 34%),
+    radial-gradient(circle at 76% 66%, rgba(15, 23, 42, 0.1), transparent 30%);
+  filter: blur(62px);
+  pointer-events: none;
+}
+
+.skill-compare-page .tool-page-hero {
+  border-color: rgba(32, 39, 45, 0.92);
+  background:
+    radial-gradient(circle at 84% 18%, rgba(20, 184, 166, 0.13), transparent 18%),
+    linear-gradient(135deg, #17191a 0%, #111314 100%);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.26);
+}
+
+.skill-compare-page .page-kicker {
+  color: #11c0ac;
+}
+
+.skill-compare-page .page-toolbar h1,
+.skill-compare-page .page-title-block h1 {
+  color: #ffffff;
+}
+
+.skill-compare-page .page-toolbar p,
+.skill-compare-page .page-title-block p {
+  color: #9eb0c0;
+}
+
+.skill-compare-upload-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.skill-compare-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(180px, 0.6fr);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(32, 39, 45, 0.92);
+  border-radius: 22px;
+  background: #111314;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.skill-compare-control-group,
+.skill-compare-card-select {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.skill-compare-control-group > span,
+.skill-compare-card-select > span {
+  color: #9eb0c0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-compare-controls .toggle-row {
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  background: #171b1d;
+}
+
+.skill-compare-controls .toggle-btn {
+  min-height: 38px;
+  border-radius: 12px;
+  border-color: transparent;
+  background: transparent;
+  color: #9eb0c0;
+  box-shadow: none;
+}
+
+.skill-compare-controls .toggle-btn.active {
+  background: #0dab99;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(13, 171, 153, 0.2);
+}
+
+.skill-compare-card-select select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: #171b1d;
+  color: #ffffff;
+  padding: 10px 12px;
+  font-weight: 900;
+}
+
+.skill-compare-upload-card,
+.skill-compare-panel {
+  border: 1px solid rgba(38, 45, 51, 0.95);
+  border-radius: 24px;
+  background: #101213;
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+}
+
+.skill-compare-upload-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: center;
+  gap: 32px;
+  min-height: 278px;
+  padding: 54px clamp(28px, 8vw, 220px);
+  color: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 74% 38%, rgba(20, 184, 166, 0.18), transparent 16%),
+    linear-gradient(155deg, #191b1d 0%, #101112 64%, #0b0c0d 100%);
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.skill-compare-upload-card::before,
+.skill-compare-upload-card::after {
+  content: none;
+}
+
+.skill-compare-upload-copy {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.skill-compare-upload-icon {
+  position: relative;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 102px;
+  height: 102px;
+  border-radius: 999px;
+  background: #0dab99;
+  color: #ffffff;
+  box-shadow: 0 18px 38px rgba(13, 171, 153, 0.28);
+}
+
+
+.skill-compare-upload-icon svg {
+  position: relative;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.skill-compare-upload-label {
+  position: absolute;
+  left: 50%;
+  bottom: 88px;
+  transform: translateX(-50%);
+  color: #7e8b95;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.skill-compare-upload-card:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: rgba(20, 184, 166, 0.42);
+  box-shadow: 0 28px 58px rgba(0, 0, 0, 0.34);
+}
+
+.skill-compare-upload-card strong {
+  color: #ffffff;
+  font-size: 1.85rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.skill-compare-upload-copy > span,
+.skill-compare-status {
+  color: #9eb0c0;
+  font-weight: 650;
+}
+
+.skill-compare-score-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  min-height: 220px;
+  padding: 30px 0;
+  border: 1px solid rgba(38, 45, 51, 0.95);
+  border-radius: 24px;
+  background: #101112;
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+}
+
+.skill-compare-score-summary > div {
+  position: relative;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  min-height: 160px;
+  padding: 18px;
+}
+
+.skill-compare-score-summary > div:nth-child(2) {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+}
+
+.skill-compare-score-summary span {
+  color: #9eb0c0;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.skill-compare-score-summary strong {
+  color: #ffffff;
+  font-size: clamp(2.6rem, 5vw, 4.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.skill-compare-score-summary .positive strong {
+  color: #11c0ac;
+}
+
+.skill-compare-score-summary .negative strong {
+  color: #ff514d;
+}
+
+.skill-compare-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.skill-compare-panel {
+  display: grid;
+  align-content: start;
+  gap: 54px;
+  min-height: 452px;
+  padding: 30px;
+}
+
+.skill-compare-panel-next {
+  border-color: rgba(20, 184, 166, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.08), transparent 42%),
+    #151d1d;
+}
+
+.skill-compare-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.skill-compare-panel-head span {
+  width: 10px;
+  height: 10px;
+  margin-top: 9px;
+  border-radius: 999px;
+  background: #7b8a96;
+  color: transparent;
+  overflow: hidden;
+}
+
+.skill-compare-panel-next .skill-compare-panel-head span {
+  background: #11c0ac;
+}
+
+.skill-compare-panel-head h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.26rem;
+  font-weight: 900;
+}
+
+.skill-compare-list {
+  display: grid;
+  gap: 14px;
+}
+
+.skill-compare-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 78px auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 90px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  background: #1a1d1f;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.skill-compare-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(20, 184, 166, 0.22);
+  background: #1d2224;
+}
+
+.skill-compare-row.unmatched {
+  border-color: rgba(255, 76, 76, 0.22);
+  background: rgba(102, 25, 31, 0.58);
+}
+
+.skill-compare-row span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: #20282d;
+  color: #9eb0c0;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.skill-compare-row.unmatched span {
+  background: rgba(255, 76, 76, 0.18);
+  color: #ff4c4c;
+}
+
+.skill-compare-row strong {
+  color: #ffffff;
+  font-size: 1.14rem;
+  font-weight: 900;
+}
+
+.skill-compare-row select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: #121617;
+  color: #9dd5ff;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.skill-compare-row em {
+  min-width: 58px;
+  padding: 0;
+  color: #ffffff;
+  font-size: 1.28rem;
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+}
+
+.skill-compare-page {
+  width: min(100%, 860px);
+  gap: 18px;
+  padding: 0 0 20px;
+  color: var(--text);
+}
+
+.skill-compare-page .tool-page-hero {
+  border-color: rgba(216, 224, 238, 0.92);
+  background:
+    radial-gradient(circle at 88% 18%, rgba(20, 184, 166, 0.14), transparent 20%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(246, 250, 255, 0.84));
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-page .page-toolbar h1,
+.skill-compare-page .page-title-block h1 {
+  color: var(--text);
+}
+
+.skill-compare-page .page-toolbar p,
+.skill-compare-page .page-title-block p {
+  color: var(--muted);
+}
+
+.skill-compare-controls {
+  padding: 12px;
+  border-color: rgba(216, 224, 238, 0.92);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-controls .toggle-row {
+  background: rgba(246, 248, 252, 0.9);
+  border-color: rgba(216, 224, 238, 0.92);
+}
+
+.skill-compare-controls .toggle-btn {
+  color: var(--muted);
+}
+
+.skill-compare-controls .toggle-btn.active {
+  background: var(--accent);
+  box-shadow: 0 8px 18px rgba(66, 95, 184, 0.16);
+}
+
+.skill-compare-control-group > span,
+.skill-compare-card-select > span {
+  color: var(--muted);
+}
+
+.skill-compare-card-select select {
+  min-height: 40px;
+  border-color: rgba(216, 224, 238, 0.92);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
+.skill-compare-upload-card {
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 18px;
+  min-height: 170px;
+  padding: 28px clamp(22px, 6vw, 88px);
+  border-color: rgba(216, 224, 238, 0.92);
+  background:
+    radial-gradient(circle at 78% 34%, rgba(20, 184, 166, 0.14), transparent 18%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(245, 249, 255, 0.88));
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-upload-card:hover:not(:disabled) {
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+}
+
+.skill-compare-upload-card strong {
+  color: var(--text);
+  font-size: 1.35rem;
+}
+
+.skill-compare-upload-copy > span,
+.skill-compare-status {
+  color: var(--muted);
+}
+
+.skill-compare-upload-icon {
+  width: 74px;
+  height: 74px;
+  background: #0dab99;
+}
+
+.skill-compare-upload-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+
+.skill-compare-upload-label {
+  bottom: 32px;
+  color: rgba(82, 96, 122, 0.54);
+  font-size: 0.78rem;
+}
+
+.skill-compare-score-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border-color: rgba(216, 224, 238, 0.92);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-score-summary > div {
+  min-height: 112px;
+  gap: 8px;
+  padding: 18px;
+}
+
+.skill-compare-score-summary > div:nth-child(2) {
+  border-left: 1px solid rgba(216, 224, 238, 0.8);
+  border-right: 0;
+  background: transparent;
+}
+
+.skill-compare-score-summary > div:nth-child(3) {
+  grid-column: 1 / -1;
+  min-height: 96px;
+  border-top: 1px solid rgba(216, 224, 238, 0.82);
+  background: rgba(255, 81, 77, 0.08);
+}
+
+.skill-compare-score-summary span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.skill-compare-score-summary strong {
+  color: var(--text);
+  font-size: clamp(1.75rem, 4.4vw, 2.6rem);
+}
+
+.skill-compare-score-summary .positive strong {
+  color: #0f766e;
+}
+
+.skill-compare-score-summary .negative strong {
+  color: #f43f5e;
+}
+
+.skill-compare-results {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.skill-compare-panel,
+.skill-compare-panel-next {
+  min-height: auto;
+  gap: 18px;
+  padding: 18px;
+  border-color: rgba(216, 224, 238, 0.92);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-panel-head h2 {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.skill-compare-panel-head span {
+  margin-top: 7px;
+}
+
+.skill-compare-row {
+  min-height: 64px;
+  padding: 10px 12px;
+  border-color: rgba(216, 224, 238, 0.72);
+  background: rgba(246, 248, 252, 0.82);
+}
+
+.skill-compare-row:hover {
+  background: #ffffff;
+}
+
+.skill-compare-row span {
+  background: rgba(66, 95, 184, 0.1);
+  color: var(--accent);
+}
+
+.skill-compare-row strong {
+  color: var(--text);
+  font-size: 0.96rem;
+}
+
+.skill-compare-row select {
+  border-color: rgba(216, 224, 238, 0.92);
+  background: #ffffff;
+  color: var(--accent);
+}
+
+.skill-compare-row em {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.skill-compare-row.unmatched {
+  border-color: rgba(244, 63, 94, 0.25);
+  background: rgba(255, 241, 242, 0.9);
+}
+
+.skill-compare-upload-card {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 16px;
+  min-height: 250px;
+  padding: 32px 22px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(20, 184, 166, 0.12), transparent 20%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.88));
+}
+
+.skill-compare-upload-copy {
+  order: 2;
+  justify-items: center;
+}
+
+.skill-compare-upload-card strong {
+  font-size: 1.26rem;
+}
+
+.skill-compare-upload-icon {
+  order: 1;
+  width: 98px;
+  height: 98px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0f9f8d, #14b8a6);
+  box-shadow: 0 18px 36px rgba(20, 184, 166, 0.22);
+}
+
+.skill-compare-upload-icon svg {
+  width: 42px;
+  height: 42px;
+}
+
+
+.skill-compare-upload-label {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  order: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(23, 32, 51, 0.06);
+  color: #315987;
+  font-size: 0.86rem;
+  letter-spacing: 0;
+}
+
+.skill-compare-upload-label::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0dab99;
+}
+
 .info-page-toolbar {
   align-items: flex-start;
   padding: 24px;
@@ -5838,6 +7272,132 @@ input {
     gap: 9px;
   }
 
+  .skill-compare-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .skill-compare-controls,
+  .skill-compare-score-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-compare-score-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 18px;
+  }
+
+  .skill-compare-upload-card {
+    grid-template-columns: 1fr;
+    min-height: 230px;
+    padding: 28px 18px;
+  }
+
+  .skill-compare-upload-icon {
+    justify-self: center;
+    width: 86px;
+    height: 86px;
+  }
+
+  .skill-compare-upload-icon svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .skill-compare-upload-label {
+    position: static;
+    transform: none;
+    justify-self: start;
+  }
+
+  .skill-compare-score-summary {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .skill-compare-score-summary > div {
+    min-height: 94px;
+    padding: 14px;
+    gap: 6px;
+  }
+
+  .skill-compare-score-summary > div:nth-child(2) {
+    border-width: 0 0 0 1px;
+  }
+
+  .skill-compare-score-summary > div:nth-child(3) {
+    grid-column: 1 / -1;
+    min-height: 82px;
+    border-top: 1px solid rgba(216, 224, 238, 0.82);
+  }
+
+  .skill-compare-score-summary span {
+    font-size: 0.72rem;
+  }
+
+  .skill-compare-score-summary strong {
+    font-size: 1.85rem;
+  }
+
+  .skill-compare-panel {
+    gap: 12px;
+    min-height: auto;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .skill-compare-panel-head {
+    gap: 7px;
+  }
+
+  .skill-compare-panel-head h2 {
+    font-size: 0.9rem;
+  }
+
+  .skill-compare-panel-head span {
+    width: 7px;
+    height: 7px;
+    margin-top: 6px;
+  }
+
+  .skill-compare-list {
+    gap: 8px;
+  }
+
+  .skill-compare-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 6px;
+    min-height: 70px;
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .skill-compare-row span {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+  }
+
+  .skill-compare-row strong {
+    font-size: 0.78rem;
+    line-height: 1.25;
+  }
+
+  .skill-compare-row select {
+    grid-column: 2;
+    width: 64px;
+    min-height: 28px;
+    padding: 3px 7px;
+    font-size: 0.72rem;
+  }
+
+  .skill-compare-row em {
+    grid-column: 2;
+    text-align: left;
+    font-size: 0.78rem;
+  }
+
   .home-widget {
     min-height: 112px;
     grid-template-columns: 42px minmax(0, 1fr) 28px;
@@ -6267,6 +7827,10 @@ input {
     grid-template-columns: 1fr;
   }
 
+  .ocr-pitcher-score-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .ocr-skill-edit-row {
     grid-template-columns: minmax(0, 1fr) 56px;
     gap: 5px;
@@ -6524,5 +8088,56 @@ input {
 
   .seo-faq-item {
     padding: 14px;
+  }
+}
+
+/* Final priority fixes for skill compare OCR. Keep after all responsive overrides. */
+.skill-compare-score-summary > div.positive {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.skill-compare-score-summary > div.negative {
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.skill-compare-score-summary > div.positive strong {
+  color: #059669;
+}
+
+.skill-compare-score-summary > div.negative strong {
+  color: #f43f5e;
+}
+
+.skill-compare-upload-label {
+  justify-self: center;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.positive {
+  background: rgba(16, 185, 129, 0.16);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.negative {
+  background: rgba(244, 63, 94, 0.14);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.positive strong {
+  color: #34d399;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-score-summary > div.negative strong {
+  color: #fb7185;
+}
+
+@media (max-width: 900px) {
+  .skill-compare-guide-card {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-compare-example-link {
+    justify-self: start;
+  }
+
+  .skill-compare-upload-label {
+    justify-self: center;
   }
 }

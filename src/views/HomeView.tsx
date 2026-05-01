@@ -45,6 +45,13 @@ const HOME_WIDGETS: Array<{
   },
 ];
 
+const OCR_WIDGET = {
+  icon: "scan" as const,
+  title: "고스변 점수 비교",
+  description: "고스변 화면의 기존/변경 후보 스킬을 좌우로 비교합니다.",
+  meta: "Beta",
+};
+
 const NOTICE_ITEMS = [
   {
     date: "2026.04.30",
@@ -131,6 +138,31 @@ export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
             </span>
           </button>
         ))}
+        <button
+          type="button"
+          className="home-widget home-widget-ocr"
+          onClick={() => onSelectView("skillCompareBeta")}
+        >
+          <span className="home-widget-icon" aria-hidden="true">
+            <IconGlyph name={OCR_WIDGET.icon} className="ui-icon" />
+          </span>
+          <span className="home-widget-copy">
+            <span className="home-widget-meta home-widget-beta">{OCR_WIDGET.meta}</span>
+            <strong>
+              {OCR_WIDGET.title}
+              <em>베타</em>
+            </strong>
+            <span>{OCR_WIDGET.description}</span>
+          </span>
+          <span className="home-widget-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="ui-icon">
+              <path
+                d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+        </button>
         <button
           type="button"
           className="home-widget home-widget-notice"

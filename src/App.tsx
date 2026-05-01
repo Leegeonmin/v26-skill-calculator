@@ -41,6 +41,7 @@ import {
 import AppChrome from "./components/AppChrome";
 import HomeView from "./views/HomeView";
 import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
+import SkillCompareBetaView from "./views/SkillCompareBetaView";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
 import SkillOcrView from "./views/SkillOcrView";
@@ -52,6 +53,7 @@ import type {
   PitcherRole,
   PlayerType,
   SkillLevel,
+  StarterHand,
   ToolView,
 } from "./types";
 import type {
@@ -152,7 +154,14 @@ function App() {
     }
 
     const requestedView = new URL(window.location.href).searchParams.get("view");
-    const validViews: ToolView[] = ["home", "calculator", "simulator", "impactChange", "ranking"];
+    const validViews: ToolView[] = [
+      "home",
+      "calculator",
+      "simulator",
+      "impactChange",
+      "ranking",
+      "skillCompareBeta",
+    ];
 
     return requestedView && validViews.includes(requestedView as ToolView)
       ? (requestedView as ToolView)
@@ -308,9 +317,15 @@ function App() {
   const totalScoreDisplay = totalScore ?? "-";
   const supabaseReady = isSupabaseConfigured();
   const activeService: ServiceView =
-    toolView === "home" ? "home" : toolView === "ranking" ? "ranking" : "toolbox";
+    toolView === "home" || toolView === "skillCompareBeta"
+      ? "home"
+      : toolView === "ranking"
+        ? "ranking"
+        : "toolbox";
   const toolboxToolView: Exclude<ToolView, "home" | "ranking"> =
-    toolView === "home" || toolView === "ranking" ? "calculator" : toolView;
+    toolView === "home" || toolView === "ranking" || toolView === "skillCompareBeta"
+      ? "calculator"
+      : toolView;
   const faqStructuredData = useMemo(
     () =>
       JSON.stringify({
@@ -454,7 +469,14 @@ function App() {
 
     const handlePopState = () => {
       const requestedView = new URL(window.location.href).searchParams.get("view");
-      const validViews: ToolView[] = ["home", "calculator", "simulator", "impactChange", "ranking"];
+      const validViews: ToolView[] = [
+        "home",
+        "calculator",
+        "simulator",
+        "impactChange",
+        "ranking",
+        "skillCompareBeta",
+      ];
       applyingPopStateRef.current = true;
       setToolView(
         requestedView && validViews.includes(requestedView as ToolView)
@@ -740,7 +762,7 @@ function App() {
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
-    if (nextToolView === "home" || nextToolView === "ranking") {
+    if (nextToolView === "home" || nextToolView === "ranking" || nextToolView === "skillCompareBeta") {
       setToolView(nextToolView);
       return;
     }
@@ -1024,6 +1046,14 @@ function App() {
     );
   };
 
+  const handleOcrPlayerStarterHandChange = (playerIndex: number, starterHand: StarterHand) => {
+    updateOcrDraftPlayers((players) =>
+      players.map((player, index) =>
+        index === playerIndex ? recalculateSkillOcrPlayer({ ...player, starterHand }) : player
+      )
+    );
+  };
+
   const handleOcrSkillChange = (
     playerIndex: number,
     slot: number,
@@ -1173,6 +1203,7 @@ function App() {
             onPlayerSelectedChange={handleOcrPlayerSelectedChange}
             onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
             onPlayerPositionChange={handleOcrPlayerPositionChange}
+            onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}
             onSkillChange={handleOcrSkillChange}
             onSkillLevelChange={handleOcrSkillLevelChange}
             onSaveDraft={() => void handleOcrSaveDraft()}
@@ -1218,6 +1249,11 @@ function App() {
 
           {toolView === "home" ? (
             <HomeView onSelectView={handleToolViewChange} themeAction={themeToggle} />
+          ) : toolView === "skillCompareBeta" ? (
+            <SkillCompareBetaView
+              themeAction={themeToggle}
+              onGoHome={() => setToolView("home")}
+            />
           ) : toolView === "ranking" ? (
             <div className="main-stage tool-page ranking-page">
               <div className="page-toolbar tool-page-hero ranking-page-hero">

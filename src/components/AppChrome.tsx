@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 
-type IconName = "trophy" | "calculator" | "sparkles" | "flame" | "notice" | "google";
+type IconName =
+  | "trophy"
+  | "calculator"
+  | "sparkles"
+  | "flame"
+  | "notice"
+  | "scan"
+  | "google";
 
 export function IconGlyph({ name, className = "" }: { name: IconName; className?: string }) {
   if (name === "trophy") {
@@ -52,6 +59,17 @@ export function IconGlyph({ name, className = "" }: { name: IconName; className?
       <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
         <path
           d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9.7L5 21v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm2 4v2h10V8H7Zm0 4v2h7v-2H7Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "scan") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M4 7V4h3v2H6v1H4Zm13-3h3v3h-2V6h-1V4ZM4 17h2v1h1v2H4v-3Zm14 1v-1h2v3h-3v-2h1ZM7 8h10v8H7V8Zm2 2v4h6v-4H9Z"
           fill="currentColor"
         />
       </svg>

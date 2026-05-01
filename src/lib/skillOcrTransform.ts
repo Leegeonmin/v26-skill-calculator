@@ -1,5 +1,5 @@
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
-import type { CalculatorMode, CardType, SkillLevel, SkillMeta } from "../types";
+import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
 import type {
   SkillOcrApiLineupRow,
   SkillOcrApiResponse,
@@ -81,17 +81,83 @@ function getModeForRow(role: SkillOcrRole, row: SkillOcrApiLineupRow): Calculato
   return getPitcherModeFromPosition(row.position);
 }
 
-function getDataSetForMode(mode: CalculatorMode): GameDataSet {
+function getDataSetForMode(mode: CalculatorMode, starterHand: StarterHand = "right"): GameDataSet {
   const dataSet =
     mode === "hitter"
       ? getGameDataSet({ playerType: "hitter" })
-      : getGameDataSet({ playerType: "pitcher", pitcherRole: mode });
+      : getGameDataSet({ playerType: "pitcher", pitcherRole: mode, starterHand });
 
   if (!dataSet) {
     throw new Error("스킬 데이터를 불러오지 못했습니다.");
   }
 
   return dataSet;
+}
+
+function findBestSkillCandidate(input: {
+  skill: SkillOcrSelectedSkill;
+  cardType: CardType;
+  dataSet: GameDataSet;
+}): SkillCandidate | null {
+  const existingSkill =
+    input.skill.skillId &&
+    input.dataSet.skills.some((skill) => skill.id === input.skill.skillId) &&
+    input.dataSet.scoreTable[input.skill.skillId]
+      ? {
+          skillId: input.skill.skillId,
+          skillName:
+            input.dataSet.skills.find((skill) => skill.id === input.skill.skillId)?.name ??
+            input.skill.skillName ??
+            input.skill.rawName ??
+            "",
+          order: -1,
+        }
+      : null;
+
+  if (existingSkill) {
+    return existingSkill;
+  }
+
+  return (
+    findSkillCandidates({
+      skillName: input.skill.skillName ?? input.skill.rawName,
+      cardType: input.cardType,
+      level: input.skill.level,
+      dataSet: input.dataSet,
+    })[0] ?? null
+  );
+}
+
+function calculatePlayerTotalForDataSet(
+  player: SkillOcrSelectedPlayer,
+  dataSet: GameDataSet
+): number {
+  return Number(
+    player.skills
+      .reduce((sum, skill) => {
+        const candidate = findBestSkillCandidate({
+          skill,
+          cardType: player.cardType,
+          dataSet,
+        });
+
+        return sum + (candidate ? dataSet.scoreTable[candidate.skillId]?.[skill.level] ?? 0 : 0);
+      }, 0)
+      .toFixed(2)
+  );
+}
+
+function calculatePitcherScores(player: SkillOcrSelectedPlayer): SkillOcrSelectedPlayer["pitcherScores"] {
+  if (player.calculatorMode === "hitter") {
+    return undefined;
+  }
+
+  return {
+    starterRight: calculatePlayerTotalForDataSet(player, getDataSetForMode("starter", "right")),
+    starterLeft: calculatePlayerTotalForDataSet(player, getDataSetForMode("starter", "left")),
+    middle: calculatePlayerTotalForDataSet(player, getDataSetForMode("middle")),
+    closer: calculatePlayerTotalForDataSet(player, getDataSetForMode("closer")),
+  };
 }
 
 export function getSkillOcrSkillOptions(player: SkillOcrSelectedPlayer): Array<{
@@ -228,19 +294,25 @@ function getSkillBySlot(row: SkillOcrApiLineupRow, slot: number) {
 }
 
 export function recalculateSkillOcrPlayer(player: SkillOcrSelectedPlayer): SkillOcrSelectedPlayer {
-  const dataSet = getDataSetForMode(player.calculatorMode);
+  const dataSet = getDataSetForMode(player.calculatorMode, player.starterHand ?? "right");
   const skills = player.skills.map((skill) => {
-    const score = skill.skillId ? dataSet.scoreTable[skill.skillId]?.[skill.level] ?? 0 : 0;
-    const meta: SkillMeta | undefined = skill.skillId
-      ? dataSet.skills.find((candidate) => candidate.id === skill.skillId)
+    const candidate = findBestSkillCandidate({
+      skill,
+      cardType: player.cardType,
+      dataSet,
+    });
+    const score = candidate ? dataSet.scoreTable[candidate.skillId]?.[skill.level] ?? 0 : 0;
+    const meta: SkillMeta | undefined = candidate
+      ? dataSet.skills.find((skillMeta) => skillMeta.id === candidate.skillId)
       : undefined;
 
     return {
       ...skill,
+      skillId: candidate?.skillId ?? null,
       skillName: meta?.name ?? skill.skillName,
       grade: meta?.grade ?? skill.grade,
       score,
-      matched: Boolean(skill.skillId),
+      matched: Boolean(candidate),
     };
   });
   const totalScore = Number(
@@ -257,6 +329,11 @@ export function recalculateSkillOcrPlayer(player: SkillOcrSelectedPlayer): Skill
     ...player,
     skills,
     totalScore,
+    pitcherScores: calculatePitcherScores({
+      ...player,
+      skills,
+      totalScore,
+    }),
   };
 }
 
@@ -300,6 +377,7 @@ export function transformSkillOcrResponse(
       playerName: row.player,
       team: row.team,
       position: row.position,
+      starterHand: role === "pitcher" ? "right" : undefined,
       cardType,
       calculatorMode,
       skills,

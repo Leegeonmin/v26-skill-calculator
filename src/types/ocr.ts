@@ -1,4 +1,4 @@
-import type { CalculatorMode, CardType, SkillGrade, SkillLevel } from ".";
+import type { CalculatorMode, CardType, SkillGrade, SkillLevel, StarterHand } from ".";
 
 export type SkillOcrRole = "hitter" | "pitcher";
 
@@ -17,6 +17,21 @@ export type SkillOcrApiSkill = {
   raw_text?: string;
   score?: number | null;
   source?: string;
+  icon_box?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  text_roi?: [number, number, number, number];
+  level_roi?: [number, number, number, number];
+  level_rule?: {
+    green_pixels: number;
+    white_pixels: number;
+    left_bottom: number;
+    top: number;
+    right: number;
+  };
 };
 
 export type SkillOcrApiLineupRow = {
@@ -26,6 +41,13 @@ export type SkillOcrApiLineupRow = {
   position: string | null;
   card_type: string | null;
   skills: SkillOcrApiSkill[];
+  player_raw_text?: string;
+  player_roi?: [number, number, number, number];
+  team_raw_text?: string;
+  team_roi?: [number, number, number, number];
+  position_raw_text?: string;
+  position_roi?: [number, number, number, number] | null;
+  base_team?: string | null;
 };
 
 export type SkillOcrApiResponse = {
@@ -70,10 +92,17 @@ export type SkillOcrSelectedPlayer = {
   playerName: string;
   team: string | null;
   position: string | null;
+  starterHand?: StarterHand;
   cardType: CardType;
   calculatorMode: CalculatorMode;
   skills: SkillOcrSelectedSkill[];
   totalScore: number;
+  pitcherScores?: {
+    starterRight: number;
+    starterLeft: number;
+    middle: number;
+    closer: number;
+  };
 };
 
 export type SkillOcrSavedUpload = {
@@ -88,4 +117,25 @@ export type SkillOcrSavedUpload = {
   average_score: number;
   created_at: string;
   updated_at: string;
+};
+
+export type SkillChangeSkill = {
+  slot: number;
+  name: string | null;
+  level: number | null;
+};
+
+export type SkillChangeResponse = {
+  ok: boolean;
+  request_id: string | null;
+  image: {
+    path: string;
+    width: number;
+    height: number;
+  };
+  left: SkillChangeSkill[];
+  right: SkillChangeSkill[];
+  debug_artifacts?: {
+    overview_image?: string;
+  };
 };

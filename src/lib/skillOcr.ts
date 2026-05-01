@@ -5,9 +5,11 @@ import type {
   SkillOcrSavedUpload,
   SkillOcrSelectedPlayer,
   SkillOcrSession,
+  SkillChangeResponse,
 } from "../types/ocr";
 
 const OCR_API_BASE_URL = "https://v26-skill-ocr.fly.dev";
+const ALLOWED_OCR_IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
 
 function requireSupabase() {
   const supabase = getSupabaseClient();
@@ -31,10 +33,17 @@ export async function recognizeSkillImage(input: {
   role: SkillOcrRole;
   file: File;
 }): Promise<SkillOcrApiResponse> {
+  const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!ALLOWED_OCR_IMAGE_EXTENSIONS.has(extension)) {
+    throw new Error("png, jpg, jpeg, webp 이미지만 업로드할 수 있습니다.");
+  }
+
   const formData = new FormData();
   formData.append("image", input.file);
+  const recognizeUrl = new URL("/recognize", OCR_API_BASE_URL);
+  recognizeUrl.searchParams.set("role", input.role);
 
-  const response = await fetch(`${OCR_API_BASE_URL}/recognize?role=${input.role}`, {
+  const response = await fetch(recognizeUrl.toString(), {
     method: "POST",
     body: formData,
   });
@@ -51,6 +60,38 @@ export async function recognizeSkillImage(input: {
 
   if (!data || !("ok" in data) || !data.ok) {
     throw new Error("이미지 인식 결과가 올바르지 않습니다.");
+  }
+
+  return data;
+}
+
+export async function recognizeSkillChangeImage(file: File): Promise<SkillChangeResponse> {
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!ALLOWED_OCR_IMAGE_EXTENSIONS.has(extension)) {
+    throw new Error("png, jpg, jpeg, webp 이미지만 업로드할 수 있습니다.");
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  const recognizeUrl = new URL("/recognize/skill-change", OCR_API_BASE_URL);
+
+  const response = await fetch(recognizeUrl.toString(), {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = (await response.json().catch(() => null)) as
+    | SkillChangeResponse
+    | { detail?: string }
+    | null;
+
+  if (!response.ok) {
+    const detail = data && "detail" in data ? data.detail : null;
+    throw new Error(detail || "스킬 변경 화면 인식 요청에 실패했습니다.");
+  }
+
+  if (!data || !("ok" in data) || !data.ok) {
+    throw new Error("스킬 변경 화면 인식 결과가 올바르지 않습니다.");
   }
 
   return data;

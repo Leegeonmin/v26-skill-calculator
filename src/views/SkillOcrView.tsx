@@ -1,6 +1,6 @@
 import { Fragment, useRef, useState } from "react";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
-import type { CardType, SkillLevel } from "../types";
+import type { CardType, SkillLevel, StarterHand } from "../types";
 import type {
   SkillOcrRole,
   SkillOcrSavedUpload,
@@ -30,6 +30,7 @@ type SkillOcrViewProps = {
   onPlayerSelectedChange: (playerIndex: number, selected: boolean) => void;
   onPlayerCardTypeChange: (playerIndex: number, cardType: CardType) => void;
   onPlayerPositionChange: (playerIndex: number, position: string) => void;
+  onPlayerStarterHandChange: (playerIndex: number, starterHand: StarterHand) => void;
   onSkillChange: (
     playerIndex: number,
     slot: number,
@@ -51,6 +52,10 @@ const CARD_TYPE_OPTIONS: Array<{ value: CardType; label: string }> = [
 ];
 
 const PITCHER_POSITION_OPTIONS = ["SP", "RP", "CP"];
+const PITCHER_HAND_OPTIONS: Array<{ value: StarterHand; label: string }> = [
+  { value: "right", label: "우투" },
+  { value: "left", label: "좌투" },
+];
 const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
 const SHOW_UPLOAD_SAVED_PANEL = false;
 type OcrPanelTab = "summary" | "upload" | "stats";
@@ -71,14 +76,14 @@ function formatRole(role: SkillOcrSavedUpload["role"]): string {
   return role === "hitter" ? "타자" : "투수";
 }
 
-function formatPlayerMeta(player: SkillOcrSelectedPlayer): string {
-  const parts = [player.team ?? "-"];
-
-  if (player.calculatorMode !== "hitter") {
-    parts.push(player.position?.trim() || "포지션 없음");
+function formatSavedPlayerMeta(player: SkillOcrSelectedPlayer): string {
+  if (player.calculatorMode === "hitter") {
+    return "";
   }
 
-  return parts.join(" · ");
+  return [player.position?.trim() || "포지션 없음", player.starterHand === "left" ? "좌투" : "우투"].join(
+    " · "
+  );
 }
 
 function formatDate(value: string): string {
@@ -124,7 +129,11 @@ function buildCopyText(params: {
   const includePosition = params.role === "pitcher";
   const playerLines = params.players.map((player) => {
     const position = player.position?.trim();
-    const name = includePosition && position ? `${player.playerName}(${position})` : player.playerName;
+    const handLabel = player.starterHand === "left" ? "좌투" : "우투";
+    const name =
+      includePosition && position
+        ? `${player.playerName}(${position}/${handLabel})`
+        : player.playerName;
     return `${name} : ${player.totalScore.toFixed(2)}점`;
   });
 
@@ -138,6 +147,48 @@ function buildCopyText(params: {
 
 function getSkillToneClass(skill: SkillOcrSelectedPlayer["skills"][number]): string {
   return skill.grade ? `ocr-skill-grade-${skill.grade}` : `ocr-skill-level-${skill.level}`;
+}
+
+function getPitcherScoreItems(player: SkillOcrSelectedPlayer): Array<{
+  key: string;
+  label: string;
+  value: number;
+  active: boolean;
+}> {
+  const scores = player.pitcherScores;
+  if (!scores) {
+    return [];
+  }
+
+  const position = player.position ?? "SP";
+  const hand = player.starterHand ?? "right";
+
+  return [
+    {
+      key: "starterRight",
+      label: "선발 우투",
+      value: scores.starterRight,
+      active: position === "SP" && hand === "right",
+    },
+    {
+      key: "starterLeft",
+      label: "선발 좌투",
+      value: scores.starterLeft,
+      active: position === "SP" && hand === "left",
+    },
+    {
+      key: "middle",
+      label: "중계",
+      value: scores.middle,
+      active: position === "RP",
+    },
+    {
+      key: "closer",
+      label: "마무리",
+      value: scores.closer,
+      active: position === "CP",
+    },
+  ];
 }
 
 function OcrIcon({ name }: { name: OcrIconName }) {
@@ -184,6 +235,7 @@ export default function SkillOcrView({
   onPlayerSelectedChange,
   onPlayerCardTypeChange,
   onPlayerPositionChange,
+  onPlayerStarterHandChange,
   onSkillChange,
   onSkillLevelChange,
   onSaveDraft,
@@ -193,6 +245,7 @@ export default function SkillOcrView({
 }: SkillOcrViewProps) {
   const pitcherInputRef = useRef<HTMLInputElement | null>(null);
   const hitterInputRef = useRef<HTMLInputElement | null>(null);
+  const savedUploadPanelRef = useRef<HTMLElement | null>(null);
   const [activeTab, setActiveTab] = useState<OcrPanelTab>("summary");
   const [showSummarySavedDetail, setShowSummarySavedDetail] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -348,10 +401,13 @@ export default function SkillOcrView({
   const openSummarySavedDetail = (upload: SkillOcrSavedUpload) => {
     setShowSummarySavedDetail(true);
     onSelectSavedUpload(upload);
+    window.setTimeout(() => {
+      savedUploadPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
   };
 
   const savedUploadPanel = savedUpload ? (
-    <section className="ocr-saved-panel">
+    <section className="ocr-saved-panel" ref={savedUploadPanelRef}>
       <div className="ocr-section-head">
         <div>
           <h2>저장된 결과</h2>
@@ -373,7 +429,7 @@ export default function SkillOcrView({
           >
             <div className="ocr-saved-player-main">
               <strong>{player.playerName}</strong>
-              <span>{formatPlayerMeta(player)}</span>
+              {formatSavedPlayerMeta(player) && <span>{formatSavedPlayerMeta(player)}</span>}
             </div>
             <div className="ocr-saved-player-skills">
               {player.skills.map((skill) => (
@@ -626,7 +682,7 @@ export default function SkillOcrView({
                                   type="button"
                                   className="ocr-table-link"
                                   onClick={() => {
-                                    onSelectSavedUpload(upload);
+                                    openSummarySavedDetail(upload);
                                   }}
                                 >
                                   <OcrIcon name="eye" />
@@ -794,7 +850,7 @@ export default function SkillOcrView({
               >
                 <div>
                   <strong>{player.playerName}</strong>
-                  <span>{formatPlayerMeta(player)}</span>
+                  {formatSavedPlayerMeta(player) && <span>{formatSavedPlayerMeta(player)}</span>}
                 </div>
                 <div>
                   {player.skills.map((skill) => (
@@ -890,7 +946,11 @@ export default function SkillOcrView({
                     />
                     <strong>{player.playerName}</strong>
                   </label>
-                  <div className="ocr-player-controls">
+                  <div
+                    className={`ocr-player-controls ocr-player-controls-${
+                      player.calculatorMode === "hitter" ? "hitter" : "pitcher"
+                    }`}
+                  >
                     <label className={`ocr-card-control ocr-card-control-${player.cardType}`}>
                       <span>카드</span>
                       <select
@@ -908,25 +968,74 @@ export default function SkillOcrView({
                     </label>
 
                     {player.calculatorMode !== "hitter" && (
-                      <label>
-                        <span>포지션</span>
-                        <select
-                          value={player.position ?? "SP"}
-                          onChange={(event) =>
-                            onPlayerPositionChange(playerIndex, event.target.value)
-                          }
-                        >
-                          {PITCHER_POSITION_OPTIONS.map((position) => (
-                            <option key={position} value={position}>
-                              {position}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      <>
+                        <label>
+                          <span>포지션</span>
+                          <select
+                            value={player.position ?? "SP"}
+                            onChange={(event) =>
+                              onPlayerPositionChange(playerIndex, event.target.value)
+                            }
+                          >
+                            {PITCHER_POSITION_OPTIONS.map((position) => (
+                              <option key={position} value={position}>
+                                {position}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          <span>투구</span>
+                          <select
+                            value={player.starterHand ?? "right"}
+                            onChange={(event) =>
+                              onPlayerStarterHandChange(
+                                playerIndex,
+                                event.target.value as StarterHand
+                              )
+                            }
+                          >
+                            {PITCHER_HAND_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </>
                     )}
                   </div>
                   <strong className="ocr-player-score">{player.totalScore.toFixed(2)}</strong>
                 </div>
+                {player.calculatorMode !== "hitter" && (
+                  <div className="ocr-pitcher-score-grid">
+                    {getPitcherScoreItems(player).map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        className={`ocr-pitcher-score-chip${item.active ? " active" : ""}`}
+                        onClick={() => {
+                          if (item.key === "starterRight" || item.key === "starterLeft") {
+                            onPlayerPositionChange(playerIndex, "SP");
+                            onPlayerStarterHandChange(
+                              playerIndex,
+                              item.key === "starterLeft" ? "left" : "right"
+                            );
+                            return;
+                          }
+
+                          onPlayerPositionChange(
+                            playerIndex,
+                            item.key === "middle" ? "RP" : "CP"
+                          );
+                        }}
+                      >
+                        <span>{item.label}</span>
+                        <strong>{item.value.toFixed(2)}</strong>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="ocr-player-skills">
                   {player.skills.map((skill) => (
                     <div

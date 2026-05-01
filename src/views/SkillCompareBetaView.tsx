@@ -1,0 +1,427 @@
+import { useMemo, useRef, useState } from "react";
+import { getGameDataSet, type GameDataSet } from "../data/gameData";
+import { recognizeSkillChangeImage } from "../lib/skillOcr";
+import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
+import type { SkillChangeResponse, SkillChangeSkill } from "../types/ocr";
+import { calculateSkillTotal } from "../utils/calculate";
+
+type SkillCompareBetaViewProps = {
+  onGoHome: () => void;
+  themeAction?: React.ReactNode;
+};
+
+type ComparedSkill = SkillChangeSkill & {
+  skillId: string;
+  displayName: string;
+  score: number;
+  matched: boolean;
+};
+
+const MODE_OPTIONS: Array<{ value: CalculatorMode; label: string }> = [
+  { value: "hitter", label: "타자" },
+  { value: "starter", label: "선발" },
+  { value: "middle", label: "중계" },
+  { value: "closer", label: "마무리" },
+];
+
+const CARD_TYPE_OPTIONS: Array<{ value: CardType; label: string }> = [
+  { value: "impact", label: "임팩트" },
+  { value: "signature", label: "시그니처" },
+  { value: "goldenGlove", label: "골든글러브" },
+  { value: "national", label: "국가대표" },
+];
+
+const STARTER_HAND_OPTIONS: Array<{ value: StarterHand; label: string }> = [
+  { value: "right", label: "우투" },
+  { value: "left", label: "좌투" },
+];
+const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
+
+function normalizeName(value: string | null | undefined): string {
+  return (value ?? "")
+    .replace(/[★☆]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function getDataSet(mode: CalculatorMode, starterHand: StarterHand): GameDataSet | null {
+  if (mode === "hitter") {
+    return getGameDataSet({ playerType: "hitter" });
+  }
+
+  if (mode === "starter") {
+    return getGameDataSet({ playerType: "pitcher", pitcherRole: "starter", starterHand });
+  }
+
+  return getGameDataSet({ playerType: "pitcher", pitcherRole: mode });
+}
+
+function findSkillMeta(skill: SkillChangeSkill, dataSet: GameDataSet, cardType: CardType): SkillMeta | null {
+  const requested = normalizeName(skill.name);
+  if (!requested) {
+    return null;
+  }
+
+  const candidates = dataSet.skills.filter((meta) => meta.availableCardTypes.includes(cardType));
+  const exact = candidates.find((meta) => normalizeName(meta.name) === requested);
+  if (exact) {
+    return exact;
+  }
+
+  const familyMatches = candidates.filter((meta) => {
+    const metaName = normalizeName(meta.name);
+    return metaName === requested || metaName.startsWith(`${requested}(`);
+  });
+
+  if (familyMatches.length === 0) {
+    return null;
+  }
+
+  const level = normalizeLevel(skill.level);
+  return [...familyMatches].sort((first, second) => {
+    const firstScore = dataSet.scoreTable[first.id]?.[level] ?? 0;
+    const secondScore = dataSet.scoreTable[second.id]?.[level] ?? 0;
+    return secondScore - firstScore;
+  })[0];
+}
+
+function normalizeLevel(level: number | null): SkillLevel {
+  return level === 5 || level === 6 || level === 7 || level === 8 ? level : 5;
+}
+
+function compareSkills(
+  skills: SkillChangeSkill[],
+  dataSet: GameDataSet | null,
+  cardType: CardType
+): { skills: ComparedSkill[]; total: number } {
+  if (!dataSet) {
+    return {
+      skills: skills.map((skill) => ({
+        ...skill,
+        skillId: "",
+        displayName: skill.name ?? "인식 실패",
+        score: 0,
+        matched: false,
+      })),
+      total: 0,
+    };
+  }
+
+  const comparedSkills = skills.slice(0, 3).map<ComparedSkill>((skill) => {
+    const level = normalizeLevel(skill.level);
+    const meta = findSkillMeta(skill, dataSet, cardType);
+
+    return {
+      ...skill,
+      level,
+      skillId: meta?.id ?? "",
+      displayName: meta?.name ?? skill.name ?? "인식 실패",
+      score: meta ? dataSet.scoreTable[meta.id]?.[level] ?? 0 : 0,
+      matched: Boolean(meta),
+    };
+  });
+
+  const total = calculateSkillTotal({
+    cardType,
+    skillIds: comparedSkills.map((skill) => skill.skillId),
+    skillLevels: comparedSkills.map((skill) => normalizeLevel(skill.level)),
+    scoreTable: dataSet.scoreTable,
+  });
+
+  return { skills: comparedSkills, total };
+}
+
+function formatSkill(skill: ComparedSkill): string {
+  return skill.displayName;
+}
+
+export default function SkillCompareBetaView({ onGoHome, themeAction }: SkillCompareBetaViewProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<SkillChangeResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<CalculatorMode>("hitter");
+  const [starterHand, setStarterHand] = useState<StarterHand>("right");
+  const [cardType, setCardType] = useState<CardType>("signature");
+  const [exampleOpen, setExampleOpen] = useState(false);
+
+  const dataSet = useMemo(() => getDataSet(mode, starterHand), [mode, starterHand]);
+  const comparedLeft = useMemo(
+    () => compareSkills(result?.left ?? [], dataSet, cardType),
+    [cardType, dataSet, result?.left]
+  );
+  const comparedRight = useMemo(
+    () => compareSkills(result?.right ?? [], dataSet, cardType),
+    [cardType, dataSet, result?.right]
+  );
+  const scoreDiff = Number((comparedRight.total - comparedLeft.total).toFixed(2));
+
+  async function upload(file: File) {
+    try {
+      setBusy(true);
+      setResult(null);
+      setError(null);
+      setResult(await recognizeSkillChangeImage(file));
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "스킬 변경 화면을 분석하지 못했습니다."
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function updateSkillLevel(side: "left" | "right", slot: number, level: SkillLevel) {
+    setResult((currentResult) => {
+      if (!currentResult) {
+        return currentResult;
+      }
+
+      return {
+        ...currentResult,
+        [side]: currentResult[side].map((skill) =>
+          skill.slot === slot ? { ...skill, level } : skill
+        ),
+      };
+    });
+  }
+
+  return (
+    <main className="skill-compare-page" aria-labelledby="skill-compare-title">
+      <div className="page-toolbar tool-page-hero">
+        <div className="page-title-block">
+          <span className="page-kicker">Beta</span>
+          <h1 id="skill-compare-title">고급 스킬 변경권 점수 비교</h1>
+          <p>고스변 화면을 업로드하면 왼쪽 기존 스킬과 오른쪽 변경 후보의 점수를 비교합니다.</p>
+        </div>
+        <div className="page-toolbar-actions">
+          {themeAction}
+          <button type="button" className="ghost-btn page-home-btn" onClick={onGoHome}>
+            홈으로
+          </button>
+        </div>
+      </div>
+
+      <section className="skill-compare-controls" aria-label="점수 기준 선택">
+        <div className="skill-compare-control-group">
+          <span>선수 구분</span>
+          <div className="toggle-row">
+            {MODE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`toggle-btn ${mode === option.value ? "active" : ""}`}
+                onClick={() => setMode(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {mode === "starter" && (
+          <div className="skill-compare-control-group">
+            <span>투구 손</span>
+            <div className="toggle-row">
+              {STARTER_HAND_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`toggle-btn ${starterHand === option.value ? "active" : ""}`}
+                  onClick={() => setStarterHand(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <label className="skill-compare-card-select">
+          <span>카드 타입</span>
+          <select value={cardType} onChange={(event) => setCardType(event.target.value as CardType)}>
+            {CARD_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      <section className="skill-compare-upload-panel">
+        <div className="skill-compare-guide-card">
+          <div>
+            <strong>고스변 화면 캡처 가이드</strong>
+            <ul>
+              <li>기존 스킬과 변경 후보 스킬 3개가 모두 보이는 화면을 업로드하세요.</li>
+              <li>스킬명과 레벨 숫자가 잘리지 않게 모바일에서 세로로 캡처하는 것을 권장합니다.</li>
+              <li>OCR 결과는 부정확할 수 있으니 선수 구분, 카드 타입, 스킬 레벨을 확인하세요.</li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            className="skill-compare-example-link"
+            onClick={() => setExampleOpen(true)}
+          >
+            예시 이미지
+          </button>
+        </div>
+
+        <input
+          ref={inputRef}
+          type="file"
+          hidden
+          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void upload(file);
+            event.currentTarget.value = "";
+          }}
+        />
+        <button
+          type="button"
+          className="skill-compare-upload-card"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          <span className="skill-compare-upload-copy">
+            <strong>{busy ? "분석 중" : "고스변 화면 업로드"}</strong>
+            <span>화면을 터치하거나 이미지를 끌어다 놓으세요</span>
+          </span>
+          <span className="skill-compare-upload-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 16V4m0 0 5 5m-5-5-5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+            </svg>
+
+          </span>
+          <span className="skill-compare-upload-label">터치하여 업로드</span>
+        </button>
+      </section>
+
+      {exampleOpen && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => setExampleOpen(false)}
+        >
+          <section
+            className="modal-card skill-compare-example-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="고스변 화면 캡처 예시"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="ocr-example-modal-head">
+              <div>
+                <p className="modal-eyebrow">Example</p>
+                <h2>고스변 화면 예시</h2>
+              </div>
+              <button type="button" className="ghost-btn" onClick={() => setExampleOpen(false)}>
+                닫기
+              </button>
+            </div>
+            <img src="/skill-change-example.png" alt="고스변 화면 캡처 예시" />
+          </section>
+        </div>
+      )}
+
+      {error && <p className="modal-error">{error}</p>}
+      {busy && <p className="skill-compare-status">스킬 변경 화면을 분석하고 있습니다.</p>}
+
+      {result && (
+        <>
+          <section className="skill-compare-score-summary">
+            <div>
+              <span>현재</span>
+              <strong>{comparedLeft.total.toFixed(2)}</strong>
+            </div>
+            <div>
+              <span>변경 후보</span>
+              <strong>{comparedRight.total.toFixed(2)}</strong>
+            </div>
+            <div className={scoreDiff >= 0 ? "positive" : "negative"}>
+              <span>차이</span>
+              <strong>
+                {scoreDiff > 0 ? "+" : ""}
+                {scoreDiff.toFixed(2)}
+              </strong>
+            </div>
+          </section>
+
+          <section className="skill-compare-results">
+            <div className="skill-compare-panel">
+              <div className="skill-compare-panel-head">
+                <span>Left</span>
+                <h2>현재 스킬</h2>
+              </div>
+              <div className="skill-compare-list">
+                {comparedLeft.skills.map((skill) => (
+                  <div
+                    key={`left-${skill.slot}`}
+                    className={`skill-compare-row ${skill.matched ? "" : "unmatched"}`}
+                  >
+                    <span>{skill.slot}</span>
+                    <strong>{formatSkill(skill)}</strong>
+                    <select
+                      aria-label={`${skill.displayName} 레벨`}
+                      value={normalizeLevel(skill.level)}
+                      onChange={(event) =>
+                        updateSkillLevel("left", skill.slot, Number(event.target.value) as SkillLevel)
+                      }
+                    >
+                      {SKILL_LEVEL_OPTIONS.map((level) => (
+                        <option key={level} value={level}>
+                          Lv.{level}
+                        </option>
+                      ))}
+                    </select>
+                    <em>{skill.score.toFixed(2)}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="skill-compare-panel skill-compare-panel-next">
+              <div className="skill-compare-panel-head">
+                <span>Right</span>
+                <h2>변경 후보</h2>
+              </div>
+              <div className="skill-compare-list">
+                {comparedRight.skills.map((skill) => (
+                  <div
+                    key={`right-${skill.slot}`}
+                    className={`skill-compare-row ${skill.matched ? "" : "unmatched"}`}
+                  >
+                    <span>{skill.slot}</span>
+                    <strong>{formatSkill(skill)}</strong>
+                    <select
+                      aria-label={`${skill.displayName} 레벨`}
+                      value={normalizeLevel(skill.level)}
+                      onChange={(event) =>
+                        updateSkillLevel(
+                          "right",
+                          skill.slot,
+                          Number(event.target.value) as SkillLevel
+                        )
+                      }
+                    >
+                      {SKILL_LEVEL_OPTIONS.map((level) => (
+                        <option key={level} value={level}>
+                          Lv.{level}
+                        </option>
+                      ))}
+                    </select>
+                    <em>{skill.score.toFixed(2)}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}

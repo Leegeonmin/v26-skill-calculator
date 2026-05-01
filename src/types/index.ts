@@ -3,7 +3,13 @@
 export type PitcherRole = "starter" | "middle" | "closer";
 export type StarterHand = "right" | "left";
 export type CalculatorMode = "hitter" | "starter" | "middle" | "closer";
-export type ToolView = "home" | "calculator" | "simulator" | "impactChange" | "ranking";
+export type ToolView =
+  | "home"
+  | "calculator"
+  | "simulator"
+  | "impactChange"
+  | "ranking"
+  | "skillCompareBeta";
 export type HitterPositionGroup = "fielder" | "catcher";
 
 export type CardType = "impact" | "signature" | "goldenGlove" | "national";
