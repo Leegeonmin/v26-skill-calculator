@@ -3664,6 +3664,20 @@ select {
   background: rgba(248, 250, 253, 0.72);
 }
 
+.ranking-page .ranking-cta-card.ranking-cta-button {
+  background: #0f9f8d;
+  border-color: #0f9f8d;
+  color: #ffffff;
+}
+
+.ranking-page .ranking-cta-card.ranking-cta-button span {
+  color: inherit;
+}
+
+.ranking-page .ranking-cta-card.ranking-cta-button .ranking-cta-arrow {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .ranking-page .ranking-entry-row {
   padding: 12px;
   border-radius: 16px;
