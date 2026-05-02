@@ -7361,6 +7361,91 @@ input {
     linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.72));
 }
 
+.app-bg[data-theme="dark"] .simulator-page .skill-select h3,
+.app-bg[data-theme="dark"] .impact-page .skill-select h3,
+.app-bg[data-theme="dark"] .simulator-page .simulation-setup-summary-copy strong,
+.app-bg[data-theme="dark"] .impact-page .simulation-setup-summary-copy strong,
+.app-bg[data-theme="dark"] .simulator-page .simulation-current-score-main strong,
+.app-bg[data-theme="dark"] .impact-page .simulation-current-score-main strong,
+.app-bg[data-theme="dark"] .simulator-page .simulation-current-score-pill strong,
+.app-bg[data-theme="dark"] .impact-page .simulation-current-score-pill strong,
+.app-bg[data-theme="dark"] .simulator-page .mobile-live-summary-head strong,
+.app-bg[data-theme="dark"] .impact-page .mobile-live-summary-head strong {
+  color: #f8fbff;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .skill-search-wrap input,
+.app-bg[data-theme="dark"] .impact-page .skill-search-wrap input,
+.app-bg[data-theme="dark"] .simulator-page .skill-col > select,
+.app-bg[data-theme="dark"] .impact-page .skill-col > select,
+.app-bg[data-theme="dark"] .simulator-page .auto-roll-compact select {
+  background: rgba(2, 6, 23, 0.72);
+  border-color: rgba(148, 163, 184, 0.34);
+  color: #f8fbff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.app-bg[data-theme="dark"] .simulator-page .skill-search-wrap input::placeholder,
+.app-bg[data-theme="dark"] .impact-page .skill-search-wrap input::placeholder {
+  color: #94a3b8;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .skill-search-icon,
+.app-bg[data-theme="dark"] .impact-page .skill-search-icon,
+.app-bg[data-theme="dark"] .simulator-page .auto-roll-compact label,
+.app-bg[data-theme="dark"] .simulator-page .simulation-current-score-main span,
+.app-bg[data-theme="dark"] .impact-page .simulation-current-score-main span,
+.app-bg[data-theme="dark"] .simulator-page .simulation-current-score-pill span,
+.app-bg[data-theme="dark"] .impact-page .simulation-current-score-pill span,
+.app-bg[data-theme="dark"] .simulator-page .mobile-live-summary-stats,
+.app-bg[data-theme="dark"] .impact-page .mobile-live-summary-stats {
+  color: #b9c5d8;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .simulation-setup-summary-tags span,
+.app-bg[data-theme="dark"] .impact-page .simulation-setup-summary-tags span,
+.app-bg[data-theme="dark"] .simulator-page .skill-score-pill,
+.app-bg[data-theme="dark"] .impact-page .skill-score-pill {
+  background: rgba(139, 164, 255, 0.16);
+  border-color: rgba(139, 164, 255, 0.28);
+  color: #dbe6ff;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .selected-skill-row,
+.app-bg[data-theme="dark"] .impact-page .selected-skill-row,
+.app-bg[data-theme="dark"] .simulator-page .skill-result-list,
+.app-bg[data-theme="dark"] .impact-page .skill-result-list {
+  background: rgba(2, 6, 23, 0.42);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.app-bg[data-theme="dark"] .simulator-page .selected-skill-row p,
+.app-bg[data-theme="dark"] .impact-page .selected-skill-row p,
+.app-bg[data-theme="dark"] .simulator-page .selected-skill-row small,
+.app-bg[data-theme="dark"] .impact-page .selected-skill-row small {
+  color: #b9c5d8;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .selected-skill-row span,
+.app-bg[data-theme="dark"] .impact-page .selected-skill-row span,
+.app-bg[data-theme="dark"] .simulator-page .skill-option,
+.app-bg[data-theme="dark"] .impact-page .skill-option {
+  color: #f8fbff !important;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .skill-option,
+.app-bg[data-theme="dark"] .impact-page .skill-option {
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .skill-option:hover,
+.app-bg[data-theme="dark"] .impact-page .skill-option:hover,
+.app-bg[data-theme="dark"] .simulator-page .skill-option.selected,
+.app-bg[data-theme="dark"] .impact-page .skill-option.selected {
+  background: var(--accent-strong);
+  color: var(--accent-contrast) !important;
+}
+
 .app-bg[data-theme="dark"] .ranking-page .ranking-card,
 .app-bg[data-theme="dark"] .ranking-page .ranking-season-card,
 .app-bg[data-theme="dark"] .ranking-page .ranking-alert-card,
@@ -7500,6 +7585,91 @@ input {
 
 .app-bg[data-theme="dark"] .ranking-page .ranking-table th {
   background: rgba(30, 41, 59, 0.72);
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-table {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-table tbody,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table tr,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table td {
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-table th,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table td {
+  border-bottom-color: rgba(148, 163, 184, 0.18);
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-summary {
+  background: rgba(30, 41, 59, 0.82);
+}
+
+.app-bg[data-theme="dark"] .ranking-page,
+.app-bg[data-theme="dark"] .ranking-page .ranking-view,
+.app-bg[data-theme="dark"] .ranking-page .ranking-card,
+.app-bg[data-theme="dark"] .ranking-page .ranking-season-card,
+.app-bg[data-theme="dark"] .ranking-page .ranking-alert-card,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table-wrap,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table {
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .ranking-page .page-title-block h1,
+.app-bg[data-theme="dark"] .ranking-page .ranking-section-head h2,
+.app-bg[data-theme="dark"] .ranking-page .ranking-page-head h1,
+.app-bg[data-theme="dark"] .ranking-page .ranking-support-copy-strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-status-card strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-info-strip strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-compare-card p,
+.app-bg[data-theme="dark"] .ranking-page .ranking-alert-copy,
+.app-bg[data-theme="dark"] .ranking-page .ranking-season-meta strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-entry-row strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-my-card strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table td:first-child,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table td:nth-child(3),
+.app-bg[data-theme="dark"] .ranking-page .ranking-roll-modal-head strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-roll-modal-score-wrap strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-roll-modal-section .ranking-entry-row strong {
+  color: #f8fbff;
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-table td,
+.app-bg[data-theme="dark"] .ranking-page .ranking-nickname-cell,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-cell,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-list,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-list-item,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-summary-main strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-list-item strong {
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-summary-main strong,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-list-item strong {
+  color: #93c5fd !important;
+}
+
+.app-bg[data-theme="dark"] .ranking-page .page-title-block p,
+.app-bg[data-theme="dark"] .ranking-page .ranking-page-head p,
+.app-bg[data-theme="dark"] .ranking-page .ranking-section-head p,
+.app-bg[data-theme="dark"] .ranking-page .ranking-support-copy,
+.app-bg[data-theme="dark"] .ranking-page .ranking-guide-list p,
+.app-bg[data-theme="dark"] .ranking-page .ranking-status-card,
+.app-bg[data-theme="dark"] .ranking-page .ranking-info-strip,
+.app-bg[data-theme="dark"] .ranking-page .ranking-compare-card span,
+.app-bg[data-theme="dark"] .ranking-page .ranking-table th,
+.app-bg[data-theme="dark"] .ranking-page .ranking-season-meta span,
+.app-bg[data-theme="dark"] .ranking-page .ranking-entry-row span,
+.app-bg[data-theme="dark"] .ranking-page .ranking-my-card span,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-summary-main span,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-list-item span,
+.app-bg[data-theme="dark"] .ranking-page .ranking-skill-summary-tail {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-row-highlight td {
+  background: rgba(20, 184, 166, 0.14);
 }
 
 .app-bg[data-theme="dark"] input,
