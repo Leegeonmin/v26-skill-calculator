@@ -329,6 +329,27 @@ export default function AdminView({
               {statsLoading ? "-" : formatNumber(stats?.ocr_saved_hitter_uploads)}
             </p>
           </section>
+          <section className="admin-subpanel">
+            <span>공개 라인업 OCR</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_lineup_requests)}</strong>
+            <p>Google 로그인 사용자의 공개 라인업 인식 요청입니다.</p>
+          </section>
+          <section className="admin-subpanel">
+            <span>공개 OCR 스냅샷</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_snapshots)}</strong>
+            <p>
+              저장 {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_uploads)} / 미저장{" "}
+              {statsLoading ? "-" : formatNumber(stats?.ocr_public_pending_uploads)}
+            </p>
+          </section>
+          <section className="admin-subpanel">
+            <span>공개 저장 라인업</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_uploads)}</strong>
+            <p>
+              투수 {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_pitcher_uploads)} / 타자{" "}
+              {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_hitter_uploads)}
+            </p>
+          </section>
         </div>
 
         <div className="admin-table-wrap">

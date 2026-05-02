@@ -9,7 +9,8 @@ export type ToolView =
   | "simulator"
   | "impactChange"
   | "ranking"
-  | "skillCompareBeta";
+  | "skillCompareBeta"
+  | "lineupSkillOcr";
 export type HitterPositionGroup = "fielder" | "catcher";
 
 export type CardType = "impact" | "signature" | "goldenGlove" | "national";

@@ -108,6 +108,7 @@ export type SkillOcrSelectedPlayer = {
 export type SkillOcrSavedUpload = {
   id: string;
   role: SkillOcrRole;
+  is_saved: boolean;
   image_name: string | null;
   request_id: string | null;
   raw_response?: SkillOcrApiResponse;
@@ -117,6 +118,13 @@ export type SkillOcrSavedUpload = {
   average_score: number;
   created_at: string;
   updated_at: string;
+};
+
+export type SkillOcrPublicQuota = {
+  role: SkillOcrRole;
+  used: boolean;
+  used_at: string | null;
+  week_start_date: string;
 };
 
 export type SkillChangeSkill = {

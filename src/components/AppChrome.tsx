@@ -4,6 +4,9 @@ type IconName =
   | "trophy"
   | "calculator"
   | "sparkles"
+  | "compare"
+  | "zap"
+  | "users"
   | "flame"
   | "notice"
   | "scan"
@@ -37,6 +40,39 @@ export function IconGlyph({ name, className = "" }: { name: IconName; className?
       <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
         <path
           d="m12 3 1.75 4.25L18 9l-4.25 1.75L12 15l-1.75-4.25L6 9l4.25-1.75L12 3Zm6 10 1 2.5L21.5 16 19 17l-1 2.5L17 17l-2.5-1 2.5-.5 1-2.5ZM6 14l.8 1.7L8.5 16l-1.7.8L6 18.5l-.8-1.7L3.5 16l1.7-.3L6 14Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "compare") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M7 4h11l-3 3 3 3H7a3 3 0 0 1 0-6Zm0 2a1 1 0 0 0 0 2h6.17l-.58-.59L12.17 7l.42-.41.58-.59H7Zm10 8H5l3-3-3-3h12a3 3 0 0 1 0 6Zm0-2a1 1 0 0 0 0-2H9.83l.58.59.42.41-.42.41-.58.59H17Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "zap") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M13 2 4 14h6l-1 8 10-13h-6l1-7Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "users") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8-1a3.5 3.5 0 0 1 1.1 6.82 5.8 5.8 0 0 1 3.4 2.08V17h-2v-2.26A4 4 0 0 0 16.2 13H15v-2h1.8A1.5 1.5 0 1 0 16.8 8H15V6h2ZM9 14c3.31 0 6 1.79 6 4v2H3v-2c0-2.21 2.69-4 6-4Zm0 2c-2.2 0-3.63.9-3.95 2h7.9C12.63 16.9 11.2 16 9 16Z"
           fill="currentColor"
         />
       </svg>

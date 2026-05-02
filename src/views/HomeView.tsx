@@ -1,16 +1,22 @@
 import { IconGlyph } from "../components/AppChrome";
 import { submitNoticeInquiry } from "../lib/notice";
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type CSSProperties, type FormEvent, type ReactNode, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import type { ToolView } from "../types";
 
 type HomeViewProps = {
   onSelectView: (view: Exclude<ToolView, "home">) => void;
   themeAction?: ReactNode;
+  authSession: Session | null;
+  authDisplayName: string | null;
+  supabaseReady: boolean;
+  onGoogleLogin: () => void;
+  onGoogleLogout: () => void;
 };
 
 type HomeWidget = {
   view: Exclude<ToolView, "home">;
-  icon: "trophy" | "calculator" | "sparkles" | "flame" | "scan";
+  icon: "trophy" | "calculator" | "sparkles" | "compare" | "zap" | "users" | "flame" | "scan";
   title: string;
   description: string;
   meta: string;
@@ -40,10 +46,17 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
       },
       {
         view: "skillCompareBeta",
-        icon: "scan",
+        icon: "compare",
         title: "고스변 점수 비교",
         description: "고스변 화면의 기존/변경 후보 스킬을 좌우로 비교합니다.",
-        meta: "Beta",
+        meta: "SKILL CHANGE DIFF",
+      },
+      {
+        view: "lineupSkillOcr",
+        icon: "users",
+        title: "라인업 스킬 인식",
+        description: "Google 로그인 후 주 1회씩 타자/투수 라인업 스킬 점수를 인식합니다.",
+        meta: "LINEUP SKILL",
       },
     ],
   },
@@ -62,7 +75,7 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
       },
       {
         view: "impactChange",
-        icon: "flame",
+        icon: "zap",
         title: "임팩트 변경 시뮬",
         description: "나는 일반 스킬 변경권으로 몇번을 돌려야 2메가 뜰까?",
         meta: "Impact Roll",
@@ -89,6 +102,21 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
 const NOTICE_ITEMS = [
   {
     date: "2026.05.02",
+    title: "라인업 스킬 인식 공개 베타 추가",
+    body: "Google 로그인 사용자에게 주 1회 타자/투수 라인업 OCR을 제공하고, 미저장 스냅샷 복구와 최근 기록 복사 기능을 추가했습니다.",
+  },
+  {
+    date: "2026.05.02",
+    title: "관리자 OCR 통계 세분화",
+    body: "관리자 대시보드에서 공개 라인업 OCR, tyrant 라인업 OCR, 스킬 비교 OCR, 공개 스냅샷 저장/미저장 현황을 나눠 확인할 수 있게 했습니다.",
+  },
+  {
+    date: "2026.05.02",
+    title: "메인 화면 디자인 리뉴얼",
+    body: "홈 화면 위젯 배치, 글래스모피즘 카드, 애니메이션 배경, 그라데이션 타이틀과 호버 효과를 적용했습니다.",
+  },
+  {
+    date: "2026.05.02",
     title: "홈 화면 위젯 그룹 정리",
     body: "계산기와 시뮬레이터 위젯을 용도별로 묶고, PC와 모바일 화면에서 각 도구를 더 쉽게 구분할 수 있게 정리했습니다.",
   },
@@ -109,7 +137,15 @@ const NOTICE_ITEMS = [
   },
 ];
 
-export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
+export default function HomeView({
+  onSelectView,
+  themeAction,
+  authSession,
+  authDisplayName,
+  supabaseReady,
+  onGoogleLogin,
+  onGoogleLogout,
+}: HomeViewProps) {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [inquiryContact, setInquiryContact] = useState("");
@@ -145,8 +181,34 @@ export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
   return (
     <main className="home-stage" aria-labelledby="home-title">
       <div className="home-gradient-aura" aria-hidden="true" />
+      <div className="home-particle-field" aria-hidden="true">
+        {Array.from({ length: 18 }, (_, index) => (
+          <span key={index} style={{ "--particle-index": index } as CSSProperties} />
+        ))}
+      </div>
       <section className="home-hero">
-        {themeAction && <div className="home-hero-action">{themeAction}</div>}
+        <div className="home-hero-action">
+          {themeAction}
+          <div className="home-auth-card">
+            {authSession ? (
+              <>
+                <span>{authDisplayName ?? "Google 사용자"}</span>
+                <button type="button" className="ghost-btn" onClick={onGoogleLogout}>
+                  로그아웃
+                </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="primary-btn"
+              disabled={!supabaseReady}
+              onClick={onGoogleLogin}
+            >
+              Google 로그인
+            </button>
+          )}
+        </div>
+        </div>
         <div className="home-hero-copy">
           <h1 id="home-title">v26-lab</h1>
           <p>계산기, 시뮬레이터, 랭킹챌린지를 한 화면에서 바로 선택하세요.</p>
@@ -179,14 +241,17 @@ export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
                   <span className="home-widget-copy">
                     <span
                       className={`home-widget-meta${
-                        widget.view === "skillCompareBeta" ? " home-widget-beta" : ""
+                        widget.view === "skillCompareBeta" || widget.view === "lineupSkillOcr"
+                          ? " home-widget-beta"
+                          : ""
                       }`}
                     >
                       {widget.meta}
                     </span>
                     <strong>
                       {widget.title}
-                      {widget.view === "skillCompareBeta" && <em>베타</em>}
+                      {(widget.view === "skillCompareBeta" ||
+                        widget.view === "lineupSkillOcr") && <em>베타</em>}
                     </strong>
                     <span>{widget.description}</span>
                   </span>

@@ -295,7 +295,11 @@ export default function SkillOcrView({
               <OcrIcon name="close" />
               홈으로
             </button>
-            <button type="button" className="primary-btn" onClick={onLogin}>
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={onLogin}
+            >
               <OcrIcon name="login" />
               로그인
             </button>
@@ -479,10 +483,16 @@ export default function SkillOcrView({
             <h1>{session.username}</h1>
           </div>
         </div>
-        <button type="button" className="ghost-btn" onClick={onLogout}>
-          <OcrIcon name="logout" />
-          <span>로그아웃</span>
-        </button>
+        <div className="ocr-header-actions">
+          <button type="button" className="ghost-btn" onClick={onGoHome}>
+            <OcrIcon name="close" />
+            <span>홈으로</span>
+          </button>
+          <button type="button" className="ghost-btn" onClick={onLogout}>
+            <OcrIcon name="logout" />
+            <span>로그아웃</span>
+          </button>
+        </div>
       </header>
 
       <nav className="ocr-tabs ocr-bottom-tabs" aria-label="OCR 화면">
@@ -540,9 +550,6 @@ export default function SkillOcrView({
                 { role: "hitter" as const, upload: latestHitterUpload },
               ].map(({ role, upload }) => (
                 <article key={role} className={`ocr-latest-card ${role}`}>
-                  <span className="ocr-summary-icon">
-                    <OcrIcon name={role === "pitcher" ? "upload" : "user"} />
-                  </span>
                   <div>
                     <strong>최근 {formatRole(role)} 기록</strong>
                     {upload ? (

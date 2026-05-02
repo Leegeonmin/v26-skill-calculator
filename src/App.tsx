@@ -7,6 +7,9 @@ import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS, SKILL_GRADE_COLORS } from "./data/uiColors";
 import {
   ensureProfile,
+  getDisplayNameFromSession,
+  signInWithGoogle,
+  signOut,
 } from "./lib/auth";
 import {
   adminGetToolUsageSummary,
@@ -17,9 +20,15 @@ import {
 } from "./lib/admin";
 import {
   recognizeSkillImage,
+  skillOcrClaimPublicWeeklyUsage,
+  skillOcrCreatePublicSnapshot,
+  skillOcrFinalizePublicUpload,
+  skillOcrGetPublicWeeklyQuota,
   skillOcrListUploads,
+  skillOcrListPublicUploads,
   skillOcrLogin,
   skillOcrLogout,
+  skillOcrSavePublicUpload,
   skillOcrSaveUpload,
   skillOcrValidateSession,
 } from "./lib/skillOcr";
@@ -45,6 +54,7 @@ import SkillCompareBetaView from "./views/SkillCompareBetaView";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
 import SkillOcrView from "./views/SkillOcrView";
+import PublicSkillOcrView from "./views/PublicSkillOcrView";
 import ToolboxStage from "./views/ToolboxStage";
 import type {
   CalculatorMode,
@@ -58,6 +68,7 @@ import type {
 } from "./types";
 import type {
   SkillOcrApiResponse,
+  SkillOcrPublicQuota,
   SkillOcrRole,
   SkillOcrSavedUpload,
   SkillOcrSelectedPlayer,
@@ -161,6 +172,7 @@ function App() {
       "impactChange",
       "ranking",
       "skillCompareBeta",
+      "lineupSkillOcr",
     ];
 
     return requestedView && validViews.includes(requestedView as ToolView)
@@ -218,6 +230,7 @@ function App() {
   const [ocrCheckingSession, setOcrCheckingSession] = useState(isOcrRoute);
   const [ocrSession, setOcrSession] = useState<SkillOcrSession | null>(null);
   const [ocrUploads, setOcrUploads] = useState<SkillOcrSavedUpload[]>([]);
+  const [ocrPublicQuota, setOcrPublicQuota] = useState<SkillOcrPublicQuota[]>([]);
   const [ocrUploadsLoading, setOcrUploadsLoading] = useState(false);
   const [ocrUploadsError, setOcrUploadsError] = useState<string | null>(null);
   const [ocrUploadBusyRole, setOcrUploadBusyRole] = useState<SkillOcrRole | null>(null);
@@ -228,6 +241,7 @@ function App() {
   const [ocrDraftRawResponse, setOcrDraftRawResponse] = useState<SkillOcrApiResponse | null>(null);
   const [ocrDraftTotalScore, setOcrDraftTotalScore] = useState(0);
   const [ocrDraftAverageScore, setOcrDraftAverageScore] = useState(0);
+  const [ocrDraftPublicUploadId, setOcrDraftPublicUploadId] = useState<string | null>(null);
   const [ocrSaving, setOcrSaving] = useState(false);
   const [ocrSavedUpload, setOcrSavedUpload] = useState<SkillOcrSavedUpload | null>(null);
   const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
@@ -317,13 +331,16 @@ function App() {
   const totalScoreDisplay = totalScore ?? "-";
   const supabaseReady = isSupabaseConfigured();
   const activeService: ServiceView =
-    toolView === "home" || toolView === "skillCompareBeta"
+    toolView === "home" || toolView === "skillCompareBeta" || toolView === "lineupSkillOcr"
       ? "home"
       : toolView === "ranking"
         ? "ranking"
         : "toolbox";
   const toolboxToolView: Exclude<ToolView, "home" | "ranking"> =
-    toolView === "home" || toolView === "ranking" || toolView === "skillCompareBeta"
+    toolView === "home" ||
+    toolView === "ranking" ||
+    toolView === "skillCompareBeta" ||
+    toolView === "lineupSkillOcr"
       ? "calculator"
       : toolView;
   const faqStructuredData = useMemo(
@@ -342,6 +359,17 @@ function App() {
       }),
     []
   );
+  const authDisplayName = getDisplayNameFromSession(authSession);
+  const publicOcrSession: SkillOcrSession | null = authSession
+    ? {
+        session_token: "public",
+        username: authDisplayName ?? "Google 사용자",
+        display_name: authDisplayName,
+        expires_at: authSession.expires_at
+          ? new Date(authSession.expires_at * 1000).toISOString()
+          : new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      }
+    : null;
 
   useEffect(() => {
     window.localStorage.setItem("v26-theme", theme);
@@ -437,6 +465,38 @@ function App() {
   }, [isOcrRoute, ocrSession]);
 
   useEffect(() => {
+    if (toolView !== "lineupSkillOcr") {
+      return;
+    }
+
+    if (!authSession) {
+      setOcrUploads([]);
+      setOcrPublicQuota([]);
+      setOcrDraftPublicUploadId(null);
+      return;
+    }
+
+    void (async () => {
+      try {
+        setOcrUploadsLoading(true);
+        setOcrUploadsError(null);
+        const [uploads, quota] = await Promise.all([
+          skillOcrListPublicUploads(20),
+          skillOcrGetPublicWeeklyQuota(),
+        ]);
+        setOcrUploads(uploads);
+        setOcrPublicQuota(quota);
+      } catch (error) {
+        setOcrUploadsError(
+          error instanceof Error ? error.message : "OCR 정보를 불러오지 못했습니다."
+        );
+      } finally {
+        setOcrUploadsLoading(false);
+      }
+    })();
+  }, [authSession, toolView]);
+
+  useEffect(() => {
     if (!isAdminRoute || !adminUnlocked) {
       return;
     }
@@ -476,6 +536,7 @@ function App() {
         "impactChange",
         "ranking",
         "skillCompareBeta",
+        "lineupSkillOcr",
       ];
       applyingPopStateRef.current = true;
       setToolView(
@@ -875,6 +936,30 @@ function App() {
     window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
   };
 
+  const handleGoogleLogin = async (nextView: ToolView = toolView) => {
+    try {
+      const redirectUrl =
+        typeof window === "undefined"
+          ? undefined
+          : `${window.location.origin}${window.location.pathname}?view=${nextView}`;
+      await signInWithGoogle(redirectUrl);
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Google 로그인에 실패했습니다.");
+    }
+  };
+
+  const handleGoogleLogout = async () => {
+    try {
+      await signOut();
+      setAuthError(null);
+      setOcrUploads([]);
+      setOcrPublicQuota([]);
+      setOcrDraftPublicUploadId(null);
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "로그아웃에 실패했습니다.");
+    }
+  };
+
   const handleOcrLogin = async () => {
     if (!OCR_FIXED_USERNAME || !OCR_FIXED_PASSWORD) {
       setOcrAuthError("OCR 접속 설정이 필요합니다.");
@@ -923,12 +1008,20 @@ function App() {
     setOcrDraftRawResponse(null);
     setOcrDraftTotalScore(0);
     setOcrDraftAverageScore(0);
+    setOcrDraftPublicUploadId(null);
     setOcrSaving(false);
     setOcrSavedUpload(null);
     window.localStorage.removeItem(OCR_SESSION_KEY);
   };
 
   const handleOcrUploadImage = async (role: SkillOcrRole, file: File) => {
+    const isPublicLineupOcr = toolView === "lineupSkillOcr";
+
+    if (isPublicLineupOcr && !authSession) {
+      setOcrUploadError("Google 로그인 후 사용할 수 있습니다.");
+      return;
+    }
+
     setOcrUploadBusyRole(role);
     setOcrUploadError(null);
     setOcrDraftPlayers([]);
@@ -937,9 +1030,15 @@ function App() {
     setOcrDraftRawResponse(null);
     setOcrDraftTotalScore(0);
     setOcrDraftAverageScore(0);
+    setOcrDraftPublicUploadId(null);
     setOcrSavedUpload(null);
 
     try {
+      if (isPublicLineupOcr) {
+        const quota = await skillOcrClaimPublicWeeklyUsage(role);
+        setOcrPublicQuota(quota);
+      }
+
       const response = await recognizeSkillImage({ role, file });
       const transformed = transformSkillOcrResponse(response, role);
 
@@ -950,6 +1049,7 @@ function App() {
         metadata: {
           session_id: toolUsageSessionId,
           role,
+          access: isPublicLineupOcr ? "public" : "private",
           request_id: response.request_id,
           players: response.summary.players,
           matched_skills: response.summary.matched_skills,
@@ -962,6 +1062,21 @@ function App() {
       setOcrDraftPlayers(transformed.players);
       setOcrDraftTotalScore(transformed.totalScore);
       setOcrDraftAverageScore(transformed.averageScore);
+
+      if (isPublicLineupOcr) {
+        const snapshot = await skillOcrCreatePublicSnapshot({
+          role,
+          imageName: file.name,
+          requestId: response.request_id,
+          rawResponse: response,
+          selectedPlayers: transformed.players,
+          totalScore: transformed.totalScore,
+          averageScore: transformed.averageScore,
+        });
+        setOcrDraftPublicUploadId(snapshot.id);
+        setOcrSavedUpload(snapshot);
+        setOcrUploads(await skillOcrListPublicUploads(20));
+      }
     } catch (error) {
       void logToolUsageEvent({
         tool: "ocr_lineup_recognize",
@@ -970,6 +1085,7 @@ function App() {
         metadata: {
           session_id: toolUsageSessionId,
           role,
+          access: isPublicLineupOcr ? "public" : "private",
           success: false,
         },
       }).catch(() => {});
@@ -983,8 +1099,15 @@ function App() {
   };
 
   const handleOcrSaveDraft = async () => {
-    if (!ocrSession || !ocrDraftRole || !ocrDraftRawResponse) {
+    const isPublicLineupOcr = toolView === "lineupSkillOcr";
+
+    if ((!ocrSession && !isPublicLineupOcr) || !ocrDraftRole || !ocrDraftRawResponse) {
       setOcrUploadError("저장할 OCR 결과가 없습니다.");
+      return;
+    }
+
+    if (isPublicLineupOcr && !authSession) {
+      setOcrUploadError("Google 로그인 후 저장할 수 있습니다.");
       return;
     }
 
@@ -998,8 +1121,7 @@ function App() {
     try {
       setOcrSaving(true);
       setOcrUploadError(null);
-      const savedUpload = await skillOcrSaveUpload({
-        sessionToken: ocrSession.session_token,
+      const saveInput = {
         role: ocrDraftRole,
         imageName: ocrDraftImageName,
         requestId: ocrDraftRawResponse.request_id,
@@ -1007,8 +1129,21 @@ function App() {
         selectedPlayers,
         totalScore: ocrDraftTotalScore,
         averageScore: ocrDraftAverageScore,
-      });
-      const uploads = await skillOcrListUploads(ocrSession.session_token, 20);
+      };
+      const savedUpload = isPublicLineupOcr
+        ? ocrDraftPublicUploadId
+          ? await skillOcrFinalizePublicUpload({
+              uploadId: ocrDraftPublicUploadId,
+              ...saveInput,
+            })
+          : await skillOcrSavePublicUpload(saveInput)
+        : await skillOcrSaveUpload({
+            sessionToken: ocrSession?.session_token ?? "",
+            ...saveInput,
+          });
+      const uploads = isPublicLineupOcr
+        ? await skillOcrListPublicUploads(20)
+        : await skillOcrListUploads(ocrSession?.session_token ?? "", 20);
 
       setOcrSavedUpload(savedUpload);
       setOcrUploads(uploads);
@@ -1018,11 +1153,25 @@ function App() {
       setOcrDraftRawResponse(null);
       setOcrDraftTotalScore(0);
       setOcrDraftAverageScore(0);
+      setOcrDraftPublicUploadId(null);
     } catch (error) {
       setOcrUploadError(error instanceof Error ? error.message : "OCR 결과 저장에 실패했습니다.");
     } finally {
       setOcrSaving(false);
     }
+  };
+
+  const handleOpenPublicOcrSnapshot = (upload: SkillOcrSavedUpload) => {
+    const summary = calculateSkillOcrSummary(upload.selected_players);
+    setOcrUploadError(null);
+    setOcrSavedUpload(upload);
+    setOcrDraftPublicUploadId(upload.id);
+    setOcrDraftPlayers(upload.selected_players);
+    setOcrDraftImageName(upload.image_name);
+    setOcrDraftRole(upload.role);
+    setOcrDraftRawResponse(upload.raw_response ?? null);
+    setOcrDraftTotalScore(summary.totalScore);
+    setOcrDraftAverageScore(summary.averageScore);
   };
 
   const updateOcrDraftPlayers = (
@@ -1279,11 +1428,49 @@ function App() {
           {authError && <p className="auth-error">{authError}</p>}
 
           {toolView === "home" ? (
-            <HomeView onSelectView={handleToolViewChange} themeAction={themeToggle} />
+            <HomeView
+              onSelectView={handleToolViewChange}
+              themeAction={themeToggle}
+              authSession={authSession}
+              authDisplayName={authDisplayName}
+              supabaseReady={supabaseReady}
+              onGoogleLogin={() => void handleGoogleLogin("home")}
+              onGoogleLogout={() => void handleGoogleLogout()}
+            />
           ) : toolView === "skillCompareBeta" ? (
             <SkillCompareBetaView
               themeAction={themeToggle}
               toolUsageSessionId={toolUsageSessionId}
+              onGoHome={() => setToolView("home")}
+            />
+          ) : toolView === "lineupSkillOcr" ? (
+            <PublicSkillOcrView
+              authenticated={Boolean(publicOcrSession)}
+              displayName={authDisplayName}
+              uploads={ocrUploads}
+              uploadsLoading={ocrUploadsLoading}
+              uploadsError={ocrUploadsError}
+              uploadBusyRole={ocrUploadBusyRole}
+              uploadError={ocrUploadError}
+              draftPlayers={ocrDraftPlayers}
+              draftTotalScore={ocrDraftTotalScore}
+              draftAverageScore={ocrDraftAverageScore}
+              saving={ocrSaving}
+              savedUpload={ocrSavedUpload}
+              quota={ocrPublicQuota}
+              themeAction={themeToggle}
+              onGoogleLogin={() => void handleGoogleLogin("lineupSkillOcr")}
+              onGoogleLogout={() => void handleGoogleLogout()}
+              onUploadImage={(role, file) => void handleOcrUploadImage(role, file)}
+              onPlayerSelectedChange={handleOcrPlayerSelectedChange}
+              onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
+              onPlayerPositionChange={handleOcrPlayerPositionChange}
+              onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}
+              onSkillChange={handleOcrSkillChange}
+              onSkillLevelChange={handleOcrSkillLevelChange}
+              onSaveDraft={() => void handleOcrSaveDraft()}
+              onSelectSnapshot={handleOpenPublicOcrSnapshot}
+              onClearSavedUpload={() => setOcrSavedUpload(null)}
               onGoHome={() => setToolView("home")}
             />
           ) : toolView === "ranking" ? (

@@ -1,6 +1,7 @@
 import { getSupabaseClient } from "./supabase";
 import type {
   SkillOcrApiResponse,
+  SkillOcrPublicQuota,
   SkillOcrRole,
   SkillOcrSavedUpload,
   SkillOcrSelectedPlayer,
@@ -21,12 +22,50 @@ function requireSupabase() {
 }
 
 function normalizeRpcError(error: { message?: string } | null, fallback: string): Error {
+  if (error?.message?.includes("PUBLIC_SKILL_OCR_WEEKLY_LIMIT_REACHED")) {
+    return new Error("이번 주 사용 횟수를 모두 사용했습니다.");
+  }
+
+  if (error?.message?.includes("AUTH_REQUIRED")) {
+    return new Error("Google 로그인이 필요합니다.");
+  }
+
   return new Error(error?.message || fallback);
 }
 
 function getSingleRow<T>(data: unknown): T | null {
   const row = Array.isArray(data) ? data[0] : data;
   return (row as T | null) ?? null;
+}
+
+type PublicQuotaRow = Omit<SkillOcrPublicQuota, "role"> & {
+  quota_role?: SkillOcrRole;
+  quota_used?: boolean;
+  quota_used_at?: string | null;
+  quota_week_start_date?: string;
+  role?: SkillOcrRole;
+};
+
+type PublicUploadRow = Omit<SkillOcrSavedUpload, "role"> & {
+  upload_role?: SkillOcrRole;
+  role?: SkillOcrRole;
+};
+
+function mapPublicQuotaRows(data: unknown): SkillOcrPublicQuota[] {
+  return ((data ?? []) as PublicQuotaRow[]).map((row) => ({
+    role: row.role ?? row.quota_role ?? "hitter",
+    used: row.used ?? row.quota_used ?? false,
+    used_at: row.used_at ?? row.quota_used_at ?? null,
+    week_start_date: row.week_start_date ?? row.quota_week_start_date ?? "",
+  }));
+}
+
+function mapPublicUploadRows(data: unknown): SkillOcrSavedUpload[] {
+  return ((data ?? []) as PublicUploadRow[]).map((row) => ({
+    ...row,
+    role: row.role ?? row.upload_role ?? "hitter",
+    is_saved: row.is_saved ?? true,
+  }));
 }
 
 export async function recognizeSkillImage(input: {
@@ -219,4 +258,141 @@ export async function skillOcrGetUpload(
   }
 
   return getSingleRow<SkillOcrSavedUpload>(data);
+}
+
+export async function skillOcrGetPublicWeeklyQuota(): Promise<SkillOcrPublicQuota[]> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("skill_ocr_get_public_weekly_quota");
+
+  if (error) {
+    throw normalizeRpcError(error, "사용 가능 횟수를 불러오지 못했습니다.");
+  }
+
+  return mapPublicQuotaRows(data);
+}
+
+export async function skillOcrClaimPublicWeeklyUsage(
+  role: SkillOcrRole
+): Promise<SkillOcrPublicQuota[]> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("skill_ocr_claim_public_weekly_usage", {
+    p_role: role,
+  });
+
+  if (error) {
+    throw normalizeRpcError(error, "사용 가능 횟수를 확인하지 못했습니다.");
+  }
+
+  return mapPublicQuotaRows(data);
+}
+
+export async function skillOcrSavePublicUpload(input: {
+  role: SkillOcrRole;
+  imageName: string | null;
+  requestId: string | null;
+  rawResponse: SkillOcrApiResponse;
+  selectedPlayers: SkillOcrSelectedPlayer[];
+  totalScore: number;
+  averageScore: number;
+}): Promise<SkillOcrSavedUpload> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("skill_ocr_save_public_upload", {
+    p_role: input.role,
+    p_image_name: input.imageName,
+    p_request_id: input.requestId,
+    p_raw_response: input.rawResponse,
+    p_selected_players: input.selectedPlayers,
+    p_total_score: input.totalScore,
+    p_average_score: input.averageScore,
+  });
+
+  if (error) {
+    throw normalizeRpcError(error, "OCR 결과 저장에 실패했습니다.");
+  }
+
+  const upload = mapPublicUploadRows(data)[0] ?? null;
+  if (!upload) {
+    throw new Error("OCR 결과 저장에 실패했습니다.");
+  }
+
+  return upload;
+}
+
+export async function skillOcrCreatePublicSnapshot(input: {
+  role: SkillOcrRole;
+  imageName: string | null;
+  requestId: string | null;
+  rawResponse: SkillOcrApiResponse;
+  selectedPlayers: SkillOcrSelectedPlayer[];
+  totalScore: number;
+  averageScore: number;
+}): Promise<SkillOcrSavedUpload> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("skill_ocr_create_public_snapshot", {
+    p_role: input.role,
+    p_image_name: input.imageName,
+    p_request_id: input.requestId,
+    p_raw_response: input.rawResponse,
+    p_selected_players: input.selectedPlayers,
+    p_total_score: input.totalScore,
+    p_average_score: input.averageScore,
+  });
+
+  if (error) {
+    throw normalizeRpcError(error, "OCR 스냅샷 저장에 실패했습니다.");
+  }
+
+  const upload = mapPublicUploadRows(data)[0] ?? null;
+  if (!upload) {
+    throw new Error("OCR 스냅샷 저장에 실패했습니다.");
+  }
+
+  return upload;
+}
+
+export async function skillOcrFinalizePublicUpload(input: {
+  uploadId: string;
+  role: SkillOcrRole;
+  imageName: string | null;
+  requestId: string | null;
+  rawResponse: SkillOcrApiResponse;
+  selectedPlayers: SkillOcrSelectedPlayer[];
+  totalScore: number;
+  averageScore: number;
+}): Promise<SkillOcrSavedUpload> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("skill_ocr_finalize_public_upload", {
+    p_upload_id: input.uploadId,
+    p_role: input.role,
+    p_image_name: input.imageName,
+    p_request_id: input.requestId,
+    p_raw_response: input.rawResponse,
+    p_selected_players: input.selectedPlayers,
+    p_total_score: input.totalScore,
+    p_average_score: input.averageScore,
+  });
+
+  if (error) {
+    throw normalizeRpcError(error, "OCR 결과 저장에 실패했습니다.");
+  }
+
+  const upload = mapPublicUploadRows(data)[0] ?? null;
+  if (!upload) {
+    throw new Error("OCR 결과 저장에 실패했습니다.");
+  }
+
+  return upload;
+}
+
+export async function skillOcrListPublicUploads(limit = 20): Promise<SkillOcrSavedUpload[]> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("skill_ocr_list_public_uploads", {
+    p_limit: limit,
+  });
+
+  if (error) {
+    throw normalizeRpcError(error, "OCR 기록을 불러오지 못했습니다.");
+  }
+
+  return mapPublicUploadRows(data);
 }
