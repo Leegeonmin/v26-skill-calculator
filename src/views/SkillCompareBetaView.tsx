@@ -17,6 +17,8 @@ type ComparedSkill = SkillChangeSkill & {
   displayName: string;
   score: number;
   matched: boolean;
+  candidateSkillIds: string[];
+  needsSelection: boolean;
 };
 
 const MODE_OPTIONS: Array<{ value: CalculatorMode; label: string }> = [
@@ -58,16 +60,31 @@ function getDataSet(mode: CalculatorMode, starterHand: StarterHand): GameDataSet
   return getGameDataSet({ playerType: "pitcher", pitcherRole: mode });
 }
 
-function findSkillMeta(skill: SkillChangeSkill, dataSet: GameDataSet, cardType: CardType): SkillMeta | null {
+type SkillMetaMatch = {
+  meta: SkillMeta | null;
+  candidates: SkillMeta[];
+  needsSelection: boolean;
+};
+
+function findSkillMeta(
+  skill: SkillChangeSkill,
+  dataSet: GameDataSet,
+  cardType: CardType,
+  selectedSkillId: string | null
+): SkillMetaMatch {
   const requested = normalizeName(skill.name);
   if (!requested) {
-    return null;
+    return { meta: null, candidates: [], needsSelection: false };
   }
 
   const candidates = dataSet.skills.filter((meta) => meta.availableCardTypes.includes(cardType));
+  const selected = selectedSkillId
+    ? candidates.find((meta) => meta.id === selectedSkillId) ?? null
+    : null;
+
   const exact = candidates.find((meta) => normalizeName(meta.name) === requested);
   if (exact) {
-    return exact;
+    return { meta: exact, candidates: [exact], needsSelection: false };
   }
 
   const familyMatches = candidates.filter((meta) => {
@@ -76,15 +93,25 @@ function findSkillMeta(skill: SkillChangeSkill, dataSet: GameDataSet, cardType: 
   });
 
   if (familyMatches.length === 0) {
-    return null;
+    return { meta: null, candidates: [], needsSelection: false };
+  }
+
+  if (familyMatches.length === 1) {
+    return { meta: familyMatches[0], candidates: familyMatches, needsSelection: false };
+  }
+
+  if (selected && familyMatches.some((meta) => meta.id === selected.id)) {
+    return { meta: selected, candidates: familyMatches, needsSelection: false };
   }
 
   const level = normalizeLevel(skill.level);
-  return [...familyMatches].sort((first, second) => {
+  const defaultMeta = [...familyMatches].sort((first, second) => {
     const firstScore = dataSet.scoreTable[first.id]?.[level] ?? 0;
     const secondScore = dataSet.scoreTable[second.id]?.[level] ?? 0;
     return secondScore - firstScore;
   })[0];
+
+  return { meta: defaultMeta, candidates: familyMatches, needsSelection: true };
 }
 
 function normalizeLevel(level: number | null): SkillLevel {
@@ -94,7 +121,9 @@ function normalizeLevel(level: number | null): SkillLevel {
 function compareSkills(
   skills: SkillChangeSkill[],
   dataSet: GameDataSet | null,
-  cardType: CardType
+  cardType: CardType,
+  selectedSkillIds: Record<string, string>,
+  side: "left" | "right"
 ): { skills: ComparedSkill[]; total: number } {
   if (!dataSet) {
     return {
@@ -104,6 +133,8 @@ function compareSkills(
         displayName: skill.name ?? "인식 실패",
         score: 0,
         matched: false,
+        candidateSkillIds: [],
+        needsSelection: false,
       })),
       total: 0,
     };
@@ -111,7 +142,8 @@ function compareSkills(
 
   const comparedSkills = skills.slice(0, 3).map<ComparedSkill>((skill) => {
     const level = normalizeLevel(skill.level);
-    const meta = findSkillMeta(skill, dataSet, cardType);
+    const match = findSkillMeta(skill, dataSet, cardType, selectedSkillIds[`${side}-${skill.slot}`] ?? null);
+    const meta = match.meta;
 
     return {
       ...skill,
@@ -120,6 +152,8 @@ function compareSkills(
       displayName: meta?.name ?? skill.name ?? "인식 실패",
       score: meta ? dataSet.scoreTable[meta.id]?.[level] ?? 0 : 0,
       matched: Boolean(meta),
+      candidateSkillIds: match.candidates.map((candidate) => candidate.id),
+      needsSelection: match.needsSelection,
     };
   });
 
@@ -134,7 +168,15 @@ function compareSkills(
 }
 
 function formatSkill(skill: ComparedSkill): string {
+  if (skill.needsSelection) {
+    return `${skill.displayName} 기본 선택`;
+  }
+
   return skill.displayName;
+}
+
+function formatSkillOptionPlaceholder(skill: ComparedSkill): string {
+  return `${skill.name ?? skill.displayName} 옵션 선택`;
 }
 
 export default function SkillCompareBetaView({
@@ -150,15 +192,16 @@ export default function SkillCompareBetaView({
   const [starterHand, setStarterHand] = useState<StarterHand>("right");
   const [cardType, setCardType] = useState<CardType>("signature");
   const [exampleOpen, setExampleOpen] = useState(false);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<Record<string, string>>({});
 
   const dataSet = useMemo(() => getDataSet(mode, starterHand), [mode, starterHand]);
   const comparedLeft = useMemo(
-    () => compareSkills(result?.left ?? [], dataSet, cardType),
-    [cardType, dataSet, result?.left]
+    () => compareSkills(result?.left ?? [], dataSet, cardType, selectedSkillIds, "left"),
+    [cardType, dataSet, result?.left, selectedSkillIds]
   );
   const comparedRight = useMemo(
-    () => compareSkills(result?.right ?? [], dataSet, cardType),
-    [cardType, dataSet, result?.right]
+    () => compareSkills(result?.right ?? [], dataSet, cardType, selectedSkillIds, "right"),
+    [cardType, dataSet, result?.right, selectedSkillIds]
   );
   const scoreDiff = Number((comparedRight.total - comparedLeft.total).toFixed(2));
 
@@ -167,6 +210,7 @@ export default function SkillCompareBetaView({
       setBusy(true);
       setResult(null);
       setError(null);
+      setSelectedSkillIds({});
       const response = await recognizeSkillChangeImage(file);
 
       void logToolUsageEvent({
@@ -217,6 +261,23 @@ export default function SkillCompareBetaView({
         ),
       };
     });
+  }
+
+  function updateSkillMeta(side: "left" | "right", slot: number, skillId: string) {
+    setSelectedSkillIds((current) => ({
+      ...current,
+      [`${side}-${slot}`]: skillId,
+    }));
+  }
+
+  function getCandidateOptions(skill: ComparedSkill) {
+    if (!dataSet) {
+      return [];
+    }
+
+    return skill.candidateSkillIds
+      .map((skillId) => dataSet.skills.find((meta) => meta.id === skillId))
+      .filter((meta): meta is SkillMeta => Boolean(meta));
   }
 
   return (
@@ -395,7 +456,23 @@ export default function SkillCompareBetaView({
                     className={`skill-compare-row ${skill.matched ? "" : "unmatched"}`}
                   >
                     <span>{skill.slot}</span>
-                    <strong>{formatSkill(skill)}</strong>
+                    {skill.candidateSkillIds.length > 1 ? (
+                      <select
+                        className="skill-compare-skill-select"
+                        aria-label={`${skill.displayName} 옵션`}
+                        value={skill.skillId}
+                        onChange={(event) => updateSkillMeta("left", skill.slot, event.target.value)}
+                      >
+                        <option value="">{formatSkillOptionPlaceholder(skill)}</option>
+                        {getCandidateOptions(skill).map((candidate) => (
+                          <option key={candidate.id} value={candidate.id}>
+                            {candidate.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <strong>{formatSkill(skill)}</strong>
+                    )}
                     <select
                       aria-label={`${skill.displayName} 레벨`}
                       value={normalizeLevel(skill.level)}
@@ -427,7 +504,23 @@ export default function SkillCompareBetaView({
                     className={`skill-compare-row ${skill.matched ? "" : "unmatched"}`}
                   >
                     <span>{skill.slot}</span>
-                    <strong>{formatSkill(skill)}</strong>
+                    {skill.candidateSkillIds.length > 1 ? (
+                      <select
+                        className="skill-compare-skill-select"
+                        aria-label={`${skill.displayName} 옵션`}
+                        value={skill.skillId}
+                        onChange={(event) => updateSkillMeta("right", skill.slot, event.target.value)}
+                      >
+                        <option value="">{formatSkillOptionPlaceholder(skill)}</option>
+                        {getCandidateOptions(skill).map((candidate) => (
+                          <option key={candidate.id} value={candidate.id}>
+                            {candidate.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <strong>{formatSkill(skill)}</strong>
+                    )}
                     <select
                       aria-label={`${skill.displayName} 레벨`}
                       value={normalizeLevel(skill.level)}
