@@ -59,10 +59,19 @@ export type AdminNoticeInquiry = {
 function requireSupabase() {
   const supabase = getSupabaseClient();
   if (!supabase) {
-    throw new Error("Supabase 설정이 필요합니다.");
+    throw new Error("서비스 설정이 필요합니다.");
   }
 
   return supabase;
+}
+
+function adminError(error: unknown, fallbackMessage: string) {
+  console.error("[admin]", error);
+  return new Error(fallbackMessage);
+}
+
+function isInvalidCredentialError(error: { message?: string } | null) {
+  return error?.message?.includes("INVALID_ADMIN_CREDENTIALS") ?? false;
 }
 
 export async function adminLogin(username: string, password: string): Promise<AdminSession> {
@@ -73,13 +82,18 @@ export async function adminLogin(username: string, password: string): Promise<Ad
   });
 
   if (error) {
-    throw new Error(error.message || "관리자 로그인에 실패했습니다.");
+    throw adminError(
+      error,
+      isInvalidCredentialError(error)
+        ? "아이디 또는 비밀번호가 올바르지 않습니다."
+        : "관리자 로그인에 실패했습니다."
+    );
   }
 
   const session = Array.isArray(data) ? data[0] : data;
 
   if (!session) {
-    throw new Error("관리자 로그인에 실패했습니다.");
+    throw new Error("아이디 또는 비밀번호가 올바르지 않습니다.");
   }
 
   return session as AdminSession;
@@ -92,7 +106,7 @@ export async function adminValidateSession(sessionToken: string): Promise<AdminS
   });
 
   if (error) {
-    throw new Error(error.message || "관리자 세션 확인에 실패했습니다.");
+    throw adminError(error, "관리자 세션을 확인하지 못했습니다. 다시 로그인해주세요.");
   }
 
   const session = Array.isArray(data) ? data[0] : data;
@@ -106,7 +120,7 @@ export async function adminLogout(sessionToken: string): Promise<void> {
   });
 
   if (error) {
-    throw new Error(error.message || "관리자 로그아웃에 실패했습니다.");
+    throw adminError(error, "로그아웃 처리 중 오류가 발생했습니다.");
   }
 }
 
@@ -119,7 +133,7 @@ export async function adminGetToolUsageSummary(
   });
 
   if (error) {
-    throw new Error(error.message || "통계 정보를 불러오지 못했습니다.");
+    throw adminError(error, "통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
   }
 
   const summary = Array.isArray(data) ? data[0] : data;

@@ -254,7 +254,7 @@ export default function AdminView({
         <section className="admin-panel">
           <h2>고유 세션</h2>
           <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.unique_sessions)}</p>
-          <p>최근 이벤트 표본 기준으로 중복을 제거한 방문 세션 수입니다.</p>
+          <p>오늘 기준으로 중복을 제거한 방문 세션 수입니다.</p>
         </section>
 
         <section className="admin-panel">
@@ -282,7 +282,7 @@ export default function AdminView({
               ? "-"
               : `${formatNumber(stats?.hitter_events)} / ${formatNumber(stats?.pitcher_events)}`}
           </p>
-          <p>최근 이벤트 표본 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
+          <p>오늘 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
         </section>
 
         <section className="admin-panel">
@@ -294,7 +294,7 @@ export default function AdminView({
                   stats?.avg_rolls_to_ssr_plus
                 )}`}
           </p>
-          <p>최근 이벤트 표본에서 고스변 자동 롤 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
+          <p>오늘 고스변 자동 롤에서 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
         </section>
       </div>
 
@@ -354,7 +354,7 @@ export default function AdminView({
             <p className="admin-eyebrow">Usage</p>
             <h2>기능별 사용량</h2>
           </div>
-          <p>최근 이벤트 표본의 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
+          <p>오늘 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
         </div>
 
         <div className="admin-table-wrap">
