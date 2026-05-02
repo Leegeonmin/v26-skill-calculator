@@ -1456,7 +1456,6 @@ function App() {
               draftTotalScore={ocrDraftTotalScore}
               draftAverageScore={ocrDraftAverageScore}
               saving={ocrSaving}
-              savedUpload={ocrSavedUpload}
               quota={ocrPublicQuota}
               themeAction={themeToggle}
               onGoogleLogin={() => void handleGoogleLogin("lineupSkillOcr")}
@@ -1470,7 +1469,6 @@ function App() {
               onSkillLevelChange={handleOcrSkillLevelChange}
               onSaveDraft={() => void handleOcrSaveDraft()}
               onSelectSnapshot={handleOpenPublicOcrSnapshot}
-              onClearSavedUpload={() => setOcrSavedUpload(null)}
               onGoHome={() => setToolView("home")}
             />
           ) : toolView === "ranking" ? (

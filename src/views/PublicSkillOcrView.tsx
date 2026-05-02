@@ -21,7 +21,6 @@ type PublicSkillOcrViewProps = {
   draftTotalScore: number;
   draftAverageScore: number;
   saving: boolean;
-  savedUpload: SkillOcrSavedUpload | null;
   themeAction?: React.ReactNode;
   onGoogleLogin: () => void;
   onGoogleLogout: () => void;
@@ -39,7 +38,6 @@ type PublicSkillOcrViewProps = {
   onSkillLevelChange: (playerIndex: number, slot: number, level: SkillLevel) => void;
   onSaveDraft: () => void;
   onSelectSnapshot: (upload: SkillOcrSavedUpload) => void;
-  onClearSavedUpload: () => void;
   onGoHome: () => void;
 };
 
@@ -175,7 +173,6 @@ export default function PublicSkillOcrView({
   draftTotalScore,
   draftAverageScore,
   saving,
-  savedUpload,
   themeAction,
   onGoogleLogin,
   onGoogleLogout,
@@ -188,7 +185,6 @@ export default function PublicSkillOcrView({
   onSkillLevelChange,
   onSaveDraft,
   onSelectSnapshot,
-  onClearSavedUpload,
   onGoHome,
 }: PublicSkillOcrViewProps) {
   const pitcherInputRef = useRef<HTMLInputElement | null>(null);
@@ -196,6 +192,7 @@ export default function PublicSkillOcrView({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "upload">("summary");
+  const [exampleOpen, setExampleOpen] = useState(false);
 
   if (!authenticated) {
     return (
@@ -422,6 +419,9 @@ export default function PublicSkillOcrView({
                   <li>투수/타자는 각각 최대 9명만 선택해 저장하세요.</li>
                 </ul>
               </div>
+              <button type="button" className="ocr-example-link" onClick={() => setExampleOpen(true)}>
+                예시 이미지
+              </button>
             </div>
             <input
               ref={pitcherInputRef}
@@ -501,20 +501,6 @@ export default function PublicSkillOcrView({
                     <em>검수하기</em>
                   </button>
                 ))}
-              </div>
-            </section>
-          )}
-
-          {savedUpload && !savedUpload.is_saved && (
-            <section className="public-ocr-panel">
-              <div className="ocr-section-head">
-                <div>
-                  <h2>{savedUpload.is_saved ? "저장된 결과" : "저장 전 스냅샷"}</h2>
-                  <span>{formatDate(savedUpload.created_at)} · {formatRole(savedUpload.role)}</span>
-                </div>
-                <button type="button" className="ghost-btn" onClick={onClearSavedUpload}>
-                  닫기
-                </button>
               </div>
             </section>
           )}
@@ -709,6 +695,29 @@ export default function PublicSkillOcrView({
 
               {validationMessage && <p className="modal-error">{validationMessage}</p>}
             </section>
+          )}
+
+          {exampleOpen && (
+            <div className="modal-backdrop" role="presentation" onClick={() => setExampleOpen(false)}>
+              <section
+                className="modal-card ocr-example-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label="모바일 라인업 캡처 예시"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="ocr-example-modal-head">
+                  <div>
+                    <p className="modal-eyebrow">Example</p>
+                    <h2>모바일 캡처 예시</h2>
+                  </div>
+                  <button type="button" className="ghost-btn" onClick={() => setExampleOpen(false)}>
+                    닫기
+                  </button>
+                </div>
+                <img src="/ocr-lineup-example.png" alt="모바일 라인업 캡처 예시" />
+              </section>
+            </div>
           )}
         </>
       )}
