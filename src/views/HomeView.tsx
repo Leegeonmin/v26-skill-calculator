@@ -8,51 +8,95 @@ type HomeViewProps = {
   themeAction?: ReactNode;
 };
 
-const HOME_WIDGETS: Array<{
+type HomeWidget = {
   view: Exclude<ToolView, "home">;
-  icon: "trophy" | "calculator" | "sparkles" | "flame";
+  icon: "trophy" | "calculator" | "sparkles" | "flame" | "scan";
   title: string;
   description: string;
   meta: string;
-}> = [
+};
+
+type HomeWidgetSection = {
+  id: string;
+  title: string;
+  description: string;
+  grouped: boolean;
+  widgets: HomeWidget[];
+};
+
+const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
   {
-    view: "calculator",
-    icon: "calculator",
-    title: "스킬 점수 계산기",
-    description: "카드의 스킬 점수 계산",
-    meta: "Skill Score",
+    id: "calculator",
+    title: "계산기",
+    description: "직접 계산하거나 고스변 화면을 비교합니다.",
+    grouped: true,
+    widgets: [
+      {
+        view: "calculator",
+        icon: "calculator",
+        title: "스킬 점수 계산기",
+        description: "카드의 스킬 점수 계산",
+        meta: "Skill Score",
+      },
+      {
+        view: "skillCompareBeta",
+        icon: "scan",
+        title: "고스변 점수 비교",
+        description: "고스변 화면의 기존/변경 후보 스킬을 좌우로 비교합니다.",
+        meta: "Beta",
+      },
+    ],
   },
   {
-    view: "simulator",
-    icon: "sparkles",
-    title: "고스변 시뮬",
-    description: "인게임 내에 고급스킬변경권과 같은 기능 + 원하는 등급까지 자동 롤",
-    meta: "Advanced Roll",
+    id: "simulators",
+    title: "시뮬레이터",
+    description: "스킬 변경권 결과를 돌려보고 목표까지 걸리는 횟수를 확인합니다.",
+    grouped: true,
+    widgets: [
+      {
+        view: "simulator",
+        icon: "sparkles",
+        title: "고스변 시뮬",
+        description: "인게임 내 고급스킬변경권과 같은 기능 + 원하는 등급까지 자동 롤",
+        meta: "Advanced Roll",
+      },
+      {
+        view: "impactChange",
+        icon: "flame",
+        title: "임팩트 변경 시뮬",
+        description: "나는 일반 스킬 변경권으로 몇번을 돌려야 2메가 뜰까?",
+        meta: "Impact Roll",
+      },
+    ],
   },
   {
-    view: "impactChange",
-    icon: "flame",
-    title: "임팩트 변경 시뮬",
-    description: "나는 일반 스킬 변경권으로 몇번을 돌려야 2메가 뜰까?",
-    meta: "Impact Roll",
-  },
-  {
-    view: "ranking",
-    icon: "trophy",
-    title: "고스변 랭킹챌린지",
-    description: "하루 한 번 기록하고 이번 주 최고 점수 경쟁",
-    meta: "Leaderboard",
+    id: "challenge",
+    title: "랭킹 챌린지",
+    description: "하루 한 번 기록하고 이번 주 최고 점수를 경쟁합니다.",
+    grouped: false,
+    widgets: [
+      {
+        view: "ranking",
+        icon: "trophy",
+        title: "고스변 랭킹챌린지",
+        description: "하루 한 번 기록하고 이번 주 최고 점수 경쟁",
+        meta: "Leaderboard",
+      },
+    ],
   },
 ];
 
-const OCR_WIDGET = {
-  icon: "scan" as const,
-  title: "고스변 점수 비교",
-  description: "고스변 화면의 기존/변경 후보 스킬을 좌우로 비교합니다.",
-  meta: "Beta",
-};
-
 const NOTICE_ITEMS = [
+  {
+    date: "2026.05.02",
+    title: "홈 화면 위젯 그룹 정리",
+    body: "계산기와 시뮬레이터 위젯을 용도별로 묶고, PC와 모바일 화면에서 각 도구를 더 쉽게 구분할 수 있게 정리했습니다.",
+  },
+  {
+    date: "2026.05.02",
+    title: "관리자 OCR 사용량 통계 추가",
+    body: "관리자 대시보드에서 라인업 OCR, 투수/타자 OCR, 고스변 점수 비교 OCR 호출량과 저장 횟수를 확인할 수 있게 했습니다.",
+  },
   {
     date: "2026.04.30",
     title: "스킬 점수표 업데이트",
@@ -103,88 +147,93 @@ export default function HomeView({ onSelectView, themeAction }: HomeViewProps) {
       <div className="home-gradient-aura" aria-hidden="true" />
       <section className="home-hero">
         {themeAction && <div className="home-hero-action">{themeAction}</div>}
-        <div className="home-hero-mark" aria-hidden="true">
-          <IconGlyph name="sparkles" className="ui-icon" />
-        </div>
         <div className="home-hero-copy">
           <h1 id="home-title">v26-lab</h1>
           <p>계산기, 시뮬레이터, 랭킹챌린지를 한 화면에서 바로 선택하세요.</p>
         </div>
       </section>
 
-      <section className="home-widget-grid" aria-label="도구 선택">
-        {HOME_WIDGETS.map((widget) => (
-          <button
-            key={widget.view}
-            type="button"
-            className={`home-widget home-widget-${widget.view}`}
-            onClick={() => onSelectView(widget.view)}
+      <section className="home-widget-sections" aria-label="도구 선택">
+        {HOME_WIDGET_SECTIONS.map((section) => (
+          <section
+            key={section.id}
+            className={`home-widget-section home-widget-section-${section.id}${
+              section.grouped ? " home-widget-section-grouped" : ""
+            }`}
           >
-            <span className="home-widget-icon" aria-hidden="true">
-              <IconGlyph name={widget.icon} className="ui-icon" />
-            </span>
-            <span className="home-widget-copy">
-              <span className="home-widget-meta">{widget.meta}</span>
-              <strong>{widget.title}</strong>
-              <span>{widget.description}</span>
-            </span>
-            <span className="home-widget-arrow" aria-hidden="true">
-              <svg viewBox="0 0 24 24" className="ui-icon">
-                <path
-                  d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </span>
-          </button>
+            <div className="home-widget-section-head">
+              <h2>{section.title}</h2>
+              <p>{section.description}</p>
+            </div>
+            <div className="home-widget-grid">
+              {section.widgets.map((widget) => (
+                <button
+                  key={widget.view}
+                  type="button"
+                  className={`home-widget home-widget-${widget.view}`}
+                  onClick={() => onSelectView(widget.view)}
+                >
+                  <span className="home-widget-icon" aria-hidden="true">
+                    <IconGlyph name={widget.icon} className="ui-icon" />
+                  </span>
+                  <span className="home-widget-copy">
+                    <span
+                      className={`home-widget-meta${
+                        widget.view === "skillCompareBeta" ? " home-widget-beta" : ""
+                      }`}
+                    >
+                      {widget.meta}
+                    </span>
+                    <strong>
+                      {widget.title}
+                      {widget.view === "skillCompareBeta" && <em>베타</em>}
+                    </strong>
+                    <span>{widget.description}</span>
+                  </span>
+                  <span className="home-widget-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" className="ui-icon">
+                      <path
+                        d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
         ))}
-        <button
-          type="button"
-          className="home-widget home-widget-ocr"
-          onClick={() => onSelectView("skillCompareBeta")}
-        >
-          <span className="home-widget-icon" aria-hidden="true">
-            <IconGlyph name={OCR_WIDGET.icon} className="ui-icon" />
-          </span>
-          <span className="home-widget-copy">
-            <span className="home-widget-meta home-widget-beta">{OCR_WIDGET.meta}</span>
-            <strong>
-              {OCR_WIDGET.title}
-              <em>베타</em>
-            </strong>
-            <span>{OCR_WIDGET.description}</span>
-          </span>
-          <span className="home-widget-arrow" aria-hidden="true">
-            <svg viewBox="0 0 24 24" className="ui-icon">
-              <path
-                d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
-                fill="currentColor"
-              />
-            </svg>
-          </span>
-        </button>
-        <button
-          type="button"
-          className="home-widget home-widget-notice"
-          onClick={() => setNoticeOpen(true)}
-        >
-          <span className="home-widget-icon" aria-hidden="true">
-            <IconGlyph name="notice" className="ui-icon" />
-          </span>
-          <span className="home-widget-copy">
-            <span className="home-widget-meta">Notice</span>
-            <strong>공지사항</strong>
-            <span>업데이트 내역 확인과 버그/기능 문의를 보낼 수 있습니다.</span>
-          </span>
-          <span className="home-widget-arrow" aria-hidden="true">
-            <svg viewBox="0 0 24 24" className="ui-icon">
-              <path
-                d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
-                fill="currentColor"
-              />
-            </svg>
-          </span>
-        </button>
+
+        <section className="home-widget-section home-widget-section-notice">
+          <div className="home-widget-section-head">
+            <h2>공지사항</h2>
+            <p>업데이트 내역과 문의를 확인합니다.</p>
+          </div>
+          <div className="home-widget-grid">
+            <button
+              type="button"
+              className="home-widget home-widget-notice"
+              onClick={() => setNoticeOpen(true)}
+            >
+              <span className="home-widget-icon" aria-hidden="true">
+                <IconGlyph name="notice" className="ui-icon" />
+              </span>
+              <span className="home-widget-copy">
+                <span className="home-widget-meta">Notice</span>
+                <strong>공지사항</strong>
+                <span>업데이트 내역 확인과 버그/기능 문의를 보낼 수 있습니다.</span>
+              </span>
+              <span className="home-widget-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="ui-icon">
+                  <path
+                    d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+            </button>
+          </div>
+        </section>
       </section>
 
       {noticeOpen && (

@@ -938,11 +938,37 @@ function App() {
       const response = await recognizeSkillImage({ role, file });
       const transformed = transformSkillOcrResponse(response, role);
 
+      void logToolUsageEvent({
+        tool: "ocr_lineup_recognize",
+        mode: role,
+        rollCount: 1,
+        metadata: {
+          session_id: toolUsageSessionId,
+          role,
+          request_id: response.request_id,
+          players: response.summary.players,
+          matched_skills: response.summary.matched_skills,
+          unmatched_skills: response.summary.unmatched_skills,
+          success: true,
+        },
+      }).catch(() => {});
+
       setOcrDraftRawResponse(response);
       setOcrDraftPlayers(transformed.players);
       setOcrDraftTotalScore(transformed.totalScore);
       setOcrDraftAverageScore(transformed.averageScore);
     } catch (error) {
+      void logToolUsageEvent({
+        tool: "ocr_lineup_recognize",
+        mode: role,
+        rollCount: 1,
+        metadata: {
+          session_id: toolUsageSessionId,
+          role,
+          success: false,
+        },
+      }).catch(() => {});
+
       setOcrUploadError(
         error instanceof Error ? error.message : "이미지를 인식하지 못했습니다."
       );
@@ -1252,6 +1278,7 @@ function App() {
           ) : toolView === "skillCompareBeta" ? (
             <SkillCompareBetaView
               themeAction={themeToggle}
+              toolUsageSessionId={toolUsageSessionId}
               onGoHome={() => setToolView("home")}
             />
           ) : toolView === "ranking" ? (

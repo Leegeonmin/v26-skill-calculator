@@ -1,4 +1,4 @@
-import type { AdminUsageSummary } from "../lib/admin";
+import type { AdminOcrBreakdown, AdminToolBreakdown, AdminUsageSummary } from "../lib/admin";
 
 type AdminViewProps = {
   unlocked: boolean;
@@ -15,6 +15,133 @@ type AdminViewProps = {
   onLock: () => void;
   onGoHome: () => void;
 };
+
+const toolLabels: Record<string, string> = {
+  tool_view: "화면 진입",
+  advanced_manual_roll: "고스변 수동",
+  advanced_auto_roll: "고스변 자동",
+  impact_auto_roll: "임팩트 자동",
+  ocr_lineup_recognize: "OCR 라인업 인식",
+  ocr_skill_compare_recognize: "OCR 스킬 비교",
+};
+
+function formatNumber(value: number | null | undefined) {
+  return value == null ? "-" : value.toLocaleString("ko-KR");
+}
+
+function formatDecimal(value: number | null | undefined) {
+  return value == null ? "-" : value.toFixed(2);
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function getToolLabel(tool: string) {
+  return toolLabels[tool] ?? tool;
+}
+
+function renderOcrRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
+  if (statsLoading) {
+    return (
+      <tr>
+        <td colSpan={6}>OCR 통계를 불러오는 중입니다.</td>
+      </tr>
+    );
+  }
+
+  if (!stats?.ocr_breakdown?.length) {
+    return (
+      <tr>
+        <td colSpan={6}>아직 OCR 사용 기록이 없습니다.</td>
+      </tr>
+    );
+  }
+
+  return stats.ocr_breakdown.map((item: AdminOcrBreakdown) => (
+    <tr key={item.label}>
+      <td>{item.label}</td>
+      <td>{formatNumber(item.request_count)}</td>
+      <td>
+        {stats.ocr_total_requests > 0
+          ? `${((item.request_count / stats.ocr_total_requests) * 100).toFixed(1)}%`
+          : "-"}
+      </td>
+      <td>{formatNumber(item.unique_sessions)}</td>
+      <td>{formatNumber(item.saved_count)}</td>
+      <td>{formatDateTime(item.last_seen_at)}</td>
+    </tr>
+  ));
+}
+
+function renderBreakdownRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
+  if (statsLoading) {
+    return (
+      <tr>
+        <td colSpan={4}>통계를 불러오는 중입니다.</td>
+      </tr>
+    );
+  }
+
+  if (!stats?.tool_breakdown?.length) {
+    return (
+      <tr>
+        <td colSpan={4}>아직 표시할 사용 기록이 없습니다.</td>
+      </tr>
+    );
+  }
+
+  return stats.tool_breakdown.map((item: AdminToolBreakdown) => (
+    <tr key={item.tool}>
+      <td>{getToolLabel(item.tool)}</td>
+      <td>{formatNumber(item.event_count)}</td>
+      <td>{formatNumber(item.unique_sessions)}</td>
+      <td>{formatDateTime(item.last_seen_at)}</td>
+    </tr>
+  ));
+}
+
+function renderInquiryRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
+  if (statsLoading) {
+    return (
+      <tr>
+        <td colSpan={4}>문의를 불러오는 중입니다.</td>
+      </tr>
+    );
+  }
+
+  if (!stats?.recent_inquiries?.length) {
+    return (
+      <tr>
+        <td colSpan={4}>최근 문의가 없습니다.</td>
+      </tr>
+    );
+  }
+
+  return stats.recent_inquiries.map((inquiry) => (
+    <tr key={inquiry.id}>
+      <td>{formatDateTime(inquiry.created_at)}</td>
+      <td>{inquiry.contact || "-"}</td>
+      <td className="admin-message-cell">{inquiry.message}</td>
+      <td>
+        {inquiry.page_url ? (
+          <a href={inquiry.page_url} target="_blank" rel="noreferrer">
+            열기
+          </a>
+        ) : (
+          "-"
+        )}
+      </td>
+    </tr>
+  ));
+}
 
 export default function AdminView({
   unlocked,
@@ -50,8 +177,8 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Access</p>
           <h1>관리자 페이지</h1>
           <p className="admin-copy">
-            이 페이지는 운영용입니다. 비밀번호를 입력하면 시즌 관리와 참가자 관리 기능을 추가할 수
-            있는 관리자 대시보드로 들어갑니다.
+            이 페이지는 운영용입니다. 비밀번호를 입력하면 사용량, 자동 롤 성과, 문의 내역을
+            확인할 수 있는 관리자 대시보드로 들어갑니다.
           </p>
 
           <label className="admin-field">
@@ -103,7 +230,7 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Dashboard</p>
           <h1>운영 대시보드</h1>
           <p className="admin-copy">
-            시즌 관리, 참가자 관리, 리더보드 운영 기능을 이곳에 모아둘 수 있습니다.
+            사용량 추이, OCR 호출량, 기능별 사용 비중, 최근 문의를 한 화면에서 확인합니다.
           </p>
         </div>
 
@@ -119,47 +246,177 @@ export default function AdminView({
 
       <div className="admin-grid">
         <section className="admin-panel">
-          <h2>총 이벤트</h2>
-          <p className="admin-metric">{statsLoading ? "-" : stats?.total_events ?? 0}</p>
+          <h2>오늘 사용량</h2>
+          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.today_events)}</p>
+          <p>오늘 0시 이후 쌓인 전체 이벤트 수입니다.</p>
+        </section>
+
+        <section className="admin-panel">
+          <h2>7일 사용량</h2>
+          <p className="admin-metric">
+            {statsLoading ? "-" : formatNumber(stats?.seven_day_events)}
+          </p>
+          <p>최근 7일 동안 기록된 사용 이벤트 수입니다.</p>
+        </section>
+
+        <section className="admin-panel">
+          <h2>30일 사용량</h2>
+          <p className="admin-metric">
+            {statsLoading ? "-" : formatNumber(stats?.thirty_day_events)}
+          </p>
+          <p>최근 30일 기준의 운영 추세를 보는 누적값입니다.</p>
+        </section>
+
+        <section className="admin-panel">
+          <h2>고유 세션</h2>
+          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.unique_sessions)}</p>
+          <p>중복을 제거한 방문 세션 수입니다.</p>
+        </section>
+
+        <section className="admin-panel">
+          <h2>OCR 호출</h2>
+          <p className="admin-metric">
+            {statsLoading ? "-" : formatNumber(stats?.ocr_total_requests)}
+          </p>
+          <p>외부 OCR API를 호출한 전체 횟수입니다.</p>
+        </section>
+
+        <section className="admin-panel">
+          <h2>OCR 저장</h2>
+          <p className="admin-metric">
+            {statsLoading ? "-" : formatNumber(stats?.ocr_saved_uploads)}
+          </p>
+          <p>라인업 OCR 결과를 사용자가 저장한 횟수입니다.</p>
+        </section>
+      </div>
+
+      <div className="admin-grid admin-grid-compact">
+        <section className="admin-panel">
+          <h2>전체 이벤트</h2>
+          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.total_events)}</p>
           <p>계산기/시뮬레이터 구간에서 쌓인 총 사용 이벤트 수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>수동 고스변</h2>
-          <p className="admin-metric">{statsLoading ? "-" : stats?.advanced_manual_rolls ?? 0}</p>
-          <p>고스변 시뮬에서 직접 1회 실행 버튼이 눌린 누적 횟수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>임팩트 자동 롤</h2>
-          <p className="admin-metric">{statsLoading ? "-" : stats?.impact_auto_runs ?? 0}</p>
-          <p>임팩트 스변 시뮬에서 자동 롤이 실행된 누적 횟수입니다.</p>
         </section>
 
         <section className="admin-panel">
           <h2>타자 vs 투수</h2>
           <p className="admin-metric">
-            {statsLoading ? "-" : `${stats?.hitter_events ?? 0} / ${stats?.pitcher_events ?? 0}`}
+            {statsLoading
+              ? "-"
+              : `${formatNumber(stats?.hitter_events)} / ${formatNumber(stats?.pitcher_events)}`}
           </p>
           <p>왼쪽은 타자, 오른쪽은 투수 계열 시뮬레이션 이벤트 수입니다.</p>
         </section>
 
         <section className="admin-panel">
-          <h2>S 평균 시도</h2>
+          <h2>S / SSR+ 평균</h2>
           <p className="admin-metric">
-            {statsLoading ? "-" : stats?.avg_rolls_to_s?.toFixed(2) ?? "-"}
+            {statsLoading
+              ? "-"
+              : `${formatDecimal(stats?.avg_rolls_to_s)} / ${formatDecimal(
+                  stats?.avg_rolls_to_ssr_plus
+                )}`}
           </p>
-          <p>고스변 자동 롤에서 S를 목표로 했을 때 평균적으로 몇 번이 걸렸는지 보여줍니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>SSR+ 평균 시도</h2>
-          <p className="admin-metric">
-            {statsLoading ? "-" : stats?.avg_rolls_to_ssr_plus?.toFixed(2) ?? "-"}
-          </p>
-          <p>고스변 자동 롤에서 SSR+를 목표로 했을 때 평균 시도 횟수입니다.</p>
+          <p>고스변 자동 롤에서 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
         </section>
       </div>
+
+      <section className="admin-panel admin-table-panel">
+        <div className="admin-section-head">
+          <div>
+            <p className="admin-eyebrow">OCR Cost</p>
+            <h2>OCR 사용량</h2>
+          </div>
+          <p>비용에 영향을 주는 OCR API 호출을 라인업/스킬 비교와 투수/타자로 나눠 봅니다.</p>
+        </div>
+
+        <div className="admin-grid admin-grid-compact">
+          <section className="admin-subpanel">
+            <span>라인업 OCR</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_lineup_requests)}</strong>
+            <p>
+              투수 {statsLoading ? "-" : formatNumber(stats?.ocr_pitcher_requests)} / 타자{" "}
+              {statsLoading ? "-" : formatNumber(stats?.ocr_hitter_requests)}
+            </p>
+          </section>
+          <section className="admin-subpanel">
+            <span>스킬 비교 OCR</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_skill_compare_requests)}</strong>
+            <p>고급 스킬 변경권 점수 비교에서 발생한 인식 요청입니다.</p>
+          </section>
+          <section className="admin-subpanel">
+            <span>저장된 라인업</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_saved_uploads)}</strong>
+            <p>
+              투수 {statsLoading ? "-" : formatNumber(stats?.ocr_saved_pitcher_uploads)} / 타자{" "}
+              {statsLoading ? "-" : formatNumber(stats?.ocr_saved_hitter_uploads)}
+            </p>
+          </section>
+        </div>
+
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>호출</th>
+                <th>비중</th>
+                <th>세션</th>
+                <th>저장</th>
+                <th>최근 사용</th>
+              </tr>
+            </thead>
+            <tbody>{renderOcrRows(stats, statsLoading)}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="admin-panel admin-table-panel">
+        <div className="admin-section-head">
+          <div>
+            <p className="admin-eyebrow">Usage</p>
+            <h2>기능별 사용량</h2>
+          </div>
+          <p>이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
+        </div>
+
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>기능</th>
+                <th>이벤트</th>
+                <th>세션</th>
+                <th>최근 사용</th>
+              </tr>
+            </thead>
+            <tbody>{renderBreakdownRows(stats, statsLoading)}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="admin-panel admin-table-panel">
+        <div className="admin-section-head">
+          <div>
+            <p className="admin-eyebrow">Inbox</p>
+            <h2>최근 문의</h2>
+          </div>
+          <p>공지/문의 창으로 들어온 최신 메시지입니다.</p>
+        </div>
+
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>등록일</th>
+                <th>연락처</th>
+                <th>내용</th>
+                <th>페이지</th>
+              </tr>
+            </thead>
+            <tbody>{renderInquiryRows(stats, statsLoading)}</tbody>
+          </table>
+        </div>
+      </section>
 
       {statsError && <p className="modal-error">{statsError}</p>}
     </div>

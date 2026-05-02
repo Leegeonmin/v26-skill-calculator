@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { recognizeSkillChangeImage } from "../lib/skillOcr";
+import { logToolUsageEvent } from "../lib/toolUsage";
 import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
 import type { SkillChangeResponse, SkillChangeSkill } from "../types/ocr";
 import { calculateSkillTotal } from "../utils/calculate";
@@ -8,6 +9,7 @@ import { calculateSkillTotal } from "../utils/calculate";
 type SkillCompareBetaViewProps = {
   onGoHome: () => void;
   themeAction?: React.ReactNode;
+  toolUsageSessionId: string | null;
 };
 
 type ComparedSkill = SkillChangeSkill & {
@@ -135,7 +137,11 @@ function formatSkill(skill: ComparedSkill): string {
   return skill.displayName;
 }
 
-export default function SkillCompareBetaView({ onGoHome, themeAction }: SkillCompareBetaViewProps) {
+export default function SkillCompareBetaView({
+  onGoHome,
+  themeAction,
+  toolUsageSessionId,
+}: SkillCompareBetaViewProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SkillChangeResponse | null>(null);
@@ -161,8 +167,33 @@ export default function SkillCompareBetaView({ onGoHome, themeAction }: SkillCom
       setBusy(true);
       setResult(null);
       setError(null);
-      setResult(await recognizeSkillChangeImage(file));
+      const response = await recognizeSkillChangeImage(file);
+
+      void logToolUsageEvent({
+        tool: "ocr_skill_compare_recognize",
+        mode,
+        cardType,
+        rollCount: 1,
+        metadata: {
+          session_id: toolUsageSessionId,
+          request_id: response.request_id,
+          success: true,
+        },
+      }).catch(() => {});
+
+      setResult(response);
     } catch (uploadError) {
+      void logToolUsageEvent({
+        tool: "ocr_skill_compare_recognize",
+        mode,
+        cardType,
+        rollCount: 1,
+        metadata: {
+          session_id: toolUsageSessionId,
+          success: false,
+        },
+      }).catch(() => {});
+
       setError(
         uploadError instanceof Error
           ? uploadError.message

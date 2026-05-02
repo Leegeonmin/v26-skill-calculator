@@ -784,6 +784,7 @@ select {
 }
 
 .home-hero,
+.home-widget-sections,
 .home-widget-grid {
   position: relative;
   z-index: 1;
@@ -850,6 +851,66 @@ select {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
+}
+
+.home-widget-sections {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-widget-section {
+  display: contents;
+}
+
+.home-widget-section-grouped {
+  display: grid;
+  grid-template-rows: 1fr;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(216, 224, 238, 0.86);
+  border-radius: 22px;
+  background: rgba(248, 250, 252, 0.62);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05);
+}
+
+.home-widget-section-head {
+  display: none;
+}
+
+.home-widget-section-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.home-widget-section-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.home-widget-section .home-widget-grid {
+  display: contents;
+}
+
+.home-widget-section-grouped .home-widget-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.home-widget-section-calculator.home-widget-section-grouped,
+.home-widget-section-simulators.home-widget-section-grouped {
+  grid-column: span 2;
+}
+
+.home-widget-section-calculator.home-widget-section-grouped .home-widget-grid,
+.home-widget-section-simulators.home-widget-section-grouped .home-widget-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* Final priority fixes for skill compare OCR. Keep after all responsive overrides. */
@@ -1604,7 +1665,8 @@ select {
   background: rgba(37, 99, 235, 0.28);
 }
 
-.home-widget-ocr::before {
+.home-widget-ocr::before,
+.home-widget-skillCompareBeta::before {
   background: rgba(20, 184, 166, 0.32);
 }
 
@@ -1652,7 +1714,8 @@ select {
   background: linear-gradient(135deg, #1e3a8a, #60a5fa);
 }
 
-.home-widget-ocr .home-widget-icon {
+.home-widget-ocr .home-widget-icon,
+.home-widget-skillCompareBeta .home-widget-icon {
   background: linear-gradient(135deg, #0f766e, #14b8a6);
 }
 
@@ -1959,6 +2022,10 @@ select {
   gap: 18px;
 }
 
+.admin-grid-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .admin-panel {
   display: grid;
   gap: 10px;
@@ -1995,6 +2062,98 @@ select {
   flex-wrap: wrap;
   justify-content: flex-end;
   margin-top: 18px;
+}
+
+.admin-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-section-head > p {
+  max-width: 360px;
+  text-align: right;
+}
+
+.admin-table-panel {
+  overflow: hidden;
+}
+
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  color: #263246;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(216, 224, 238, 0.86);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th {
+  color: #60708c;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.admin-table td {
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table a {
+  color: #1b6ccf;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-message-cell {
+  min-width: 260px;
+  max-width: 460px;
+  white-space: pre-wrap;
+}
+
+.admin-subpanel {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid rgba(216, 224, 238, 0.82);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.admin-subpanel span {
+  color: #60708c;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-subpanel strong {
+  color: #172033;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.admin-subpanel p {
+  margin: 0;
+  color: #41506a;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .ocr-view {
@@ -5996,6 +6155,11 @@ input {
   border-color: rgba(148, 163, 184, 0.2);
 }
 
+.app-bg[data-theme="dark"] .home-widget-section-grouped {
+  background: rgba(15, 23, 42, 0.42);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
 .app-bg[data-theme="dark"] .ranking-page .ranking-table th {
   background: rgba(30, 41, 59, 0.72);
 }
@@ -6042,6 +6206,33 @@ input {
 .app-bg[data-theme="dark"] .ranking-title,
 .app-bg[data-theme="dark"] .result-hero-score {
   color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .admin-auth-card,
+.app-bg[data-theme="dark"] .admin-panel {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.app-bg[data-theme="dark"] .admin-subpanel {
+  background: rgba(2, 6, 23, 0.34);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.app-bg[data-theme="dark"] .admin-panel p,
+.app-bg[data-theme="dark"] .admin-subpanel p,
+.app-bg[data-theme="dark"] .admin-table {
+  color: #c3ccda;
+}
+
+.app-bg[data-theme="dark"] .admin-metric,
+.app-bg[data-theme="dark"] .admin-subpanel strong {
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .admin-table th,
+.app-bg[data-theme="dark"] .admin-table td {
+  border-color: rgba(148, 163, 184, 0.2);
 }
 
 .app-bg[data-theme="dark"] .app-footer {
@@ -7034,6 +7225,15 @@ input {
     flex-direction: column;
   }
 
+  .admin-section-head {
+    flex-direction: column;
+  }
+
+  .admin-section-head > p {
+    max-width: none;
+    text-align: left;
+  }
+
   .ocr-header {
     flex-direction: column;
   }
@@ -7068,6 +7268,15 @@ input {
 
   .home-widget-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-widget-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .home-widget-section-calculator.home-widget-section-grouped,
+  .home-widget-section-simulators.home-widget-section-grouped {
+    grid-column: auto;
   }
 }
 
@@ -7270,6 +7479,50 @@ input {
   .home-widget-grid {
     grid-template-columns: 1fr;
     gap: 9px;
+  }
+
+  .home-widget-sections {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .home-widget-section {
+    display: contents;
+  }
+
+  .home-widget-section-grouped {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .home-widget-section .home-widget-grid {
+    display: contents;
+  }
+
+  .home-widget-section-grouped .home-widget-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .home-widget-section-calculator.home-widget-section-grouped .home-widget-grid,
+  .home-widget-section-simulators.home-widget-section-grouped .home-widget-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-widget-section-head {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    padding: 0 2px;
+  }
+
+  .home-widget-section-head h2 {
+    font-size: 0.92rem;
+  }
+
+  .home-widget-section-head p {
+    font-size: 0.76rem;
   }
 
   .skill-compare-results {

@@ -8,6 +8,9 @@ export type AdminSession = {
 
 export type AdminUsageSummary = {
   total_events: number;
+  today_events: number;
+  seven_day_events: number;
+  thirty_day_events: number;
   unique_sessions: number;
   avg_actions_per_session: number | null;
   advanced_manual_rolls: number;
@@ -17,6 +20,40 @@ export type AdminUsageSummary = {
   pitcher_events: number;
   avg_rolls_to_s: number | null;
   avg_rolls_to_ssr_plus: number | null;
+  ocr_total_requests: number;
+  ocr_lineup_requests: number;
+  ocr_skill_compare_requests: number;
+  ocr_hitter_requests: number;
+  ocr_pitcher_requests: number;
+  ocr_saved_uploads: number;
+  ocr_saved_hitter_uploads: number;
+  ocr_saved_pitcher_uploads: number;
+  ocr_breakdown: AdminOcrBreakdown[];
+  tool_breakdown: AdminToolBreakdown[];
+  recent_inquiries: AdminNoticeInquiry[];
+};
+
+export type AdminOcrBreakdown = {
+  label: string;
+  request_count: number;
+  unique_sessions: number;
+  saved_count: number;
+  last_seen_at: string | null;
+};
+
+export type AdminToolBreakdown = {
+  tool: string;
+  event_count: number;
+  unique_sessions: number;
+  last_seen_at: string | null;
+};
+
+export type AdminNoticeInquiry = {
+  id: string;
+  message: string;
+  contact: string | null;
+  page_url: string | null;
+  created_at: string;
 };
 
 function requireSupabase() {
