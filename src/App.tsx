@@ -82,8 +82,8 @@ const ADMIN_PATH = "/admin";
 const ADMIN_SESSION_KEY = "v26-admin-session";
 const OCR_PATH = "/tyrant";
 const OCR_SESSION_KEY = "v26-skill-ocr-session";
-const OCR_FIXED_USERNAME = "tyrant";
-const OCR_FIXED_PASSWORD = "tttt1199";
+const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
+const OCR_FIXED_PASSWORD = import.meta.env.VITE_OCR_PASSWORD ?? "";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "guide",
@@ -876,6 +876,11 @@ function App() {
   };
 
   const handleOcrLogin = async () => {
+    if (!OCR_FIXED_USERNAME || !OCR_FIXED_PASSWORD) {
+      setOcrAuthError("OCR 접속 설정이 필요합니다.");
+      return;
+    }
+
     if (!ocrPasswordInput.trim()) {
       setOcrAuthError("비밀번호를 입력해주세요.");
       return;

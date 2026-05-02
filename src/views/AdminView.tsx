@@ -230,7 +230,7 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Dashboard</p>
           <h1>운영 대시보드</h1>
           <p className="admin-copy">
-            최근 30일 사용량, OCR 호출량, 기능별 사용 비중, 최근 문의를 한 화면에서 확인합니다.
+            오늘 사용량, OCR 호출량, 기능별 사용 비중, 최근 문의를 한 화면에서 확인합니다.
           </p>
         </div>
 
@@ -252,25 +252,9 @@ export default function AdminView({
         </section>
 
         <section className="admin-panel">
-          <h2>7일 사용량</h2>
-          <p className="admin-metric">
-            {statsLoading ? "-" : formatNumber(stats?.seven_day_events)}
-          </p>
-          <p>최근 7일 동안 기록된 사용 이벤트 수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>30일 사용량</h2>
-          <p className="admin-metric">
-            {statsLoading ? "-" : formatNumber(stats?.thirty_day_events)}
-          </p>
-          <p>최근 30일 기준의 운영 추세를 보는 누적값입니다.</p>
-        </section>
-
-        <section className="admin-panel">
           <h2>고유 세션</h2>
           <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.unique_sessions)}</p>
-          <p>최근 30일 기준으로 중복을 제거한 방문 세션 수입니다.</p>
+          <p>최근 이벤트 표본 기준으로 중복을 제거한 방문 세션 수입니다.</p>
         </section>
 
         <section className="admin-panel">
@@ -292,19 +276,13 @@ export default function AdminView({
 
       <div className="admin-grid admin-grid-compact">
         <section className="admin-panel">
-          <h2>전체 이벤트 추정</h2>
-          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.total_events)}</p>
-          <p>DB 통계 기준의 빠른 추정값입니다. 상세 지표는 최근 30일 기준입니다.</p>
-        </section>
-
-        <section className="admin-panel">
           <h2>타자 vs 투수</h2>
           <p className="admin-metric">
             {statsLoading
               ? "-"
               : `${formatNumber(stats?.hitter_events)} / ${formatNumber(stats?.pitcher_events)}`}
           </p>
-          <p>최근 30일 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
+          <p>최근 이벤트 표본 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
         </section>
 
         <section className="admin-panel">
@@ -316,7 +294,7 @@ export default function AdminView({
                   stats?.avg_rolls_to_ssr_plus
                 )}`}
           </p>
-          <p>최근 30일 고스변 자동 롤에서 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
+          <p>최근 이벤트 표본에서 고스변 자동 롤 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
         </section>
       </div>
 
@@ -326,7 +304,7 @@ export default function AdminView({
             <p className="admin-eyebrow">OCR Cost</p>
             <h2>OCR 사용량</h2>
           </div>
-          <p>최근 30일 OCR API 호출을 라인업/스킬 비교와 투수/타자로 나눠 봅니다.</p>
+          <p>OCR API 호출을 라인업/스킬 비교와 투수/타자로 나눠 봅니다.</p>
         </div>
 
         <div className="admin-grid admin-grid-compact">
@@ -376,7 +354,7 @@ export default function AdminView({
             <p className="admin-eyebrow">Usage</p>
             <h2>기능별 사용량</h2>
           </div>
-          <p>최근 30일 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
+          <p>최근 이벤트 표본의 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
         </div>
 
         <div className="admin-table-wrap">

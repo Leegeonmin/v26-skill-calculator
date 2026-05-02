@@ -8,7 +8,7 @@ import type {
   SkillChangeResponse,
 } from "../types/ocr";
 
-const OCR_API_BASE_URL = "https://v26-skill-ocr.fly.dev";
+const OCR_API_BASE_URL = import.meta.env.VITE_OCR_API_BASE_URL;
 const ALLOWED_OCR_IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
 
 function requireSupabase() {
@@ -33,6 +33,10 @@ export async function recognizeSkillImage(input: {
   role: SkillOcrRole;
   file: File;
 }): Promise<SkillOcrApiResponse> {
+  if (!OCR_API_BASE_URL) {
+    throw new Error("OCR API 설정이 필요합니다.");
+  }
+
   const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "";
   if (!ALLOWED_OCR_IMAGE_EXTENSIONS.has(extension)) {
     throw new Error("png, jpg, jpeg, webp 이미지만 업로드할 수 있습니다.");
@@ -66,6 +70,10 @@ export async function recognizeSkillImage(input: {
 }
 
 export async function recognizeSkillChangeImage(file: File): Promise<SkillChangeResponse> {
+  if (!OCR_API_BASE_URL) {
+    throw new Error("OCR API 설정이 필요합니다.");
+  }
+
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   if (!ALLOWED_OCR_IMAGE_EXTENSIONS.has(extension)) {
     throw new Error("png, jpg, jpeg, webp 이미지만 업로드할 수 있습니다.");

@@ -58,7 +58,6 @@ export default function ImpactSimulatorView({
   resolvedSkill3,
   impactSessionRollCount,
   impactLastSuccessRollCount,
-  impactLastMessage: _impactLastMessage,
   level2,
   level3,
   setSkill1,

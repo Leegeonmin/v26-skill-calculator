@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
@@ -143,13 +143,14 @@ export default function ToolboxStage({
   onImpactRoll,
   resetImpactChangeSession,
 }: ToolboxStageProps) {
-  const [simulatorSetupComplete, setSimulatorSetupComplete] = useState(false);
-
-  useEffect(() => {
-    if (toolView !== "simulator") {
-      setSimulatorSetupComplete(false);
-    }
-  }, [toolView]);
+  const [simulatorSetupState, setSimulatorSetupState] = useState({
+    toolView,
+    complete: false,
+  });
+  const simulatorSetupComplete =
+    toolView === "simulator" &&
+    simulatorSetupState.toolView === "simulator" &&
+    simulatorSetupState.complete;
 
   const modeLabel = getModeLabel(mode);
   const hitterPositionLabel =
@@ -268,7 +269,7 @@ export default function ToolboxStage({
               <button
                 type="button"
                 className="primary-btn"
-                onClick={() => setSimulatorSetupComplete(true)}
+                onClick={() => setSimulatorSetupState({ toolView: "simulator", complete: true })}
               >
                 시뮬 시작
               </button>
@@ -528,7 +529,7 @@ export default function ToolboxStage({
                       setLevel1={setLevel1}
                       setLevel2={setLevel2}
                       setLevel3={setLevel3}
-                      onBackToSetup={() => setSimulatorSetupComplete(false)}
+                      onBackToSetup={() => setSimulatorSetupState({ toolView: "simulator", complete: false })}
                       onRollOnce={onRollOnce}
                       onAutoRoll={onAutoRoll}
                       getSkillScoreLabel={getSkillScoreLabel}
@@ -626,6 +627,10 @@ export default function ToolboxStage({
     </div>
   );
 }
+
+
+
+
 
 
 
