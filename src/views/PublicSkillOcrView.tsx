@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
+import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
 import type { CardType, SkillLevel, StarterHand } from "../types";
 import type {
   SkillOcrPublicQuota,
@@ -116,6 +117,37 @@ function getPitcherScoreItems(player: SkillOcrSelectedPlayer): Array<{
       active: position === "CP",
     },
   ];
+}
+
+function PublicSkillOcrOddsBadge({ player }: { player: SkillOcrSelectedPlayer }) {
+  const { odds, loading } = useSkillOcrPlayerOdds(player);
+
+  if (loading) {
+    return (
+      <div
+        className="ocr-player-odds-badge public-ocr-player-odds-badge ocr-player-odds-badge-loading"
+        aria-label="확률 계산 중"
+      >
+        <span />
+        <span />
+      </div>
+    );
+  }
+
+  if (!odds) {
+    return null;
+  }
+
+  return (
+    <div className="ocr-player-odds-badge public-ocr-player-odds-badge">
+      <span>
+        등급 <strong style={{ color: odds.gradeColor }}>{odds.grade}</strong>
+      </span>
+      <span>
+        {odds.basisLabel} <strong>{odds.topPercentLabel}</strong>
+      </span>
+    </div>
+  );
 }
 
 function buildCopyText(params: {
@@ -396,6 +428,7 @@ export default function PublicSkillOcrView({
                     <article key={`${upload.id}-${player.sourceRow}`} className="public-ocr-saved-row">
                       <strong>{player.playerName}</strong>
                       <span>{player.totalScore.toFixed(2)}</span>
+                      <PublicSkillOcrOddsBadge player={player} />
                     </article>
                   ))}
                 </div>
@@ -608,6 +641,7 @@ export default function PublicSkillOcrView({
                         )}
                         </div>
                         <strong className="public-ocr-player-score">{player.totalScore.toFixed(2)}</strong>
+                        <PublicSkillOcrOddsBadge player={player} />
                       </div>
 
                       {player.calculatorMode !== "hitter" && (

@@ -1,5 +1,6 @@
 import { Fragment, useRef, useState } from "react";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
+import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
 import type { CardType, SkillLevel, StarterHand } from "../types";
 import type {
   SkillOcrRole,
@@ -189,6 +190,34 @@ function getPitcherScoreItems(player: SkillOcrSelectedPlayer): Array<{
       active: position === "CP",
     },
   ];
+}
+
+function SkillOcrOddsBadge({ player }: { player: SkillOcrSelectedPlayer }) {
+  const { odds, loading } = useSkillOcrPlayerOdds(player);
+
+  if (loading) {
+    return (
+      <div className="ocr-player-odds-badge ocr-player-odds-badge-loading" aria-label="확률 계산 중">
+        <span />
+        <span />
+      </div>
+    );
+  }
+
+  if (!odds) {
+    return null;
+  }
+
+  return (
+    <div className="ocr-player-odds-badge">
+      <span>
+        등급 <strong style={{ color: odds.gradeColor }}>{odds.grade}</strong>
+      </span>
+      <span>
+        {odds.basisLabel} <strong>{odds.topPercentLabel}</strong>
+      </span>
+    </div>
+  );
 }
 
 function OcrIcon({ name }: { name: OcrIconName }) {
@@ -446,6 +475,7 @@ export default function SkillOcrView({
               ))}
             </div>
             <strong className="ocr-saved-score">{player.totalScore.toFixed(2)}</strong>
+            <SkillOcrOddsBadge player={player} />
           </article>
         ))}
       </div>
@@ -1013,6 +1043,7 @@ export default function SkillOcrView({
                     )}
                   </div>
                   <strong className="ocr-player-score">{player.totalScore.toFixed(2)}</strong>
+                  <SkillOcrOddsBadge player={player} />
                 </div>
                 {player.calculatorMode !== "hitter" && (
                   <div className="ocr-pitcher-score-grid">

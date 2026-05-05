@@ -1162,6 +1162,7 @@ select {
   color: var(--text);
   font-size: 0.9rem;
   line-height: 1.35;
+  white-space: pre-line;
 }
 
 .app-bg[data-theme="dark"] .home-change-note {
@@ -6529,7 +6530,21 @@ input {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 14%, transparent);
 }
 
+.impact-page .skill-option:hover {
+  border-color: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 58%, white);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 14%, transparent);
+  color: var(--skill-option-color, var(--accent-strong)) !important;
+}
+
 .calculator-page .skill-option.selected {
+  border-color: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 66%, white);
+  background: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 7%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 16%, transparent);
+  color: var(--skill-option-color, var(--accent-strong)) !important;
+}
+
+.impact-page .skill-option.selected {
   border-color: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 66%, white);
   background: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 7%, white);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 16%, transparent);
@@ -7758,23 +7773,25 @@ input {
 }
 
 .app-bg[data-theme="dark"] .simulator-page .skill-option:hover,
-.app-bg[data-theme="dark"] .impact-page .skill-option:hover,
-.app-bg[data-theme="dark"] .simulator-page .skill-option.selected,
-.app-bg[data-theme="dark"] .impact-page .skill-option.selected {
+.app-bg[data-theme="dark"] .simulator-page .skill-option.selected {
   background: var(--accent-strong);
   color: var(--accent-contrast) !important;
 }
 
-.app-bg[data-theme="dark"] .calculator-page .skill-option:hover {
+.app-bg[data-theme="dark"] .calculator-page .skill-option:hover,
+.app-bg[data-theme="dark"] .impact-page .skill-option:hover {
   border-color: color-mix(in srgb, var(--skill-option-color, #93c5fd) 62%, #f8fbff);
   background: rgba(15, 23, 42, 0.5);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--skill-option-color, #93c5fd) 18%, transparent);
+  color: var(--skill-option-color, #93c5fd) !important;
 }
 
-.app-bg[data-theme="dark"] .calculator-page .skill-option.selected {
+.app-bg[data-theme="dark"] .calculator-page .skill-option.selected,
+.app-bg[data-theme="dark"] .impact-page .skill-option.selected {
   border-color: color-mix(in srgb, var(--skill-option-color, #93c5fd) 72%, #f8fbff);
   background: color-mix(in srgb, var(--skill-option-color, #93c5fd) 12%, rgba(15, 23, 42, 0.7));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-option-color, #93c5fd) 22%, transparent);
+  color: color-mix(in srgb, var(--skill-option-color, #93c5fd) 78%, #ffffff) !important;
 }
 
 .app-bg[data-theme="dark"] .ranking-page .ranking-card,
@@ -10343,6 +10360,139 @@ input {
   justify-self: center;
 }
 
+.skill-compare-odds-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.skill-compare-odds-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.skill-compare-odds-card-next {
+  background:
+    linear-gradient(135deg, transparent, rgba(20, 184, 166, 0.06)),
+    var(--panel);
+}
+
+.skill-compare-odds-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skill-compare-odds-card-head span,
+.skill-compare-odds-grid span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.skill-compare-odds-card-head strong {
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.skill-compare-odds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.skill-compare-odds-grid > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(100, 116, 139, 0.08);
+}
+
+.skill-compare-odds-grid strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.ocr-player-odds-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ocr-player-odds-badge span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.08);
+  white-space: nowrap;
+}
+
+.ocr-player-odds-badge strong {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ocr-player-odds-badge-loading span {
+  width: 76px;
+  border-color: transparent;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.12),
+    rgba(148, 163, 184, 0.28),
+    rgba(148, 163, 184, 0.12)
+  );
+  background-size: 220% 100%;
+  animation: ocr-odds-skeleton 1.1s ease-in-out infinite;
+}
+
+.ocr-player-odds-badge-loading span:nth-child(2) {
+  width: 92px;
+}
+
+@keyframes ocr-odds-skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.ocr-saved-row .ocr-player-odds-badge,
+.public-ocr-saved-row .ocr-player-odds-badge {
+  justify-self: end;
+}
+
+.ocr-player-main .ocr-player-odds-badge,
+.public-ocr-player-main .ocr-player-odds-badge {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+}
+
 .app-bg[data-theme="dark"] .skill-compare-score-summary > div.positive {
   background: rgba(16, 185, 129, 0.16);
 }
@@ -10370,5 +10520,15 @@ input {
 
   .skill-compare-upload-label {
     justify-self: center;
+  }
+
+  .skill-compare-odds-summary,
+  .skill-compare-odds-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ocr-saved-row .ocr-player-odds-badge,
+  .public-ocr-saved-row .ocr-player-odds-badge {
+    justify-self: start;
   }
 }

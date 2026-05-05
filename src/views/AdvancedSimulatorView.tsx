@@ -195,9 +195,9 @@ export default function AdvancedSimulatorView({
         intervalRef.current = null;
       }
 
-      setRollingPreview([]);
       complete();
       setIsRolling(false);
+      setRollingPreview([]);
       timeoutRef.current = null;
     }, duration);
   };
@@ -227,7 +227,8 @@ export default function AdvancedSimulatorView({
           <button
             type="button"
             className="primary-btn simulation-cta-btn"
-            onClick={onRollOnce}
+            onClick={() => startRolling(onRollOnce)}
+            disabled={isRolling}
           >
             <span className="mobile-hidden-label">고스변 1회 사용</span>
             <span className="desktop-hidden-label">고스변1회</span>
@@ -235,7 +236,10 @@ export default function AdvancedSimulatorView({
           <button
             type="button"
             className="primary-btn auto-roll-btn simulation-cta-btn"
-            onClick={() => startRolling(onAutoRoll, 720, { keepMajorFirst: true })}
+            onClick={() => {
+              onAutoRoll();
+              startRolling(() => undefined, 720, { keepMajorFirst: true });
+            }}
             disabled={isRolling}
           >
             <span className="mobile-hidden-label">

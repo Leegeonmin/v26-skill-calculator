@@ -15,6 +15,7 @@ import type {
   ToolView,
 } from "../types";
 import type { SkillOddsResult } from "../utils/advancedSkillOdds";
+import { formatTopPercent } from "../utils/formatOdds";
 
 type ToolboxStageProps = {
   toolView: Exclude<ToolView, "home" | "ranking" | "notice">;
@@ -182,12 +183,7 @@ export default function ToolboxStage({
       : toolView === "simulator"
         ? "simulator-page"
         : "impact-page";
-  const scoreAtLeastPercentLabel = skillOdds
-    ? `${(skillOdds.scoreAtLeastProbability * 100).toLocaleString("ko-KR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4,
-      })}%`
-    : "-";
+  const scoreAtLeastPercentLabel = formatTopPercent(skillOdds?.scoreAtLeastProbability);
   const expectedRollsLabel =
     skillOdds?.expectedRollsForScoreAtLeast != null
       ? `${skillOdds.expectedRollsForScoreAtLeast.toLocaleString("ko-KR", {
@@ -600,7 +596,7 @@ export default function ToolboxStage({
           <div className="result-odds-card">
             <div className="result-odds-head">
               <span>확률</span>
-              <strong>현재 점수 이상</strong>
+
             </div>
             <div className="result-odds-grid">
               <div>

@@ -1,10 +1,21 @@
 import { useMemo, useRef, useState } from "react";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
+import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import { recognizeSkillChangeImage } from "../lib/skillOcr";
 import { logToolUsageEvent } from "../lib/toolUsage";
-import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
+import type {
+  CalculatorMode,
+  CardType,
+  HitterPositionGroup,
+  SkillLevel,
+  SkillMeta,
+  StarterHand,
+} from "../types";
 import type { SkillChangeResponse, SkillChangeSkill } from "../types/ocr";
+import { calculateAdvancedSkillOdds, type SkillOddsResult } from "../utils/advancedSkillOdds";
 import { calculateSkillTotal } from "../utils/calculate";
+import { formatTopPercent } from "../utils/formatOdds";
+import { judgeSkillResultByProbability, type JudgeResult } from "../utils/judge";
 
 type SkillCompareBetaViewProps = {
   onGoHome: () => void;
@@ -38,6 +49,10 @@ const CARD_TYPE_OPTIONS: Array<{ value: CardType; label: string }> = [
 const STARTER_HAND_OPTIONS: Array<{ value: StarterHand; label: string }> = [
   { value: "right", label: "우투" },
   { value: "left", label: "좌투" },
+];
+const HITTER_POSITION_GROUP_OPTIONS: Array<{ value: HitterPositionGroup; label: string }> = [
+  { value: "fielder", label: "야수" },
+  { value: "catcher", label: "포수" },
 ];
 const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
 
@@ -167,6 +182,56 @@ function compareSkills(
   return { skills: comparedSkills, total };
 }
 
+function calculateCompareOdds(
+  compared: { skills: ComparedSkill[]; total: number },
+  dataSet: GameDataSet | null,
+  mode: CalculatorMode,
+  cardType: CardType,
+  hitterPositionGroup: HitterPositionGroup
+): SkillOddsResult | null {
+  if (!dataSet || compared.skills.length < 3 || compared.skills.some((skill) => !skill.skillId)) {
+    return null;
+  }
+
+  const [skill1, skill2, skill3] = compared.skills;
+
+  return calculateAdvancedSkillOdds({
+    mode,
+    cardType,
+    hitterPositionGroup,
+    skills: dataSet.skills,
+    scoreTable: dataSet.scoreTable,
+    skillIds: [skill1.skillId, skill2.skillId, skill3.skillId],
+    skillLevels: [
+      normalizeLevel(skill1.level),
+      normalizeLevel(skill2.level),
+      normalizeLevel(skill3.level),
+    ],
+    targetScore: compared.total,
+  });
+}
+
+function formatOddsPercent(odds: SkillOddsResult | null): string {
+  return formatTopPercent(odds?.scoreAtLeastProbability);
+}
+
+function formatExpectedRolls(odds: SkillOddsResult | null): string {
+  return odds?.expectedRollsForScoreAtLeast != null
+    ? `${odds.expectedRollsForScoreAtLeast.toLocaleString("ko-KR", {
+        minimumFractionDigits: odds.expectedRollsForScoreAtLeast < 10 ? 1 : 0,
+        maximumFractionDigits: odds.expectedRollsForScoreAtLeast < 10 ? 1 : 0,
+      })}회`
+    : "-";
+}
+
+function getJudgeGrade(judgeResult: JudgeResult | null): string {
+  return judgeResult?.grade ?? "-";
+}
+
+function getJudgeGradeColor(judgeResult: JudgeResult | null): string {
+  return judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#94a3b8";
+}
+
 function formatSkill(skill: ComparedSkill): string {
   if (skill.needsSelection) {
     return `${skill.displayName} 기본 선택`;
@@ -189,6 +254,8 @@ export default function SkillCompareBetaView({
   const [result, setResult] = useState<SkillChangeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<CalculatorMode>("hitter");
+  const [hitterPositionGroup, setHitterPositionGroup] =
+    useState<HitterPositionGroup>("fielder");
   const [starterHand, setStarterHand] = useState<StarterHand>("right");
   const [cardType, setCardType] = useState<CardType>("signature");
   const [exampleOpen, setExampleOpen] = useState(false);
@@ -203,6 +270,16 @@ export default function SkillCompareBetaView({
     () => compareSkills(result?.right ?? [], dataSet, cardType, selectedSkillIds, "right"),
     [cardType, dataSet, result?.right, selectedSkillIds]
   );
+  const leftOdds = useMemo(
+    () => calculateCompareOdds(comparedLeft, dataSet, mode, cardType, hitterPositionGroup),
+    [cardType, comparedLeft, dataSet, hitterPositionGroup, mode]
+  );
+  const rightOdds = useMemo(
+    () => calculateCompareOdds(comparedRight, dataSet, mode, cardType, hitterPositionGroup),
+    [cardType, comparedRight, dataSet, hitterPositionGroup, mode]
+  );
+  const leftJudgeResult = judgeSkillResultByProbability(leftOdds?.scoreAtLeastProbability);
+  const rightJudgeResult = judgeSkillResultByProbability(rightOdds?.scoreAtLeastProbability);
   const scoreDiff = Number((comparedRight.total - comparedLeft.total).toFixed(2));
 
   async function upload(file: File) {
@@ -312,6 +389,24 @@ export default function SkillCompareBetaView({
             ))}
           </div>
         </div>
+
+        {mode === "hitter" && (
+          <div className="skill-compare-control-group">
+            <span>타자 구분</span>
+            <div className="toggle-row">
+              {HITTER_POSITION_GROUP_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`toggle-btn ${hitterPositionGroup === option.value ? "active" : ""}`}
+                  onClick={() => setHitterPositionGroup(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {mode === "starter" && (
           <div className="skill-compare-control-group">
@@ -440,6 +535,46 @@ export default function SkillCompareBetaView({
                 {scoreDiff > 0 ? "+" : ""}
                 {scoreDiff.toFixed(2)}
               </strong>
+            </div>
+          </section>
+
+          <section className="skill-compare-odds-summary" aria-label="고급 스킬 변경권 확률 비교">
+            <div className="skill-compare-odds-card">
+              <div className="skill-compare-odds-card-head">
+                <span>현재</span>
+                <strong style={{ color: getJudgeGradeColor(leftJudgeResult) }}>
+                  {getJudgeGrade(leftJudgeResult)}
+                </strong>
+              </div>
+              <div className="skill-compare-odds-grid">
+                <div>
+                  <span>상위 확률</span>
+                  <strong>{formatOddsPercent(leftOdds)}</strong>
+                </div>
+                <div>
+                  <span>기대 횟수</span>
+                  <strong>{formatExpectedRolls(leftOdds)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="skill-compare-odds-card skill-compare-odds-card-next">
+              <div className="skill-compare-odds-card-head">
+                <span>변경 후보</span>
+                <strong style={{ color: getJudgeGradeColor(rightJudgeResult) }}>
+                  {getJudgeGrade(rightJudgeResult)}
+                </strong>
+              </div>
+              <div className="skill-compare-odds-grid">
+                <div>
+                  <span>상위 확률</span>
+                  <strong>{formatOddsPercent(rightOdds)}</strong>
+                </div>
+                <div>
+                  <span>기대 횟수</span>
+                  <strong>{formatExpectedRolls(rightOdds)}</strong>
+                </div>
+              </div>
             </div>
           </section>
 

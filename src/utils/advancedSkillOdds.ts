@@ -36,8 +36,34 @@ export type SkillOddsResult = {
   evaluatedCombinationCount: number;
 };
 
+type ScoreDistribution = {
+  probabilityAtLeastByScore: Map<number, number>;
+  sortedScores: number[];
+  evaluatedCombinationCount: number;
+};
+
+const scoreDistributionCache = new Map<string, ScoreDistribution>();
+
 function getFamilyWeight(family: SkillFamily, weights: Partial<Record<SkillFamily["grade"], number>>) {
   return weights[family.grade] ?? 0;
+}
+
+function getDistributionCacheKey(input: {
+  mode: CalculatorMode;
+  cardType: CardType;
+  hitterPositionGroup: HitterPositionGroup;
+  skillIds: [string, string, string];
+  skillLevels: [SkillLevel, SkillLevel, SkillLevel];
+  skills: SkillMeta[];
+}): string {
+  return [
+    input.mode,
+    input.cardType,
+    input.hitterPositionGroup,
+    input.skillLevels.join(","),
+    input.cardType === "impact" ? input.skillIds[0] : "",
+    input.skills.map((skill) => skill.id).join(","),
+  ].join("|");
 }
 
 function expandSlotStates(
@@ -82,6 +108,57 @@ function expandSlotStates(
   return nextStates;
 }
 
+function buildScoreDistribution(states: RollState[]): ScoreDistribution {
+  const probabilityByScore = new Map<number, number>();
+
+  states.forEach((state) => {
+    const score = Number(state.score.toFixed(2));
+    probabilityByScore.set(score, (probabilityByScore.get(score) ?? 0) + state.probability);
+  });
+
+  const sortedScores = [...probabilityByScore.keys()].sort((first, second) => second - first);
+  const probabilityAtLeastByScore = new Map<number, number>();
+  let cumulativeProbability = 0;
+
+  sortedScores.forEach((score) => {
+    cumulativeProbability += probabilityByScore.get(score) ?? 0;
+    probabilityAtLeastByScore.set(score, cumulativeProbability);
+  });
+
+  return {
+    probabilityAtLeastByScore,
+    sortedScores,
+    evaluatedCombinationCount: states.length,
+  };
+}
+
+function getScoreAtLeastProbability(
+  distribution: ScoreDistribution,
+  targetScore: number
+): number {
+  const normalizedTargetScore = Number(targetScore.toFixed(2));
+  const exactProbability = distribution.probabilityAtLeastByScore.get(normalizedTargetScore);
+
+  if (exactProbability != null) {
+    return exactProbability;
+  }
+
+  let matchedScore: number | null = null;
+
+  for (let index = distribution.sortedScores.length - 1; index >= 0; index -= 1) {
+    const score = distribution.sortedScores[index];
+
+    if (score + 1e-9 >= normalizedTargetScore) {
+      matchedScore = score;
+      break;
+    }
+  }
+
+  return matchedScore != null
+    ? distribution.probabilityAtLeastByScore.get(matchedScore) ?? 0
+    : 0;
+}
+
 export function calculateAdvancedSkillOdds({
   mode,
   cardType,
@@ -94,6 +171,27 @@ export function calculateAdvancedSkillOdds({
 }: SkillOddsParams): SkillOddsResult | null {
   if (!Number.isFinite(targetScore) || targetScore <= 0 || skillIds.some((skillId) => !skillId)) {
     return null;
+  }
+
+  const cacheKey = getDistributionCacheKey({
+    mode,
+    cardType,
+    hitterPositionGroup,
+    skillIds,
+    skillLevels,
+    skills,
+  });
+  const cachedDistribution = scoreDistributionCache.get(cacheKey);
+
+  if (cachedDistribution) {
+    const scoreAtLeastProbability = getScoreAtLeastProbability(cachedDistribution, targetScore);
+
+    return {
+      scoreAtLeastProbability,
+      expectedRollsForScoreAtLeast:
+        scoreAtLeastProbability > 0 ? 1 / scoreAtLeastProbability : null,
+      evaluatedCombinationCount: cachedDistribution.evaluatedCombinationCount,
+    };
   }
 
   const isImpact = cardType === "impact";
@@ -138,16 +236,15 @@ export function calculateAdvancedSkillOdds({
     return null;
   }
 
-  const normalizedTargetScore = Number(targetScore.toFixed(2));
-  const scoreAtLeastProbability = states.reduce((sum, state) => {
-    const score = Number(state.score.toFixed(2));
-    return score + 1e-9 >= normalizedTargetScore ? sum + state.probability : sum;
-  }, 0);
+  const distribution = buildScoreDistribution(states);
+  scoreDistributionCache.set(cacheKey, distribution);
+
+  const scoreAtLeastProbability = getScoreAtLeastProbability(distribution, targetScore);
 
   return {
     scoreAtLeastProbability,
     expectedRollsForScoreAtLeast:
       scoreAtLeastProbability > 0 ? 1 / scoreAtLeastProbability : null,
-    evaluatedCombinationCount: states.length,
+    evaluatedCombinationCount: distribution.evaluatedCombinationCount,
   };
 }
