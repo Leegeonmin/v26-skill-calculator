@@ -1,4 +1,28 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "v26-lab.vercel.app"
+        }
+      ],
+      "destination": "https://www.cpbv-lab.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "v26-skill-calculator.vercel.app"
+        }
+      ],
+      "destination": "https://www.cpbv-lab.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

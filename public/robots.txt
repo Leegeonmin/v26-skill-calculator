@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://v26-skill-calculator.vercel.app/sitemap.xml
+Sitemap: https://www.cpbv-lab.com/sitemap.xml
