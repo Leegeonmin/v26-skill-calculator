@@ -22,7 +22,6 @@ interface CalculatorViewProps {
   resultGradeColor: string;
   judgeGrade: string;
   totalScore: number | string;
-  matchedPercentLabel: string;
   selectedSkillMeta: SelectedSkillMetaMap;
   rolledSkillColors: {
     skill1: string;
@@ -64,7 +63,6 @@ export default function CalculatorView({
   resultGradeColor,
   judgeGrade,
   totalScore,
-  matchedPercentLabel,
   selectedSkillMeta,
   rolledSkillColors,
   skillScores,
@@ -247,7 +245,6 @@ export default function CalculatorView({
         </div>
         <div className="mobile-live-summary-stats">
           <div>점수 {gameData ? totalScore : "-"}</div>
-          <div>확률 {matchedPercentLabel}</div>
         </div>
         <div className="mobile-current-skill-list">
           {mobileSelectedSkills.length === 0 ? (

@@ -65,13 +65,6 @@ export function pickValidSkill(
   return desired;
 }
 
-export function formatMatchedPercent(percent: number | null): string {
-  if (percent === null) return "기준표 최저점 미만";
-  if (percent <= 0) return "0% 미만";
-  if (percent < 0.01) return "< 0.01%";
-  return `${percent}%`;
-}
-
 export function getSkillScoreLabel(score: number | undefined): string {
   if (score === undefined) return "점수 -";
   return `점수 ${score}`;

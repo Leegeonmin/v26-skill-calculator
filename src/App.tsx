@@ -40,7 +40,6 @@ import {
 } from "./lib/skillOcrTransform";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import {
-  formatMatchedPercent,
   getDefaultLevels,
   getOrCreateToolUsageSessionId,
   getSkillScoreLabel,
@@ -76,6 +75,7 @@ import type {
   SkillOcrSession,
 } from "./types/ocr";
 import { calculateSkillTotal } from "./utils/calculate";
+import { calculateAdvancedSkillOdds } from "./utils/advancedSkillOdds";
 import { judgeSkillResult, type ResultGrade } from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
@@ -137,7 +137,7 @@ const SEO_FAQ = [
   {
     question: "V26 스킬 계산기는 무엇을 계산하나요?",
     answer:
-      "타자와 투수 카드의 스킬 조합 점수, 기준표 확률, 등급을 계산합니다. 카드 타입별 점수 차이와 등급 기준도 함께 확인할 수 있습니다.",
+      "타자와 투수 카드의 스킬 조합 점수와 등급을 계산합니다. 카드 타입별 점수 차이와 고스변 희귀도도 함께 확인할 수 있습니다.",
   },
   {
     question: "고스변 시뮬은 어떤 용도인가요?",
@@ -337,10 +337,35 @@ function App() {
 
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
   const judgeGrade = judgeResult?.grade ?? "-";
-  const matchedPercentLabel = hasAnySkillSelection
-    ? formatMatchedPercent(judgeResult?.matchedPercent ?? null)
-    : "-";
   const totalScoreDisplay = totalScore ?? "-";
+  const skillOdds = useMemo(
+    () =>
+      gameData && totalScore !== null
+        ? calculateAdvancedSkillOdds({
+            mode,
+            cardType: activeCardType,
+            hitterPositionGroup,
+            skills: gameData.skills,
+            scoreTable: gameData.scoreTable,
+            skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
+            skillLevels: [level1, level2, level3],
+            targetScore: totalScore,
+          })
+        : null,
+    [
+      activeCardType,
+      gameData,
+      hitterPositionGroup,
+      level1,
+      level2,
+      level3,
+      mode,
+      resolvedSkill1,
+      resolvedSkill2,
+      resolvedSkill3,
+      totalScore,
+    ]
+  );
   const supabaseReady = isSupabaseConfigured();
   const activeService: ServiceView =
     toolView === "home" ||
@@ -1606,7 +1631,7 @@ function App() {
               resultGradeColor={resultGradeColor}
               judgeGrade={judgeGrade}
               totalScore={gameData ? totalScoreDisplay : "-"}
-              matchedPercentLabel={matchedPercentLabel}
+              skillOdds={skillOdds}
               selectedSkillMeta={selectedSkillMeta}
               rolledSkillColors={rolledSkillColors}
               skillScores={skillScores}
@@ -1653,7 +1678,7 @@ function App() {
             <div className="seo-copy">
               <h2 id="seo-guide-title">V26 스킬 계산기 안내</h2>
               <p>
-                V26 스킬 계산기는 타자와 투수 카드의 스킬 점수, 기준표 확률, 등급을 빠르게
+                V26 스킬 계산기는 타자와 투수 카드의 스킬 점수와 등급을 빠르게
                 확인하기 위한 계산기다. 시그니처, 골든글러브, 국가대표, 임팩트 카드 기준을
                 함께 비교할 수 있다.
               </p>

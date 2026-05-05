@@ -6672,6 +6672,64 @@ input {
   background: rgba(248, 250, 253, 0.72);
 }
 
+.result-odds-card {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 14px;
+  border: 1px solid rgba(216, 224, 238, 0.82);
+  border-radius: 16px;
+  background: rgba(248, 250, 253, 0.76);
+}
+
+.result-odds-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.result-odds-head span,
+.result-odds-grid span {
+  color: #66748f;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.result-odds-head strong {
+  color: var(--text);
+  font-size: 0.86rem;
+}
+
+.result-odds-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.result-odds-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid rgba(216, 224, 238, 0.72);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.result-odds-grid strong {
+  color: #172033;
+  font-size: 1.02rem;
+  line-height: 1.1;
+}
+
+.result-odds-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
 .result-hero-eyebrow {
   color: #66748f;
   font-size: 0.8rem;
@@ -7595,6 +7653,7 @@ input {
 .app-bg[data-theme="dark"] .calculator-page .selected-skill-row,
 .app-bg[data-theme="dark"] .calculator-page .skill-result-list,
 .app-bg[data-theme="dark"] .calculator-page .result-stat,
+.app-bg[data-theme="dark"] .calculator-page .result-odds-card,
 .app-bg[data-theme="dark"] .calculator-page .result-grade-guide,
 .app-bg[data-theme="dark"] .simulator-page .control-section,
 .app-bg[data-theme="dark"] .impact-page .control-section,
@@ -7738,6 +7797,16 @@ input {
 .app-bg[data-theme="dark"] .ranking-page .ranking-skill-summary {
   background: rgba(2, 6, 23, 0.34);
   border-color: rgba(148, 163, 184, 0.2);
+}
+
+.app-bg[data-theme="dark"] .calculator-page .result-odds-grid div {
+  background: rgba(2, 6, 23, 0.34);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.app-bg[data-theme="dark"] .calculator-page .result-odds-grid strong,
+.app-bg[data-theme="dark"] .calculator-page .result-odds-head strong {
+  color: #f8fbff;
 }
 
 .app-bg[data-theme="dark"] .home-widget-section-grouped {

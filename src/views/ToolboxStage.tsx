@@ -14,6 +14,7 @@ import type {
   SkillMeta,
   ToolView,
 } from "../types";
+import type { SkillOddsResult } from "../utils/advancedSkillOdds";
 
 type ToolboxStageProps = {
   toolView: Exclude<ToolView, "home" | "ranking" | "notice">;
@@ -26,7 +27,7 @@ type ToolboxStageProps = {
   resultGradeColor: string;
   judgeGrade: string;
   totalScore: number | string;
-  matchedPercentLabel: string;
+  skillOdds: SkillOddsResult | null;
   selectedSkillMeta: {
     skill1: SkillMeta | undefined;
     skill2: SkillMeta | undefined;
@@ -104,7 +105,7 @@ export default function ToolboxStage({
   resultGradeColor,
   judgeGrade,
   totalScore,
-  matchedPercentLabel,
+  skillOdds,
   selectedSkillMeta,
   rolledSkillColors,
   skillScores,
@@ -181,6 +182,19 @@ export default function ToolboxStage({
       : toolView === "simulator"
         ? "simulator-page"
         : "impact-page";
+  const scoreAtLeastPercentLabel = skillOdds
+    ? `${(skillOdds.scoreAtLeastProbability * 100).toLocaleString("ko-KR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4,
+      })}%`
+    : "-";
+  const expectedRollsLabel =
+    skillOdds?.expectedRollsForScoreAtLeast != null
+      ? `${skillOdds.expectedRollsForScoreAtLeast.toLocaleString("ko-KR", {
+          minimumFractionDigits: skillOdds.expectedRollsForScoreAtLeast < 10 ? 1 : 0,
+          maximumFractionDigits: skillOdds.expectedRollsForScoreAtLeast < 10 ? 1 : 0,
+        })}회`
+      : "-";
 
   const simulatorSetupCard = (
     <>
@@ -462,7 +476,6 @@ export default function ToolboxStage({
                   resultGradeColor={resultGradeColor}
                   judgeGrade={judgeGrade}
                   totalScore={totalScore}
-                  matchedPercentLabel={matchedPercentLabel}
                   selectedSkillMeta={selectedSkillMeta}
                   rolledSkillColors={rolledSkillColors}
                   skillScores={skillScores}
@@ -510,7 +523,6 @@ export default function ToolboxStage({
                       resultGradeColor={resultGradeColor}
                       judgeGrade={judgeGrade}
                       totalScore={totalScore}
-                      matchedPercentLabel={matchedPercentLabel}
                       selectedSkillMeta={selectedSkillMeta}
                       skillScores={skillScores}
                       filteredSkills={filteredSkills}
@@ -541,7 +553,6 @@ export default function ToolboxStage({
                   resultGradeColor={resultGradeColor}
                   judgeGrade={judgeGrade}
                   totalScore={totalScore}
-                  matchedPercentLabel={matchedPercentLabel}
                   selectedSkillMeta={selectedSkillMeta}
                   skillScores={skillScores}
                   filteredSkills={filteredSkills}
@@ -573,16 +584,12 @@ export default function ToolboxStage({
           <div className="result-hero-card" style={{ borderColor: resultGradeColor }}>
             <div className="result-hero-eyebrow">총 스킬 점수</div>
             <div className="result-hero-score">{gameData ? totalScore : "-"}</div>
-            <div className="result-hero-meta">
+            {/* <div className="result-hero-meta">
               <div className="result-hero-pill">
                 <span>등급</span>
                 <strong style={{ color: resultGradeColor }}>{judgeGrade}</strong>
               </div>
-              <div className="result-hero-pill">
-                <span>기준표 확률</span>
-                <strong>{matchedPercentLabel}</strong>
-              </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="result-stat">
@@ -590,9 +597,21 @@ export default function ToolboxStage({
             <strong style={{ color: resultGradeColor }}>{judgeGrade}</strong>
           </div>
 
-          <div className="result-stat">
-            <span>기준표 확률</span>
-            <strong>{matchedPercentLabel}</strong>
+          <div className="result-odds-card">
+            <div className="result-odds-head">
+              <span>확률</span>
+              <strong>현재 점수 이상</strong>
+            </div>
+            <div className="result-odds-grid">
+              <div>
+                <span>상위 확률</span>
+                <strong>{scoreAtLeastPercentLabel}</strong>
+              </div>
+              <div>
+                <span>기대 횟수</span>
+                <strong>{expectedRollsLabel}</strong>
+              </div>
+            </div>
           </div>
 
           <div className="result-grade-guide">

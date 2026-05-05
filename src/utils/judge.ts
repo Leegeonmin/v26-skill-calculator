@@ -8,7 +8,6 @@ export interface CardThresholdRow {
 }
 
 export interface JudgeResult {
-  matchedPercent: number | null;
   grade: ResultGrade;
 }
 
@@ -19,15 +18,15 @@ function getPercentByScore(
 ): number | null {
   const table = thresholds[cardType];
 
-  let matchedPercent: number | null = null;
+  let thresholdPercent: number | null = null;
 
   for (const row of table) {
     if (totalScore >= row.score) {
-      matchedPercent = row.percent;
+      thresholdPercent = row.percent;
     }
   }
 
-  return matchedPercent;
+  return thresholdPercent;
 }
 
 export function judgeSkillResult(
@@ -38,24 +37,24 @@ export function judgeSkillResult(
   const percent = getPercentByScore(thresholds, cardType, totalScore);
 
   if (percent === null) {
-    return { matchedPercent: null, grade: "F" };
+    return { grade: "F" };
   }
 
   if (percent <= 0.5) {
-    return { matchedPercent: percent, grade: "SSR+" };
+    return { grade: "SSR+" };
   }
 
   if (percent <= 1.5) {
-    return { matchedPercent: percent, grade: "S" };
+    return { grade: "S" };
   }
 
   if (percent <= 7) {
-    return { matchedPercent: percent, grade: "A" };
+    return { grade: "A" };
   }
 
   if (percent <= 12) {
-    return { matchedPercent: percent, grade: "C" };
+    return { grade: "C" };
   }
 
-  return { matchedPercent: percent, grade: "F" };
+  return { grade: "F" };
 }

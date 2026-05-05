@@ -21,7 +21,6 @@ interface ImpactSimulatorViewProps {
   resultGradeColor: string;
   judgeGrade: string;
   totalScore: number | string;
-  matchedPercentLabel: string;
   selectedSkillMeta: SelectedSkillMetaMap;
   skillScores: {
     skill1?: number;
@@ -49,7 +48,6 @@ export default function ImpactSimulatorView({
   resultGradeColor,
   judgeGrade,
   totalScore,
-  matchedPercentLabel,
   selectedSkillMeta,
   skillScores,
   filteredSkills,
@@ -201,10 +199,6 @@ export default function ImpactSimulatorView({
           </div>
           <div className="simulation-current-score-meta">
             <div className="simulation-current-score-pill">
-              <span>기준표 확률</span>
-              <strong>{isRolling ? "변경 중" : hasSimulationResult ? matchedPercentLabel : "-"}</strong>
-            </div>
-            <div className="simulation-current-score-pill">
               <span>등장 횟수</span>
               <strong>{isRolling ? "..." : occurrenceLabel}</strong>
             </div>
@@ -220,7 +214,6 @@ export default function ImpactSimulatorView({
           </div>
           <div className="mobile-live-summary-stats">
             <div>점수 {isRolling ? "..." : hasSimulationResult ? totalScore : "-"}</div>
-            <div>확률 {isRolling ? "변경 중" : hasSimulationResult ? matchedPercentLabel : "-"}</div>
             <div>등장 {isRolling ? "..." : occurrenceLabel}</div>
           </div>
           <div className="mobile-simulator-card-list">
