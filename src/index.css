@@ -5590,6 +5590,16 @@ select {
   border-left: 3px solid #1464c0;
 }
 
+.ranking-row-highlight .ranking-skill-summary {
+  border-color: rgba(216, 224, 238, 0.72);
+  background: rgba(20, 100, 192, 0.08);
+  box-shadow: none;
+}
+
+.ranking-row-highlight .ranking-skill-summary-tail {
+  color: #315783;
+}
+
 .ranking-skill-disclosure {
   position: relative;
   display: block;
@@ -5602,7 +5612,10 @@ select {
   gap: 10px;
   cursor: pointer;
   list-style: none;
-  padding: 2px 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(216, 224, 238, 0.72);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .ranking-skill-summary::-webkit-details-marker {
@@ -7942,6 +7955,16 @@ input {
 
 .app-bg[data-theme="dark"] .ranking-page .ranking-row-highlight td {
   background: rgba(20, 184, 166, 0.14);
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-row-highlight .ranking-skill-summary {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(20, 184, 166, 0.14);
+  box-shadow: none;
+}
+
+.app-bg[data-theme="dark"] .ranking-page .ranking-row-highlight .ranking-skill-summary-tail {
+  color: #99f6e4;
 }
 
 .app-bg[data-theme="dark"] input,
