@@ -1479,13 +1479,30 @@ select {
 
   .home-hero {
     min-height: 230px;
-    padding-top: 96px;
+    padding-top: 70px;
   }
 
   .home-hero-action {
+    top: -8px;
     left: 0;
     right: 0;
     justify-content: space-between;
+  }
+
+  .home-hero-action .home-auth-card {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .app-bg[data-theme="dark"] .home-hero-action .home-auth-card {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
   }
 
   .home-widget-sections {
