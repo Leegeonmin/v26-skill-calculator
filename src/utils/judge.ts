@@ -1,60 +1,33 @@
-import type { CardType } from "../types";
-
-export type ResultGrade = "F" | "C" | "A" | "S" | "SSR+";
-
-export interface CardThresholdRow {
-  score: number;
-  percent: number;
-}
+export type ResultGrade = "C" | "B" | "A" | "S" | "SS" | "SR+";
 
 export interface JudgeResult {
   grade: ResultGrade;
 }
 
-function getPercentByScore(
-  thresholds: Record<CardType, CardThresholdRow[]>,
-  cardType: CardType,
-  totalScore: number
-): number | null {
-  const table = thresholds[cardType];
+export type ResultGradeThreshold = {
+  grade: ResultGrade;
+  maxProbability: number;
+  expectedRolls: number;
+};
 
-  let thresholdPercent: number | null = null;
+export const RESULT_GRADE_THRESHOLDS: ResultGradeThreshold[] = [
+  { grade: "SR+", maxProbability: 0.001, expectedRolls: 1000 },
+  { grade: "SS", maxProbability: 0.005, expectedRolls: 200 },
+  { grade: "S", maxProbability: 0.015, expectedRolls: 67 },
+  { grade: "A", maxProbability: 0.05, expectedRolls: 20 },
+  { grade: "B", maxProbability: 0.12, expectedRolls: 9 },
+];
 
-  for (const row of table) {
-    if (totalScore >= row.score) {
-      thresholdPercent = row.percent;
-    }
+export function judgeSkillResultByProbability(
+  scoreAtLeastProbability: number | null | undefined
+): JudgeResult | null {
+  if (scoreAtLeastProbability == null || !Number.isFinite(scoreAtLeastProbability)) {
+    return null;
   }
 
-  return thresholdPercent;
-}
+  const matchedThreshold = RESULT_GRADE_THRESHOLDS.find(
+    (threshold) => scoreAtLeastProbability <= threshold.maxProbability
+  );
 
-export function judgeSkillResult(
-  thresholds: Record<CardType, CardThresholdRow[]>,
-  cardType: CardType,
-  totalScore: number
-): JudgeResult {
-  const percent = getPercentByScore(thresholds, cardType, totalScore);
-
-  if (percent === null) {
-    return { grade: "F" };
-  }
-
-  if (percent <= 0.5) {
-    return { grade: "SSR+" };
-  }
-
-  if (percent <= 1.5) {
-    return { grade: "S" };
-  }
-
-  if (percent <= 7) {
-    return { grade: "A" };
-  }
-
-  if (percent <= 12) {
-    return { grade: "C" };
-  }
-
-  return { grade: "F" };
+  return { grade: matchedThreshold?.grade ?? "C" };
 }

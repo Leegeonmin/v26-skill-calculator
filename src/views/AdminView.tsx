@@ -333,7 +333,7 @@ export default function AdminView({
         </section>
 
         <section className="admin-panel">
-          <h2>S / SSR+ 평균</h2>
+          <h2>S / SR+ 평균</h2>
           <p className="admin-metric">
             {statsLoading
               ? "-"

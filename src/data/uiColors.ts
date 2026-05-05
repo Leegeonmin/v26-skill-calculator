@@ -10,9 +10,10 @@ export const SKILL_GRADE_COLORS: Record<SkillGrade, string> = {
 };
 
 export const RESULT_GRADE_COLORS: Record<ResultGrade, string> = {
-  F: "#6b7280",
-  C: "#2563eb",
+  C: "#64748b",
+  B: "#2563eb",
   A: "#16a34a",
   S: "#f59e0b",
-  "SSR+": "#dc2626",
+  SS: "#ef4444",
+  "SR+": "#dc2626",
 };

@@ -102,11 +102,12 @@ export function getResultSummaryMessage(percent: number | null): string {
 
 export function gradeRank(value: ResultGrade): number {
   const rankMap: Record<ResultGrade, number> = {
-    F: 0,
-    C: 1,
+    C: 0,
+    B: 1,
     A: 2,
     S: 3,
-    "SSR+": 4,
+    SS: 4,
+    "SR+": 5,
   };
 
   return rankMap[value];

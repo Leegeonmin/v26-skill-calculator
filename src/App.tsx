@@ -76,7 +76,10 @@ import type {
 } from "./types/ocr";
 import { calculateSkillTotal } from "./utils/calculate";
 import { calculateAdvancedSkillOdds } from "./utils/advancedSkillOdds";
-import { judgeSkillResult, type ResultGrade } from "./utils/judge";
+import {
+  judgeSkillResultByProbability,
+  type ResultGrade,
+} from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
 import { logToolUsageEvent } from "./lib/toolUsage";
@@ -113,17 +116,20 @@ type ThemePreference = "light" | "dark";
 
 const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
   { value: "C", label: "C 이상" },
+  { value: "B", label: "B 이상" },
   { value: "A", label: "A 이상" },
   { value: "S", label: "S 이상" },
-  { value: "SSR+", label: "SSR+ 이상" },
+  { value: "SS", label: "SS 이상" },
+  { value: "SR+", label: "SR+ 이상" },
 ];
 
 const RESULT_GRADE_GUIDE: Array<{ grade: ResultGrade; title: string; description: string }> = [
-  { grade: "F", title: "F", description: "일스변도 이렇게는 안나오겠다" },
-  { grade: "C", title: "C", description: "카드가 제성능을 발휘하기엔 모자람" },
-  { grade: "A", title: "A", description: "타협" },
-  { grade: "S", title: "S", description: "사장님 아니면 스탑" },
-  { grade: "SSR+", title: "SSR+", description: "종결" },
+  { grade: "C", title: "C", description: "상위 12% 초과 / 기대 9회 미만" },
+  { grade: "B", title: "B", description: "상위 12% 이내 / 기대 9회 이상" },
+  { grade: "A", title: "A", description: "상위 5% 이내 / 기대 20회 이상" },
+  { grade: "S", title: "S", description: "상위 1.5% 이내 / 기대 67회 이상" },
+  { grade: "SS", title: "SS", description: "상위 0.5% 이내 / 기대 200회 이상" },
+  { grade: "SR+", title: "SR+", description: "상위 0.1% 이내 / 기대 1,000회 이상" },
 ];
 
 const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, string]>).map(
@@ -330,13 +336,6 @@ function App() {
         })
       : null;
 
-  const judgeResult =
-    gameData && totalScore !== null
-      ? judgeSkillResult(gameData.thresholds, activeCardType, totalScore)
-      : null;
-
-  const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
-  const judgeGrade = judgeResult?.grade ?? "-";
   const totalScoreDisplay = totalScore ?? "-";
   const skillOdds = useMemo(
     () =>
@@ -366,6 +365,9 @@ function App() {
       totalScore,
     ]
   );
+  const judgeResult = judgeSkillResultByProbability(skillOdds?.scoreAtLeastProbability);
+  const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
+  const judgeGrade = judgeResult?.grade ?? "-";
   const supabaseReady = isSupabaseConfigured();
   const activeService: ServiceView =
     toolView === "home" ||
@@ -813,7 +815,17 @@ function App() {
       skillLevels: [level1, level2, level3],
       scoreTable: gameData.scoreTable,
     });
-    const nextJudgeResult = judgeSkillResult(gameData.thresholds, activeCardType, nextTotalScore);
+    const nextOdds = calculateAdvancedSkillOdds({
+      mode,
+      cardType: activeCardType,
+      hitterPositionGroup,
+      skills: gameData.skills,
+      scoreTable: gameData.scoreTable,
+      skillIds: [nextSkill1, nextSkill2, nextSkill3],
+      skillLevels: [level1, level2, level3],
+      targetScore: nextTotalScore,
+    });
+    const nextJudgeResult = judgeSkillResultByProbability(nextOdds?.scoreAtLeastProbability);
 
     setSimRollCount((count) => count + 1);
     setSimBestScore((bestScore) =>
@@ -827,7 +839,7 @@ function App() {
       cardType: activeCardType,
       rollCount: 1,
       resultScore: nextTotalScore,
-      resultGrade: nextJudgeResult.grade,
+      resultGrade: nextJudgeResult?.grade ?? null,
       metadata: {
         session_id: toolUsageSessionId,
       },
@@ -841,6 +853,7 @@ function App() {
     let bestScoreInRun = simBestScore;
     let finalSkillIds: [string, string, string] = [resolvedSkill1, resolvedSkill2, resolvedSkill3];
     let finalJudgeResult = judgeResult;
+    const judgeCache = new Map<string, ReturnType<typeof judgeSkillResultByProbability>>();
 
     while (tryCount < AUTO_ROLL_LIMIT) {
       const nextRoll = simulateAdvancedSkillChange({
@@ -858,7 +871,23 @@ function App() {
         scoreTable: gameData.scoreTable,
       });
 
-      const nextJudgeResult = judgeSkillResult(gameData.thresholds, activeCardType, nextTotalScore);
+      const scoreCacheKey = nextTotalScore.toFixed(2);
+      let nextJudgeResult = judgeCache.get(scoreCacheKey);
+
+      if (nextJudgeResult === undefined) {
+        const nextOdds = calculateAdvancedSkillOdds({
+          mode,
+          cardType: activeCardType,
+          hitterPositionGroup,
+          skills: gameData.skills,
+          scoreTable: gameData.scoreTable,
+          skillIds: nextRoll.skillIds,
+          skillLevels: [level1, level2, level3],
+          targetScore: nextTotalScore,
+        });
+        nextJudgeResult = judgeSkillResultByProbability(nextOdds?.scoreAtLeastProbability);
+        judgeCache.set(scoreCacheKey, nextJudgeResult);
+      }
 
       tryCount += 1;
       finalSkillIds = nextRoll.skillIds;
@@ -866,7 +895,7 @@ function App() {
       bestScoreInRun =
         bestScoreInRun === null ? nextTotalScore : Math.max(bestScoreInRun, nextTotalScore);
 
-      if (gradeRank(nextJudgeResult.grade) >= gradeRank(targetGrade)) {
+      if (nextJudgeResult && gradeRank(nextJudgeResult.grade) >= gradeRank(targetGrade)) {
         break;
       }
     }
