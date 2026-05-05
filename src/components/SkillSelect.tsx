@@ -101,7 +101,7 @@ function SkillSelect({
                 onClick={() => onChange(skill.id)}
                 disabled={disabled}
                 className={`skill-option ${isSelected ? "selected" : ""}`}
-                style={{ color, borderColor: "#dde4f0" }}
+                style={{ color, "--skill-option-color": color } as import("react").CSSProperties}
               >
                 {skill.name}
               </button>

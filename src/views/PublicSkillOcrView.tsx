@@ -490,7 +490,7 @@ export default function PublicSkillOcrView({
                   <button
                     key={upload.id}
                     type="button"
-                    className="public-ocr-saved-row"
+                    className="public-ocr-saved-row public-ocr-review-row"
                     onClick={() => {
                       onSelectSnapshot(upload);
                       setActiveTab("upload");

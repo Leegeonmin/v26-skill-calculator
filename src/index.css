@@ -956,6 +956,14 @@ select {
   background: rgba(16, 185, 129, 0.1);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .public-ocr-review-row,
+  .public-ocr-review-row::before,
+  .public-ocr-review-row em::after {
+    animation: none;
+  }
+}
+
 .skill-compare-score-summary > div.negative {
   background: rgba(244, 63, 94, 0.08);
 }
@@ -3909,6 +3917,96 @@ select {
   text-align: left;
 }
 
+.public-ocr-review-row {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-color: rgba(20, 184, 166, 0.42);
+  background:
+    linear-gradient(90deg, rgba(20, 184, 166, 0.08), rgba(37, 99, 235, 0.06)),
+    #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.12);
+  animation: public-ocr-review-nudge 2400ms ease-in-out infinite;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.public-ocr-review-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.62) 42%, transparent 64%);
+  transform: translateX(-120%);
+  animation: public-ocr-review-sheen 2600ms ease-in-out infinite;
+}
+
+.public-ocr-review-row:hover,
+.public-ocr-review-row:focus-visible {
+  border-color: #0f9f8d;
+  box-shadow: 0 14px 30px rgba(15, 118, 110, 0.2);
+  transform: translateY(-2px);
+}
+
+.public-ocr-review-row em {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #0f9f8d;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 850;
+  font-style: normal;
+  box-shadow: 0 8px 18px rgba(15, 159, 141, 0.28);
+}
+
+.public-ocr-review-row em::after {
+  content: ">";
+  margin-left: 6px;
+  animation: public-ocr-review-arrow 900ms ease-in-out infinite;
+}
+
+@keyframes public-ocr-review-nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes public-ocr-review-sheen {
+  0%,
+  34% {
+    transform: translateX(-120%);
+  }
+
+  64%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes public-ocr-review-arrow {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(3px);
+  }
+}
+
 .public-ocr-history-row strong,
 .public-ocr-saved-row strong,
 .public-ocr-history-row em {
@@ -5606,6 +5704,11 @@ select {
     radial-gradient(circle at 72% 48%, rgba(245, 158, 66, 0.08), transparent 34%);
 }
 
+.calculator-page::before {
+  background: rgba(148, 163, 184, 0.08);
+  opacity: 0.42;
+}
+
 .ranking-page::before {
   background:
     radial-gradient(circle at 30% 42%, rgba(15, 159, 141, 0.1), transparent 34%),
@@ -5660,7 +5763,7 @@ select {
   inset: auto 22px -52px;
   height: 104px;
   border-radius: 999px;
-  background: rgba(66, 95, 184, 0.14);
+  background: rgba(148, 163, 184, 0.1);
   filter: blur(30px);
   pointer-events: none;
 }
@@ -6092,7 +6195,7 @@ input {
   width: 32px;
   height: 32px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(45, 212, 191, 0.14));
+  background: rgba(241, 245, 251, 0.94);
 }
 
 .calculator-page .skill-select h3 {
@@ -6113,7 +6216,7 @@ input {
 .calculator-page .selected-skill-row {
   border-color: rgba(66, 95, 184, 0.18);
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(231, 237, 255, 0.78), rgba(255, 255, 255, 0.74));
+  background: rgba(248, 250, 253, 0.82);
 }
 
 .calculator-page .skill-result-list {
@@ -6255,11 +6358,11 @@ input {
   padding: 12px 14px;
   margin-bottom: 4px;
   border-radius: 14px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(221, 228, 240, 0.9);
   background: transparent;
   font-weight: 600;
   cursor: pointer;
-  transition: all 180ms ease;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .skill-option:hover {
@@ -6270,6 +6373,23 @@ input {
 .skill-option.selected {
   background: var(--accent-strong);
   color: var(--accent-contrast) !important;
+}
+
+.calculator-page .skill-option {
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.calculator-page .skill-option:hover {
+  border-color: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 58%, white);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 14%, transparent);
+}
+
+.calculator-page .skill-option.selected {
+  border-color: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 66%, white);
+  background: color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 7%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-option-color, var(--accent-strong)) 16%, transparent);
+  color: var(--skill-option-color, var(--accent-strong)) !important;
 }
 
 .skill-empty {
@@ -6394,9 +6514,7 @@ input {
 .calculator-page .result-hero-card {
   border-width: 1px;
   border-radius: 20px;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.2), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(231, 237, 255, 0.66));
+  background: rgba(248, 250, 253, 0.88);
 }
 
 .calculator-page .result-hero-score {
@@ -7344,9 +7462,7 @@ input {
 }
 
 .app-bg[data-theme="dark"] .calculator-page .result-hero-card {
-  background:
-    radial-gradient(circle at top right, rgba(111, 140, 255, 0.24), transparent 36%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.72));
+  background: rgba(15, 23, 42, 0.78);
 }
 
 .app-bg[data-theme="dark"] .simulator-page .simulation-current-score-card {
@@ -7446,6 +7562,18 @@ input {
   color: var(--accent-contrast) !important;
 }
 
+.app-bg[data-theme="dark"] .calculator-page .skill-option:hover {
+  border-color: color-mix(in srgb, var(--skill-option-color, #93c5fd) 62%, #f8fbff);
+  background: rgba(15, 23, 42, 0.5);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--skill-option-color, #93c5fd) 18%, transparent);
+}
+
+.app-bg[data-theme="dark"] .calculator-page .skill-option.selected {
+  border-color: color-mix(in srgb, var(--skill-option-color, #93c5fd) 72%, #f8fbff);
+  background: color-mix(in srgb, var(--skill-option-color, #93c5fd) 12%, rgba(15, 23, 42, 0.7));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skill-option-color, #93c5fd) 22%, transparent);
+}
+
 .app-bg[data-theme="dark"] .ranking-page .ranking-card,
 .app-bg[data-theme="dark"] .ranking-page .ranking-season-card,
 .app-bg[data-theme="dark"] .ranking-page .ranking-alert-card,
@@ -7485,6 +7613,19 @@ input {
 .app-bg[data-theme="dark"] .public-ocr-saved-row {
   border-color: rgba(148, 163, 184, 0.22);
   background: rgba(15, 23, 42, 0.72);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-review-row {
+  border-color: rgba(45, 212, 191, 0.38);
+  background:
+    linear-gradient(90deg, rgba(20, 184, 166, 0.18), rgba(96, 165, 250, 0.12)),
+    rgba(15, 23, 42, 0.78);
+  box-shadow: 0 12px 26px rgba(20, 184, 166, 0.16);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-review-row em {
+  background: #14b8a6;
+  color: #021412;
 }
 
 .app-bg[data-theme="dark"] .public-ocr-view .ocr-tabs {
