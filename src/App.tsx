@@ -113,7 +113,6 @@ const ADMIN_SESSION_KEY = "v26-admin-session";
 const OCR_PATH = "/tyrant";
 const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
-const ADSENSE_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT ?? "";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "guide",
@@ -250,22 +249,6 @@ function App() {
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
 
-  useEffect(() => {
-    if (
-      typeof document === "undefined" ||
-      !/^ca-pub-\d+$/.test(ADSENSE_CLIENT) ||
-      document.querySelector("script[data-v26-adsense]")
-    ) {
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.crossOrigin = "anonymous";
-    script.dataset.v26Adsense = "true";
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
-    document.head.appendChild(script);
-  }, []);
   const [adminHomeChangeDraft, setAdminHomeChangeDraft] = useState("");
   const [adminHomeChangeSaving, setAdminHomeChangeSaving] = useState(false);
   const [adminHomeChangeStatus, setAdminHomeChangeStatus] = useState<"idle" | "saved" | "error">("idle");
