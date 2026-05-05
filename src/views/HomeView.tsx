@@ -101,6 +101,11 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
 
 export const NOTICE_ITEMS = [
   {
+    date: "2026.05.05",
+    title: "고스변 확률 계산과 라인업 OCR 등급 표시 개선",
+    body: "스킬 점수 계산기, 고스변 점수 비교, 라인업 스킬 인식에 상위 확률과 등급 정보를 추가하고 자동롤 및 호버 UI를 다듬었습니다.",
+  },
+  {
     date: "2026.05.02",
     title: "라인업 스킬 인식 공개 베타 추가",
     body: "Google 로그인 사용자에게 주 1회 타자/투수 라인업 OCR을 제공하고, 미저장 스냅샷 복구와 최근 기록 복사 기능을 추가했습니다.",
