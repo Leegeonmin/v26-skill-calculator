@@ -1151,11 +1151,35 @@ select {
   backdrop-filter: blur(18px);
 }
 
-.home-change-note span {
+.home-change-note-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.home-change-note-head span {
   color: #2563eb;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.06em;
+}
+
+.home-change-note-close {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.home-change-note-close:hover {
+  background: rgba(37, 99, 235, 0.14);
 }
 
 .home-change-note strong {
@@ -1171,8 +1195,14 @@ select {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
 }
 
-.app-bg[data-theme="dark"] .home-change-note span {
+.app-bg[data-theme="dark"] .home-change-note-head span,
+.app-bg[data-theme="dark"] .home-change-note-close {
   color: #93c5fd;
+}
+
+.app-bg[data-theme="dark"] .home-change-note-close {
+  border-color: rgba(147, 197, 253, 0.2);
+  background: rgba(147, 197, 253, 0.1);
 }
 
 .home-hero {
@@ -1440,6 +1470,11 @@ select {
     top: 14px;
     left: 12px;
     width: min(320px, calc(100% - 24px));
+    padding: 10px 11px;
+  }
+
+  .home-change-note-close {
+    min-height: 30px;
   }
 
   .home-hero {

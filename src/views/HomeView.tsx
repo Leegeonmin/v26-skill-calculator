@@ -1,5 +1,5 @@
 import { IconGlyph } from "../components/AppChrome";
-import { type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ToolView } from "../types";
 
@@ -13,6 +13,8 @@ type HomeViewProps = {
   onGoogleLogin: () => void;
   onGoogleLogout: () => void;
 };
+
+const HOME_CHANGE_DISMISSED_KEY = "v26-home-change-dismissed";
 
 type HomeWidget = {
   view: Exclude<ToolView, "home">;
@@ -155,6 +157,26 @@ export default function HomeView({
   onGoogleLogout,
 }: HomeViewProps) {
   const visibleHomeChangeMessage = homeChangeMessage.trim();
+  const [dismissedHomeChangeMessage, setDismissedHomeChangeMessage] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    setDismissedHomeChangeMessage(window.sessionStorage.getItem(HOME_CHANGE_DISMISSED_KEY) ?? "");
+  }, []);
+
+  const showHomeChangeMessage =
+    visibleHomeChangeMessage && visibleHomeChangeMessage !== dismissedHomeChangeMessage;
+
+  function handleDismissHomeChangeMessage() {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(HOME_CHANGE_DISMISSED_KEY, visibleHomeChangeMessage);
+    }
+
+    setDismissedHomeChangeMessage(visibleHomeChangeMessage);
+  }
 
   return (
     <main className="home-stage" aria-labelledby="home-title">
@@ -164,9 +186,19 @@ export default function HomeView({
           <span key={index} style={{ "--particle-index": index } as CSSProperties} />
         ))}
       </div>
-      {visibleHomeChangeMessage && (
+      {showHomeChangeMessage && (
         <aside className="home-change-note" aria-label="공지사항">
-          <span>공지사항</span>
+          <div className="home-change-note-head">
+            <span>공지사항</span>
+            <button
+              type="button"
+              className="home-change-note-close"
+              aria-label="공지사항 닫기"
+              onClick={handleDismissHomeChangeMessage}
+            >
+              닫기
+            </button>
+          </div>
           <strong>{visibleHomeChangeMessage}</strong>
         </aside>
       )}
