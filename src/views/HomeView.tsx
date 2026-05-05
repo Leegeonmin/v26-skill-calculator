@@ -157,6 +157,7 @@ export default function HomeView({
   onGoogleLogout,
 }: HomeViewProps) {
   const visibleHomeChangeMessage = homeChangeMessage.trim();
+  const [canDismissHomeChangeMessage, setCanDismissHomeChangeMessage] = useState(false);
   const [dismissedHomeChangeMessage, setDismissedHomeChangeMessage] = useState("");
 
   useEffect(() => {
@@ -165,10 +166,19 @@ export default function HomeView({
     }
 
     setDismissedHomeChangeMessage(window.sessionStorage.getItem(HOME_CHANGE_DISMISSED_KEY) ?? "");
+
+    const mediaQuery = window.matchMedia("(max-width: 640px)");
+    const syncCanDismiss = () => setCanDismissHomeChangeMessage(mediaQuery.matches);
+
+    syncCanDismiss();
+    mediaQuery.addEventListener("change", syncCanDismiss);
+
+    return () => mediaQuery.removeEventListener("change", syncCanDismiss);
   }, []);
 
   const showHomeChangeMessage =
-    visibleHomeChangeMessage && visibleHomeChangeMessage !== dismissedHomeChangeMessage;
+    visibleHomeChangeMessage &&
+    (!canDismissHomeChangeMessage || visibleHomeChangeMessage !== dismissedHomeChangeMessage);
 
   function handleDismissHomeChangeMessage() {
     if (typeof window !== "undefined") {
@@ -190,14 +200,16 @@ export default function HomeView({
         <aside className="home-change-note" aria-label="공지사항">
           <div className="home-change-note-head">
             <span>공지사항</span>
-            <button
-              type="button"
-              className="home-change-note-close"
-              aria-label="공지사항 닫기"
-              onClick={handleDismissHomeChangeMessage}
-            >
-              닫기
-            </button>
+            {canDismissHomeChangeMessage && (
+              <button
+                type="button"
+                className="home-change-note-close"
+                aria-label="공지사항 닫기"
+                onClick={handleDismissHomeChangeMessage}
+              >
+                닫기
+              </button>
+            )}
           </div>
           <strong>{visibleHomeChangeMessage}</strong>
         </aside>
