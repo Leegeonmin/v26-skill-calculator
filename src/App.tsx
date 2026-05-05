@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -47,15 +47,7 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
-import HomeView from "./views/HomeView";
-import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
-import NoticeView from "./views/NoticeView";
-import SkillCompareBetaView from "./views/SkillCompareBetaView";
-import RankingView from "./views/RankingView";
-import AdminView from "./views/AdminView";
-import SkillOcrView from "./views/SkillOcrView";
-import PublicSkillOcrView from "./views/PublicSkillOcrView";
-import ToolboxStage from "./views/ToolboxStage";
+import type { InfoPageKey } from "./views/InfoPageView";
 import type {
   CalculatorMode,
   CardType,
@@ -89,6 +81,24 @@ import {
   getHomeChangeMessage,
 } from "./lib/siteSettings";
 
+const HomeView = lazy(() => import("./views/HomeView"));
+const InfoPageView = lazy(() => import("./views/InfoPageView"));
+const NoticeView = lazy(() => import("./views/NoticeView"));
+const SkillCompareBetaView = lazy(() => import("./views/SkillCompareBetaView"));
+const RankingView = lazy(() => import("./views/RankingView"));
+const AdminView = lazy(() => import("./views/AdminView"));
+const SkillOcrView = lazy(() => import("./views/SkillOcrView"));
+const PublicSkillOcrView = lazy(() => import("./views/PublicSkillOcrView"));
+const ToolboxStage = lazy(() => import("./views/ToolboxStage"));
+
+function ViewFallback() {
+  return (
+    <main className="main-stage" aria-busy="true">
+      <p className="ocr-copy">로딩 중...</p>
+    </main>
+  );
+}
+
 const DEFAULT_MODE: CalculatorMode = "hitter";
 const DEFAULT_VIEW: ToolView = "home";
 const DEFAULT_HITTER_POSITION_GROUP: HitterPositionGroup = "fielder";
@@ -103,7 +113,7 @@ const ADMIN_SESSION_KEY = "v26-admin-session";
 const OCR_PATH = "/tyrant";
 const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
-const OCR_FIXED_PASSWORD = import.meta.env.VITE_OCR_PASSWORD ?? "";
+const ADSENSE_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT ?? "";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "guide",
@@ -239,6 +249,23 @@ function App() {
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
+
+  useEffect(() => {
+    if (
+      typeof document === "undefined" ||
+      !/^ca-pub-\d+$/.test(ADSENSE_CLIENT) ||
+      document.querySelector("script[data-v26-adsense]")
+    ) {
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.dataset.v26Adsense = "true";
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+    document.head.appendChild(script);
+  }, []);
   const [adminHomeChangeDraft, setAdminHomeChangeDraft] = useState("");
   const [adminHomeChangeSaving, setAdminHomeChangeSaving] = useState(false);
   const [adminHomeChangeStatus, setAdminHomeChangeStatus] = useState<"idle" | "saved" | "error">("idle");
@@ -1104,18 +1131,13 @@ function App() {
   };
 
   const handleOcrLogin = async () => {
-    if (!OCR_FIXED_USERNAME || !OCR_FIXED_PASSWORD) {
+    if (!OCR_FIXED_USERNAME) {
       setOcrAuthError("OCR 접속 설정이 필요합니다.");
       return;
     }
 
     if (!ocrPasswordInput.trim()) {
       setOcrAuthError("비밀번호를 입력해주세요.");
-      return;
-    }
-
-    if (ocrPasswordInput !== OCR_FIXED_PASSWORD) {
-      setOcrAuthError("비밀번호가 올바르지 않습니다.");
       return;
     }
 
@@ -1463,41 +1485,43 @@ function App() {
     return (
       <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
-          <AdminView
-            unlocked={adminUnlocked}
-            checkingSession={adminCheckingSession}
-            usernameInput={adminUsernameInput}
-            passwordInput={adminPasswordInput}
-            passwordError={adminPasswordError}
-            stats={adminStats}
-            statsLoading={adminStatsLoading}
-            statsError={adminStatsError}
-            homeChangeMessage={adminHomeChangeDraft}
-            homeChangeSaving={adminHomeChangeSaving}
-            homeChangeStatus={adminHomeChangeStatus}
-            homeChangeError={adminHomeChangeError}
-            onUsernameChange={(value) => {
-              setAdminUsernameInput(value);
-              if (adminPasswordError) {
-                setAdminPasswordError(null);
-              }
-            }}
-            onPasswordChange={(value) => {
-              setAdminPasswordInput(value);
-              if (adminPasswordError) {
-                setAdminPasswordError(null);
-              }
-            }}
-            onUnlock={() => void handleAdminUnlock()}
-            onLock={() => void handleAdminLock()}
-            onGoHome={handleGoHome}
-            onHomeChangeMessageChange={(value) => {
-              setAdminHomeChangeDraft(value);
-              setAdminHomeChangeStatus("idle");
-              setAdminHomeChangeError(null);
-            }}
-            onSaveHomeChangeMessage={() => void handleSaveHomeChangeMessage()}
-          />
+          <Suspense fallback={<ViewFallback />}>
+            <AdminView
+              unlocked={adminUnlocked}
+              checkingSession={adminCheckingSession}
+              usernameInput={adminUsernameInput}
+              passwordInput={adminPasswordInput}
+              passwordError={adminPasswordError}
+              stats={adminStats}
+              statsLoading={adminStatsLoading}
+              statsError={adminStatsError}
+              homeChangeMessage={adminHomeChangeDraft}
+              homeChangeSaving={adminHomeChangeSaving}
+              homeChangeStatus={adminHomeChangeStatus}
+              homeChangeError={adminHomeChangeError}
+              onUsernameChange={(value) => {
+                setAdminUsernameInput(value);
+                if (adminPasswordError) {
+                  setAdminPasswordError(null);
+                }
+              }}
+              onPasswordChange={(value) => {
+                setAdminPasswordInput(value);
+                if (adminPasswordError) {
+                  setAdminPasswordError(null);
+                }
+              }}
+              onUnlock={() => void handleAdminUnlock()}
+              onLock={() => void handleAdminLock()}
+              onGoHome={handleGoHome}
+              onHomeChangeMessageChange={(value) => {
+                setAdminHomeChangeDraft(value);
+                setAdminHomeChangeStatus("idle");
+                setAdminHomeChangeError(null);
+              }}
+              onSaveHomeChangeMessage={() => void handleSaveHomeChangeMessage()}
+            />
+          </Suspense>
           <Analytics />
           <SpeedInsights  />
         </div>
@@ -1509,41 +1533,43 @@ function App() {
     return (
       <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
-          <SkillOcrView
-            session={ocrSession}
-            checkingSession={ocrCheckingSession}
-            passwordInput={ocrPasswordInput}
-            authError={ocrAuthError}
-            uploads={ocrUploads}
-            uploadsLoading={ocrUploadsLoading}
-            uploadsError={ocrUploadsError}
-            uploadBusyRole={ocrUploadBusyRole}
-            uploadError={ocrUploadError}
-            draftPlayers={ocrDraftPlayers}
-            draftTotalScore={ocrDraftTotalScore}
-            draftAverageScore={ocrDraftAverageScore}
-            saving={ocrSaving}
-            savedUpload={ocrSavedUpload}
-            onPasswordChange={(value) => {
-              setOcrPasswordInput(value);
-              if (ocrAuthError) {
-                setOcrAuthError(null);
-              }
-            }}
-            onLogin={() => void handleOcrLogin()}
-            onLogout={() => void handleOcrLogout()}
-            onUploadImage={(role, file) => void handleOcrUploadImage(role, file)}
-            onPlayerSelectedChange={handleOcrPlayerSelectedChange}
-            onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
-            onPlayerPositionChange={handleOcrPlayerPositionChange}
-            onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}
-            onSkillChange={handleOcrSkillChange}
-            onSkillLevelChange={handleOcrSkillLevelChange}
-            onSaveDraft={() => void handleOcrSaveDraft()}
-            onSelectSavedUpload={setOcrSavedUpload}
-            onClearSavedUpload={() => setOcrSavedUpload(null)}
-            onGoHome={handleGoHome}
-          />
+          <Suspense fallback={<ViewFallback />}>
+            <SkillOcrView
+              session={ocrSession}
+              checkingSession={ocrCheckingSession}
+              passwordInput={ocrPasswordInput}
+              authError={ocrAuthError}
+              uploads={ocrUploads}
+              uploadsLoading={ocrUploadsLoading}
+              uploadsError={ocrUploadsError}
+              uploadBusyRole={ocrUploadBusyRole}
+              uploadError={ocrUploadError}
+              draftPlayers={ocrDraftPlayers}
+              draftTotalScore={ocrDraftTotalScore}
+              draftAverageScore={ocrDraftAverageScore}
+              saving={ocrSaving}
+              savedUpload={ocrSavedUpload}
+              onPasswordChange={(value) => {
+                setOcrPasswordInput(value);
+                if (ocrAuthError) {
+                  setOcrAuthError(null);
+                }
+              }}
+              onLogin={() => void handleOcrLogin()}
+              onLogout={() => void handleOcrLogout()}
+              onUploadImage={(role, file) => void handleOcrUploadImage(role, file)}
+              onPlayerSelectedChange={handleOcrPlayerSelectedChange}
+              onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
+              onPlayerPositionChange={handleOcrPlayerPositionChange}
+              onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}
+              onSkillChange={handleOcrSkillChange}
+              onSkillLevelChange={handleOcrSkillLevelChange}
+              onSaveDraft={() => void handleOcrSaveDraft()}
+              onSelectSavedUpload={setOcrSavedUpload}
+              onClearSavedUpload={() => setOcrSavedUpload(null)}
+              onGoHome={handleGoHome}
+            />
+          </Suspense>
           <Analytics />
           <SpeedInsights />
         </div>
@@ -1556,7 +1582,9 @@ function App() {
       <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
           <AppChrome>
-            <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
+            <Suspense fallback={<ViewFallback />}>
+              <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
+            </Suspense>
           </AppChrome>
           <footer className="app-footer">
             <nav className="footer-links" aria-label="사이트 정보">
@@ -1580,6 +1608,7 @@ function App() {
         <AppChrome>
           {authError && <p className="auth-error">{authError}</p>}
 
+          <Suspense fallback={<ViewFallback />}>
           {toolView === "home" ? (
             <HomeView
               onSelectView={handleToolViewChange}
@@ -1700,6 +1729,7 @@ function App() {
               resetImpactChangeSession={resetImpactChangeSession}
             />
           )}
+          </Suspense>
         </AppChrome>
 
         {activeService === "toolbox" && (

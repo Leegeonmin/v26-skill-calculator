@@ -99,6 +99,8 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
   },
 ];
 
+// Shared with NoticeView; keep this colocated with the home announcement source.
+// eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
     date: "2026.05.05",
