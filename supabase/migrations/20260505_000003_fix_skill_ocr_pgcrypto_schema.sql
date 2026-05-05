@@ -1,18 +1,4 @@
-create extension if not exists pgcrypto;
-
-alter table public.skill_ocr_accounts
-  add column if not exists password_hash text;
-
-update public.skill_ocr_accounts
-set password_hash = extensions.crypt(password, extensions.gen_salt('bf'))
-where password_hash is null
-  and password is not null;
-
-alter table public.skill_ocr_accounts
-  alter column password_hash set not null;
-
-alter table public.skill_ocr_accounts
-  drop column if exists password;
+create extension if not exists pgcrypto with schema extensions;
 
 create or replace function public.skill_ocr_login(
   p_username text,
