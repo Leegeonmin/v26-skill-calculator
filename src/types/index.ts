@@ -9,6 +9,7 @@ export type ToolView =
   | "simulator"
   | "impactChange"
   | "ranking"
+  | "notice"
   | "skillCompareBeta"
   | "lineupSkillOcr";
 export type HitterPositionGroup = "fielder" | "catcher";

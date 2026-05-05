@@ -50,6 +50,7 @@ import {
 import AppChrome from "./components/AppChrome";
 import HomeView from "./views/HomeView";
 import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
+import NoticeView from "./views/NoticeView";
 import SkillCompareBetaView from "./views/SkillCompareBetaView";
 import RankingView from "./views/RankingView";
 import AdminView from "./views/AdminView";
@@ -79,6 +80,11 @@ import { judgeSkillResult, type ResultGrade } from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
 import { logToolUsageEvent } from "./lib/toolUsage";
+import {
+  adminGetHomeChangeMessage,
+  adminUpdateHomeChangeMessage,
+  getHomeChangeMessage,
+} from "./lib/siteSettings";
 
 const DEFAULT_MODE: CalculatorMode = "hitter";
 const DEFAULT_VIEW: ToolView = "home";
@@ -171,6 +177,7 @@ function App() {
       "simulator",
       "impactChange",
       "ranking",
+      "notice",
       "skillCompareBeta",
       "lineupSkillOcr",
     ];
@@ -225,6 +232,11 @@ function App() {
   const [adminStats, setAdminStats] = useState<AdminUsageSummary | null>(null);
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
+  const [homeChangeMessage, setHomeChangeMessage] = useState("");
+  const [adminHomeChangeDraft, setAdminHomeChangeDraft] = useState("");
+  const [adminHomeChangeSaving, setAdminHomeChangeSaving] = useState(false);
+  const [adminHomeChangeStatus, setAdminHomeChangeStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [adminHomeChangeError, setAdminHomeChangeError] = useState<string | null>(null);
   const [ocrPasswordInput, setOcrPasswordInput] = useState("");
   const [ocrAuthError, setOcrAuthError] = useState<string | null>(null);
   const [ocrCheckingSession, setOcrCheckingSession] = useState(isOcrRoute);
@@ -331,14 +343,18 @@ function App() {
   const totalScoreDisplay = totalScore ?? "-";
   const supabaseReady = isSupabaseConfigured();
   const activeService: ServiceView =
-    toolView === "home" || toolView === "skillCompareBeta" || toolView === "lineupSkillOcr"
+    toolView === "home" ||
+    toolView === "notice" ||
+    toolView === "skillCompareBeta" ||
+    toolView === "lineupSkillOcr"
       ? "home"
       : toolView === "ranking"
         ? "ranking"
         : "toolbox";
-  const toolboxToolView: Exclude<ToolView, "home" | "ranking"> =
+  const toolboxToolView: Exclude<ToolView, "home" | "ranking" | "notice"> =
     toolView === "home" ||
     toolView === "ranking" ||
+    toolView === "notice" ||
     toolView === "skillCompareBeta" ||
     toolView === "lineupSkillOcr"
       ? "calculator"
@@ -374,6 +390,22 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem("v26-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!supabaseReady) {
+      setHomeChangeMessage("");
+      return;
+    }
+
+    void (async () => {
+      try {
+        const setting = await getHomeChangeMessage();
+        setHomeChangeMessage(setting.message);
+      } catch {
+        setHomeChangeMessage("");
+      }
+    })();
+  }, [supabaseReady]);
 
   useEffect(() => {
     if (!isAdminRoute) {
@@ -523,6 +555,30 @@ function App() {
   }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
+    if (!isAdminRoute || !adminUnlocked) {
+      return;
+    }
+
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!sessionToken) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        setAdminHomeChangeError(null);
+        const setting = await adminGetHomeChangeMessage(sessionToken);
+        setAdminHomeChangeDraft(setting.message);
+        setHomeChangeMessage(setting.message);
+      } catch (error) {
+        setAdminHomeChangeError(
+          error instanceof Error ? error.message : "메인 변경사항 메시지를 불러오지 못했습니다."
+        );
+      }
+    })();
+  }, [adminUnlocked, isAdminRoute]);
+
+  useEffect(() => {
     if (isAdminRoute || isOcrRoute || infoPageKey) {
       return;
     }
@@ -535,6 +591,7 @@ function App() {
         "simulator",
         "impactChange",
         "ranking",
+        "notice",
         "skillCompareBeta",
         "lineupSkillOcr",
       ];
@@ -823,7 +880,12 @@ function App() {
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
-    if (nextToolView === "home" || nextToolView === "ranking" || nextToolView === "skillCompareBeta") {
+    if (
+      nextToolView === "home" ||
+      nextToolView === "ranking" ||
+      nextToolView === "notice" ||
+      nextToolView === "skillCompareBeta"
+    ) {
       setToolView(nextToolView);
       return;
     }
@@ -839,6 +901,33 @@ function App() {
     }
 
     setToolView(nextToolView);
+  };
+
+  const handleSaveHomeChangeMessage = async () => {
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+
+    if (!sessionToken) {
+      setAdminHomeChangeStatus("error");
+      setAdminHomeChangeError("관리자 세션이 없습니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    try {
+      setAdminHomeChangeSaving(true);
+      setAdminHomeChangeStatus("idle");
+      setAdminHomeChangeError(null);
+      const setting = await adminUpdateHomeChangeMessage(sessionToken, adminHomeChangeDraft);
+      setAdminHomeChangeDraft(setting.message);
+      setHomeChangeMessage(setting.message);
+      setAdminHomeChangeStatus("saved");
+    } catch (error) {
+      setAdminHomeChangeStatus("error");
+      setAdminHomeChangeError(
+        error instanceof Error ? error.message : "메인 변경사항 메시지를 저장하지 못했습니다."
+      );
+    } finally {
+      setAdminHomeChangeSaving(false);
+    }
   };
 
   const handleModeChange = (nextMode: CalculatorMode) => {
@@ -1329,6 +1418,10 @@ function App() {
             stats={adminStats}
             statsLoading={adminStatsLoading}
             statsError={adminStatsError}
+            homeChangeMessage={adminHomeChangeDraft}
+            homeChangeSaving={adminHomeChangeSaving}
+            homeChangeStatus={adminHomeChangeStatus}
+            homeChangeError={adminHomeChangeError}
             onUsernameChange={(value) => {
               setAdminUsernameInput(value);
               if (adminPasswordError) {
@@ -1344,6 +1437,12 @@ function App() {
             onUnlock={() => void handleAdminUnlock()}
             onLock={() => void handleAdminLock()}
             onGoHome={handleGoHome}
+            onHomeChangeMessageChange={(value) => {
+              setAdminHomeChangeDraft(value);
+              setAdminHomeChangeStatus("idle");
+              setAdminHomeChangeError(null);
+            }}
+            onSaveHomeChangeMessage={() => void handleSaveHomeChangeMessage()}
           />
           <Analytics />
           <SpeedInsights  />
@@ -1434,9 +1533,12 @@ function App() {
               authSession={authSession}
               authDisplayName={authDisplayName}
               supabaseReady={supabaseReady}
+              homeChangeMessage={homeChangeMessage}
               onGoogleLogin={() => void handleGoogleLogin("home")}
               onGoogleLogout={() => void handleGoogleLogout()}
             />
+          ) : toolView === "notice" ? (
+            <NoticeView themeAction={themeToggle} onGoHome={() => setToolView("home")} />
           ) : toolView === "skillCompareBeta" ? (
             <SkillCompareBetaView
               themeAction={themeToggle}

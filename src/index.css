@@ -1135,6 +1135,45 @@ select {
   animation-delay: calc(var(--particle-index) * -0.45s);
 }
 
+.home-change-note {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 4;
+  display: grid;
+  gap: 5px;
+  width: min(340px, calc(100% - 36px));
+  padding: 12px 14px;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 16px 34px rgba(18, 40, 76, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.home-change-note span {
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.home-change-note strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.app-bg[data-theme="dark"] .home-change-note {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.58);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+}
+
+.app-bg[data-theme="dark"] .home-change-note span {
+  color: #93c5fd;
+}
+
 .home-hero {
   min-height: 280px;
   padding: 58px 8px 10px;
@@ -1396,9 +1435,15 @@ select {
     padding: 14px 12px 42px;
   }
 
+  .home-change-note {
+    top: 14px;
+    left: 12px;
+    width: min(320px, calc(100% - 24px));
+  }
+
   .home-hero {
     min-height: 230px;
-    padding-top: 58px;
+    padding-top: 96px;
   }
 
   .home-hero-action {
@@ -2261,6 +2306,40 @@ select {
   gap: 22px;
 }
 
+.notice-page .tool-page-hero {
+  margin-bottom: 18px;
+}
+
+.notice-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.notice-page-list-card,
+.notice-page-inquiry-card {
+  padding: 18px;
+  border: 1px solid rgba(216, 224, 238, 0.76);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.notice-page .notice-list {
+  max-height: calc(100vh - 260px);
+  min-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.app-bg[data-theme="dark"] .notice-page-list-card,
+.app-bg[data-theme="dark"] .notice-page-inquiry-card {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
 .notice-modal-head {
   display: flex;
   align-items: flex-start;
@@ -2397,6 +2476,20 @@ select {
   min-width: 120px;
 }
 
+@media (max-width: 820px) {
+  .notice-page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .notice-page .notice-list {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+}
+
 .auth-panel {
   display: flex;
   align-items: center;
@@ -2529,6 +2622,26 @@ select {
   font-weight: 700;
 }
 
+.admin-field textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 12px 13px;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.admin-field textarea:focus {
+  border-color: rgba(37, 99, 235, 0.72);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
 .admin-actions {
   display: flex;
   gap: 10px;
@@ -2551,6 +2664,24 @@ select {
 
 .admin-table-panel {
   overflow: hidden;
+}
+
+.admin-setting-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-setting-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-setting-actions span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
 }
 
 .admin-table-wrap {

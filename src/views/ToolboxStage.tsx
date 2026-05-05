@@ -16,7 +16,7 @@ import type {
 } from "../types";
 
 type ToolboxStageProps = {
-  toolView: Exclude<ToolView, "home" | "ranking">;
+  toolView: Exclude<ToolView, "home" | "ranking" | "notice">;
   mode: CalculatorMode;
   hitterPositionGroup: HitterPositionGroup;
   cardType: CardType;

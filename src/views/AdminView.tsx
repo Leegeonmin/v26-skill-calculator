@@ -9,11 +9,17 @@ type AdminViewProps = {
   stats: AdminUsageSummary | null;
   statsLoading: boolean;
   statsError: string | null;
+  homeChangeMessage: string;
+  homeChangeSaving: boolean;
+  homeChangeStatus: "idle" | "saved" | "error";
+  homeChangeError: string | null;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
   onLock: () => void;
   onGoHome: () => void;
+  onHomeChangeMessageChange: (value: string) => void;
+  onSaveHomeChangeMessage: () => void;
 };
 
 const toolLabels: Record<string, string> = {
@@ -152,11 +158,17 @@ export default function AdminView({
   stats,
   statsLoading,
   statsError,
+  homeChangeMessage,
+  homeChangeSaving,
+  homeChangeStatus,
+  homeChangeError,
   onUsernameChange,
   onPasswordChange,
   onUnlock,
   onLock,
   onGoHome,
+  onHomeChangeMessageChange,
+  onSaveHomeChangeMessage,
 }: AdminViewProps) {
   if (checkingSession) {
     return (
@@ -243,6 +255,41 @@ export default function AdminView({
           </button>
         </div>
       </div>
+
+      <section className="admin-panel admin-setting-panel">
+        <div className="admin-section-head">
+          <div>
+            <p className="admin-eyebrow">Home</p>
+            <h2>메인 공지사항</h2>
+          </div>
+          <p>비워서 저장하면 메인 화면의 공지사항 배지가 숨겨집니다.</p>
+        </div>
+
+        <label className="admin-field">
+          <span>표시 메시지</span>
+          <textarea
+            value={homeChangeMessage}
+            onChange={(event) => onHomeChangeMessageChange(event.target.value)}
+            placeholder="메인 왼쪽 위에 표시할 메시지를 입력하세요."
+            rows={3}
+            maxLength={240}
+          />
+        </label>
+
+        <div className="admin-setting-actions">
+          <span>{homeChangeMessage.length}/240</span>
+          <button
+            type="button"
+            className="primary-btn"
+            onClick={onSaveHomeChangeMessage}
+            disabled={homeChangeSaving}
+          >
+            {homeChangeSaving ? "저장 중..." : "저장"}
+          </button>
+        </div>
+        {homeChangeStatus === "saved" && <p className="notice-form-success">저장됐습니다.</p>}
+        {homeChangeStatus === "error" && homeChangeError && <p className="modal-error">{homeChangeError}</p>}
+      </section>
 
       <div className="admin-grid">
         <section className="admin-panel">
