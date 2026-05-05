@@ -284,6 +284,13 @@ export default function HomeView({
           </div>
         </section>
       </section>
+
+      <nav className="home-site-links" aria-label="사이트 정보">
+        <a href="/about">소개</a>
+        <a href="/guide">사용 가이드</a>
+        <a href="/privacy">개인정보처리방침</a>
+        <a href="/contact">문의</a>
+      </nav>
     </main>
   );
 }

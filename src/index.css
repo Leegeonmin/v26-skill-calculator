@@ -2301,6 +2301,29 @@ select {
   display: none;
 }
 
+.home-site-links {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 4px 0 2px;
+}
+
+.home-site-links a {
+  color: #5d6d87;
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.home-site-links a:hover {
+  color: #1769c7;
+  text-decoration: underline;
+}
+
 .notice-modal {
   width: min(640px, calc(100vw - 28px));
   display: grid;
@@ -8128,10 +8151,12 @@ input {
   color: #7f8da3;
 }
 
+.app-bg[data-theme="dark"] .home-site-links a,
 .app-bg[data-theme="dark"] .footer-links a {
   color: #9ca8bd;
 }
 
+.app-bg[data-theme="dark"] .home-site-links a:hover,
 .app-bg[data-theme="dark"] .footer-links a:hover {
   color: #bfdbfe;
 }
