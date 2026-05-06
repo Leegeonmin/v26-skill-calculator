@@ -87,15 +87,18 @@ function findSkillMeta(
   cardType: CardType,
   selectedSkillId: string | null
 ): SkillMetaMatch {
-  const requested = normalizeName(skill.name);
-  if (!requested) {
-    return { meta: null, candidates: [], needsSelection: false };
-  }
-
   const candidates = dataSet.skills.filter((meta) => meta.availableCardTypes.includes(cardType));
   const selected = selectedSkillId
     ? candidates.find((meta) => meta.id === selectedSkillId) ?? null
     : null;
+  if (selected) {
+    return { meta: selected, candidates: [selected], needsSelection: false };
+  }
+
+  const requested = normalizeName(skill.name);
+  if (!requested) {
+    return { meta: null, candidates: [], needsSelection: false };
+  }
 
   const exact = candidates.find((meta) => normalizeName(meta.name) === requested);
   if (exact) {
@@ -113,10 +116,6 @@ function findSkillMeta(
 
   if (familyMatches.length === 1) {
     return { meta: familyMatches[0], candidates: familyMatches, needsSelection: false };
-  }
-
-  if (selected && familyMatches.some((meta) => meta.id === selected.id)) {
-    return { meta: selected, candidates: familyMatches, needsSelection: false };
   }
 
   const level = normalizeLevel(skill.level);
@@ -232,16 +231,13 @@ function getJudgeGradeColor(judgeResult: JudgeResult | null): string {
   return judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#94a3b8";
 }
 
-function formatSkill(skill: ComparedSkill): string {
-  if (skill.needsSelection) {
-    return `${skill.displayName} 기본 선택`;
-  }
-
-  return skill.displayName;
+function formatRecognizedSkillName(skill: ComparedSkill): string {
+  return skill.name?.trim() ? skill.name : "매칭실패";
 }
 
 function formatSkillOptionPlaceholder(skill: ComparedSkill): string {
-  return `${skill.name ?? skill.displayName} 옵션 선택`;
+  const recognizedName = formatRecognizedSkillName(skill);
+  return skill.matched ? `${recognizedName} 선택됨` : `${recognizedName} - 스킬 선택`;
 }
 
 export default function SkillCompareBetaView({
@@ -347,15 +343,15 @@ export default function SkillCompareBetaView({
     }));
   }
 
-  function getCandidateOptions(skill: ComparedSkill) {
+  function getSelectableSkillOptions() {
     if (!dataSet) {
       return [];
     }
 
-    return skill.candidateSkillIds
-      .map((skillId) => dataSet.skills.find((meta) => meta.id === skillId))
-      .filter((meta): meta is SkillMeta => Boolean(meta));
+    return dataSet.skills.filter((meta) => meta.availableCardTypes.includes(cardType));
   }
+
+  const selectableSkillOptions = getSelectableSkillOptions();
 
   return (
     <main className="skill-compare-page" aria-labelledby="skill-compare-title">
@@ -591,23 +587,22 @@ export default function SkillCompareBetaView({
                     className={`skill-compare-row ${skill.matched ? "" : "unmatched"}`}
                   >
                     <span>{skill.slot}</span>
-                    {skill.candidateSkillIds.length > 1 ? (
+                    <div className="skill-compare-skill-field">
                       <select
                         className="skill-compare-skill-select"
-                        aria-label={`${skill.displayName} 옵션`}
+                        aria-label={`${formatRecognizedSkillName(skill)} 스킬 선택`}
                         value={skill.skillId}
                         onChange={(event) => updateSkillMeta("left", skill.slot, event.target.value)}
                       >
                         <option value="">{formatSkillOptionPlaceholder(skill)}</option>
-                        {getCandidateOptions(skill).map((candidate) => (
+                        {selectableSkillOptions.map((candidate) => (
                           <option key={candidate.id} value={candidate.id}>
                             {candidate.name}
                           </option>
                         ))}
                       </select>
-                    ) : (
-                      <strong>{formatSkill(skill)}</strong>
-                    )}
+                      <small>인식: {formatRecognizedSkillName(skill)}</small>
+                    </div>
                     <select
                       aria-label={`${skill.displayName} 레벨`}
                       value={normalizeLevel(skill.level)}
@@ -639,23 +634,22 @@ export default function SkillCompareBetaView({
                     className={`skill-compare-row ${skill.matched ? "" : "unmatched"}`}
                   >
                     <span>{skill.slot}</span>
-                    {skill.candidateSkillIds.length > 1 ? (
+                    <div className="skill-compare-skill-field">
                       <select
                         className="skill-compare-skill-select"
-                        aria-label={`${skill.displayName} 옵션`}
+                        aria-label={`${formatRecognizedSkillName(skill)} 스킬 선택`}
                         value={skill.skillId}
                         onChange={(event) => updateSkillMeta("right", skill.slot, event.target.value)}
                       >
                         <option value="">{formatSkillOptionPlaceholder(skill)}</option>
-                        {getCandidateOptions(skill).map((candidate) => (
+                        {selectableSkillOptions.map((candidate) => (
                           <option key={candidate.id} value={candidate.id}>
                             {candidate.name}
                           </option>
                         ))}
                       </select>
-                    ) : (
-                      <strong>{formatSkill(skill)}</strong>
-                    )}
+                      <small>인식: {formatRecognizedSkillName(skill)}</small>
+                    </div>
                     <select
                       aria-label={`${skill.displayName} 레벨`}
                       value={normalizeLevel(skill.level)}

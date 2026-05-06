@@ -8645,6 +8645,21 @@ input {
   text-align: left;
 }
 
+.skill-compare-skill-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.skill-compare-skill-field small {
+  overflow: hidden;
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .skill-compare-row em {
   min-width: 58px;
   padding: 0;
@@ -8858,6 +8873,10 @@ input {
 
 .skill-compare-row .skill-compare-skill-select {
   color: var(--text);
+}
+
+.skill-compare-skill-field small {
+  color: var(--muted);
 }
 
 .skill-compare-row em {
@@ -9652,6 +9671,11 @@ input {
 
   .skill-compare-row .skill-compare-skill-select {
     width: 100%;
+    grid-column: auto;
+  }
+
+  .skill-compare-skill-field {
+    grid-column: 2;
   }
 
   .skill-compare-row em {
