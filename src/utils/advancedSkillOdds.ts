@@ -48,6 +48,14 @@ function getFamilyWeight(family: SkillFamily, weights: Partial<Record<SkillFamil
   return weights[family.grade] ?? 0;
 }
 
+function getDistributionLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
+  if (cardType === "goldenGlove") {
+    return [6, 6, 6];
+  }
+
+  return [6, 5, 5];
+}
+
 function getDistributionCacheKey(input: {
   mode: CalculatorMode;
   cardType: CardType;
@@ -166,19 +174,20 @@ export function calculateAdvancedSkillOdds({
   skills,
   scoreTable,
   skillIds,
-  skillLevels,
   targetScore,
 }: SkillOddsParams): SkillOddsResult | null {
   if (!Number.isFinite(targetScore) || targetScore <= 0 || skillIds.some((skillId) => !skillId)) {
     return null;
   }
 
+  const distributionLevels = getDistributionLevels(cardType);
+
   const cacheKey = getDistributionCacheKey({
     mode,
     cardType,
     hitterPositionGroup,
     skillIds,
-    skillLevels,
+    skillLevels: distributionLevels,
     skills,
   });
   const cachedDistribution = scoreDistributionCache.get(cacheKey);
@@ -224,13 +233,27 @@ export function calculateAdvancedSkillOdds({
       families,
       profile.firstSlot,
       scoreTable,
-      skillLevels[0],
+      distributionLevels[0],
       true
     );
   }
 
-  states = expandSlotStates(states, families, profile.otherSlots, scoreTable, skillLevels[1], true);
-  states = expandSlotStates(states, families, profile.otherSlots, scoreTable, skillLevels[2], true);
+  states = expandSlotStates(
+    states,
+    families,
+    profile.otherSlots,
+    scoreTable,
+    distributionLevels[1],
+    true
+  );
+  states = expandSlotStates(
+    states,
+    families,
+    profile.otherSlots,
+    scoreTable,
+    distributionLevels[2],
+    true
+  );
 
   if (states.length === 0) {
     return null;

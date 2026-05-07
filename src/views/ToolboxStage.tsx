@@ -608,6 +608,7 @@ export default function ToolboxStage({
                 <strong>{expectedRollsLabel}</strong>
               </div>
             </div>
+            <p>상위 확률은 카드 타입별 기본 레벨 분포에서 같은 점수 이상이 나올 확률입니다.</p>
           </div>
 
           <div className="result-grade-guide">
