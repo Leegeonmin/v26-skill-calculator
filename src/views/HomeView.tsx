@@ -105,6 +105,11 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.05.13",
+    title: "라인업 OCR 확률 표시와 복사 개선",
+    body: "라인업 스킬 인식 결과의 상위 확률을 소수점 3자리까지만 표시하고, 복사 내용에 선수별 등급과 확률도 함께 포함되도록 개선했습니다.",
+  },
+  {
     date: "2026.05.05",
     title: "고스변 확률 계산과 라인업 OCR 등급 표시 개선",
     body: "스킬 점수 계산기, 고스변 점수 비교, 라인업 스킬 인식에 상위 확률과 등급 정보를 추가하고 자동롤 및 호버 UI를 다듬었습니다.",

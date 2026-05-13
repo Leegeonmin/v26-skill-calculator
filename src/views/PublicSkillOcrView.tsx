@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { getSkillOcrPlayerOdds } from "../lib/skillOcrOdds";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
 import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
 import type { CardType, SkillLevel, StarterHand } from "../types";
@@ -159,13 +160,15 @@ function buildCopyText(params: {
   const roleLabel = params.role ? formatRole(params.role) : "선수";
   const includePosition = params.role === "pitcher";
   const lines = params.players.map((player) => {
+    const odds = getSkillOcrPlayerOdds(player);
     const position = player.position?.trim();
     const handLabel = player.starterHand === "left" ? "좌투" : "우투";
     const name =
       includePosition && position
         ? `${player.playerName}(${position}/${handLabel})`
         : player.playerName;
-    return `${name} : ${player.totalScore.toFixed(2)}점`;
+    const resultLabel = odds ? ` / 등급 ${odds.grade} / ${odds.basisLabel} ${odds.topPercentLabel}` : "";
+    return `${name} : ${player.totalScore.toFixed(2)}점${resultLabel}`;
   });
 
   return [

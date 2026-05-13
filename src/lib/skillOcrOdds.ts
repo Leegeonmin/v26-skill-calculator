@@ -63,7 +63,7 @@ export function getSkillOcrPlayerOdds(player: SkillOcrSelectedPlayer): SkillOcrP
   return {
     grade: judgeResult?.grade ?? "-",
     gradeColor: judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#94a3b8",
-    topPercentLabel: formatTopPercent(odds?.scoreAtLeastProbability),
+    topPercentLabel: formatTopPercent(odds?.scoreAtLeastProbability, { maximumFractionDigits: 3 }),
     basisLabel: player.cardType === "impact" ? "상위(2,3)" : "상위",
   };
 }

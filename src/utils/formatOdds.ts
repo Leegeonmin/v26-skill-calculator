@@ -1,4 +1,11 @@
-export function formatTopPercent(probability: number | null | undefined): string {
+type FormatTopPercentOptions = {
+  maximumFractionDigits?: number;
+};
+
+export function formatTopPercent(
+  probability: number | null | undefined,
+  options: FormatTopPercentOptions = {}
+): string {
   if (probability == null || !Number.isFinite(probability)) {
     return "-";
   }
@@ -8,12 +15,16 @@ export function formatTopPercent(probability: number | null | undefined): string
   }
 
   const percent = probability * 100;
-  const fractionDigits =
+  const defaultFractionDigits =
     percent >= 1 ? 4 : percent >= 0.01 ? 6 : percent >= 0.0001 ? 8 : 10;
+  const fractionDigits =
+    options.maximumFractionDigits == null
+      ? defaultFractionDigits
+      : Math.min(defaultFractionDigits, options.maximumFractionDigits);
   const displayPercent = Math.ceil(percent * 10 ** fractionDigits) / 10 ** fractionDigits;
 
   return `${displayPercent.toLocaleString("ko-KR", {
-    minimumFractionDigits: Math.min(2, fractionDigits),
+    minimumFractionDigits: options.maximumFractionDigits == null ? Math.min(2, fractionDigits) : 0,
     maximumFractionDigits: fractionDigits,
   })}%`;
 }
