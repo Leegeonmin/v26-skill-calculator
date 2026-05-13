@@ -113,6 +113,7 @@ const ADMIN_SESSION_KEY = "v26-admin-session";
 const OCR_PATH = "/tyrant";
 const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
+const ADSENSE_CLIENT = "ca-pub-6461439689226359";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "guide",
@@ -396,6 +397,18 @@ function App() {
     toolView === "lineupSkillOcr"
       ? "calculator"
       : toolView;
+  const shouldLoadAdsense =
+    !isAdminRoute &&
+    !isOcrRoute &&
+    (Boolean(infoPageKey) ||
+      toolView === "home" ||
+      toolView === "notice" ||
+      toolView === "ranking" ||
+      toolView === "skillCompareBeta" ||
+      toolView === "calculator" ||
+      toolView === "simulator" ||
+      toolView === "impactChange" ||
+      (toolView === "lineupSkillOcr" && Boolean(authSession)));
   const faqStructuredData = useMemo(
     () =>
       JSON.stringify({
@@ -443,6 +456,30 @@ function App() {
       }
     })();
   }, [supabaseReady]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>("script[data-v26-adsense]");
+
+    if (!shouldLoadAdsense) {
+      existingScript?.remove();
+      return;
+    }
+
+    if (existingScript) {
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.dataset.v26Adsense = "true";
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+    document.head.appendChild(script);
+  }, [shouldLoadAdsense]);
 
   useEffect(() => {
     if (!isAdminRoute) {
