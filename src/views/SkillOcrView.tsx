@@ -1,4 +1,5 @@
 import { Fragment, useRef, useState } from "react";
+import { getSkillOcrPlayerOdds } from "../lib/skillOcrOdds";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
 import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
 import type { CardType, SkillLevel, StarterHand } from "../types";
@@ -58,7 +59,7 @@ const PITCHER_HAND_OPTIONS: Array<{ value: StarterHand; label: string }> = [
   { value: "left", label: "좌투" },
 ];
 const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
-const SHOW_UPLOAD_SAVED_PANEL = false;
+const SHOW_UPLOAD_SAVED_PANEL = true;
 type OcrPanelTab = "summary" | "upload" | "stats";
 type OcrIconName =
   | "chart"
@@ -75,16 +76,6 @@ type OcrIconName =
 
 function formatRole(role: SkillOcrSavedUpload["role"]): string {
   return role === "hitter" ? "타자" : "투수";
-}
-
-function formatSavedPlayerMeta(player: SkillOcrSelectedPlayer): string {
-  if (player.calculatorMode === "hitter") {
-    return "";
-  }
-
-  return [player.position?.trim() || "포지션 없음", player.starterHand === "left" ? "좌투" : "우투"].join(
-    " · "
-  );
 }
 
 function formatDate(value: string): string {
@@ -129,13 +120,15 @@ function buildCopyText(params: {
   const roleLabel = params.role ? formatRole(params.role) : "선수";
   const includePosition = params.role === "pitcher";
   const playerLines = params.players.map((player) => {
+    const odds = getSkillOcrPlayerOdds(player);
     const position = player.position?.trim();
     const handLabel = player.starterHand === "left" ? "좌투" : "우투";
     const name =
       includePosition && position
         ? `${player.playerName}(${position}/${handLabel})`
         : player.playerName;
-    return `${name} : ${player.totalScore.toFixed(2)}점`;
+    const resultLabel = odds ? ` / 등급 ${odds.grade} / ${odds.basisLabel} ${odds.topPercentLabel}` : "";
+    return `${name} : ${player.totalScore.toFixed(2)}점${resultLabel}`;
   });
 
   return [
@@ -209,7 +202,7 @@ function SkillOcrOddsBadge({ player }: { player: SkillOcrSelectedPlayer }) {
   }
 
   return (
-    <div className="ocr-player-odds-badge">
+    <div className="ocr-player-odds-badge public-ocr-player-odds-badge">
       <span>
         등급 <strong style={{ color: odds.gradeColor }}>{odds.grade}</strong>
       </span>
@@ -440,7 +433,7 @@ export default function SkillOcrView({
   };
 
   const savedUploadPanel = savedUpload ? (
-    <section className="ocr-saved-panel" ref={savedUploadPanelRef}>
+    <section className="ocr-saved-panel public-ocr-panel" ref={savedUploadPanelRef}>
       <div className="ocr-section-head">
         <div>
           <h2>저장된 결과</h2>
@@ -454,27 +447,14 @@ export default function SkillOcrView({
         </div>
       </div>
 
-      <div className="ocr-saved-list">
+      <div className="public-ocr-saved-list">
         {savedUpload.selected_players.map((player) => (
           <article
             key={`${savedUpload.id}-${player.sourceRow}`}
-            className={`ocr-saved-row ocr-card-row-${player.cardType}`}
+            className={`public-ocr-saved-row public-ocr-card-row-${player.cardType}`}
           >
-            <div className="ocr-saved-player-main">
-              <strong>{player.playerName}</strong>
-              {formatSavedPlayerMeta(player) && <span>{formatSavedPlayerMeta(player)}</span>}
-            </div>
-            <div className="ocr-saved-player-skills">
-              {player.skills.map((skill) => (
-                <span
-                  key={`${player.sourceRow}-${skill.slot}`}
-                  className={`ocr-saved-skill ${getSkillToneClass(skill)}`}
-                >
-                  {skill.skillName ?? "매칭실패"} Lv.{skill.level}
-                </span>
-              ))}
-            </div>
-            <strong className="ocr-saved-score">{player.totalScore.toFixed(2)}</strong>
+            <strong>{player.playerName}</strong>
+            <span>{player.totalScore.toFixed(2)}</span>
             <SkillOcrOddsBadge player={player} />
           </article>
         ))}
@@ -505,7 +485,7 @@ export default function SkillOcrView({
   ) : null;
 
   return (
-    <div className="ocr-view">
+    <div className="ocr-view public-ocr-view">
       <header className="ocr-header">
         <div className="ocr-brand">
           <span className="ocr-avatar">{session.username.slice(0, 1).toUpperCase()}</span>
@@ -805,7 +785,7 @@ export default function SkillOcrView({
         </div>
       )}
 
-      <section className="ocr-upload-panel">
+      <section className="ocr-upload-panel public-ocr-upload-panel">
         <input
           ref={pitcherInputRef}
           className="ocr-file-input"
@@ -834,7 +814,7 @@ export default function SkillOcrView({
         />
         <button
           type="button"
-          className="ocr-upload-btn"
+          className="ocr-upload-btn public-ocr-upload-btn"
           disabled={Boolean(uploadBusyRole)}
           onClick={() => pitcherInputRef.current?.click()}
         >
@@ -844,7 +824,7 @@ export default function SkillOcrView({
         </button>
         <button
           type="button"
-          className="ocr-upload-btn"
+          className="ocr-upload-btn public-ocr-upload-btn"
           disabled={Boolean(uploadBusyRole)}
           onClick={() => hitterInputRef.current?.click()}
         >
@@ -867,7 +847,7 @@ export default function SkillOcrView({
       {uploadError && <p className="modal-error">{uploadError}</p>}
 
       {savedUpload && SHOW_UPLOAD_SAVED_PANEL && (
-        <section className="ocr-saved-panel">
+        <section className="ocr-saved-panel public-ocr-panel">
           <div className="ocr-section-head">
             <div>
               <h2>저장된 결과</h2>
@@ -879,27 +859,15 @@ export default function SkillOcrView({
             </div>
           </div>
 
-          <div className="ocr-saved-list">
+          <div className="public-ocr-saved-list">
             {savedUpload.selected_players.map((player) => (
               <article
                 key={`${savedUpload.id}-${player.sourceRow}`}
-                className={`ocr-saved-row ocr-card-row-${player.cardType}`}
+                className={`public-ocr-saved-row public-ocr-card-row-${player.cardType}`}
               >
-                <div>
-                  <strong>{player.playerName}</strong>
-                  {formatSavedPlayerMeta(player) && <span>{formatSavedPlayerMeta(player)}</span>}
-                </div>
-                <div>
-                  {player.skills.map((skill) => (
-                    <span
-                      key={`${player.sourceRow}-${skill.slot}`}
-                      className={`ocr-saved-skill ${getSkillToneClass(skill)}`}
-                    >
-                      {skill.skillName ?? "매칭실패"} Lv.{skill.level}
-                    </span>
-                  ))}
-                </div>
-                <strong>{player.totalScore.toFixed(2)}</strong>
+                <strong>{player.playerName}</strong>
+                <span>{player.totalScore.toFixed(2)}</span>
+                <SkillOcrOddsBadge player={player} />
               </article>
             ))}
           </div>
@@ -929,7 +897,7 @@ export default function SkillOcrView({
       )}
 
       {draftPlayers.length > 0 && (
-        <section className="ocr-review-panel">
+        <section className="ocr-review-panel public-ocr-panel">
           <div className="ocr-section-head">
             <div>
               <h2>인식 결과 검수</h2>
@@ -960,19 +928,19 @@ export default function SkillOcrView({
             </div>
           </div>
 
-          <div className="ocr-player-list">
+          <div className="public-ocr-player-list">
             {draftPlayers.map((player, playerIndex) => {
               const skillOptions = getSkillOcrSkillOptions(player);
 
               return (
               <article
                 key={`${player.sourceRow}-${player.playerName}`}
-                className={`ocr-player-row ocr-card-row-${player.cardType}${
+                className={`public-ocr-player-row public-ocr-card-row-${player.cardType}${
                   player.selected ? "" : " muted"
                 }`}
               >
-                <div className="ocr-player-main">
-                  <label className="ocr-player-check">
+                <div className="public-ocr-player-main">
+                  <label className="public-ocr-player-check">
                     <input
                       type="checkbox"
                       checked={player.selected}
@@ -984,11 +952,11 @@ export default function SkillOcrView({
                     <strong>{player.playerName}</strong>
                   </label>
                   <div
-                    className={`ocr-player-controls ocr-player-controls-${
+                    className={`public-ocr-player-controls public-ocr-player-controls-${
                       player.calculatorMode === "hitter" ? "hitter" : "pitcher"
                     }`}
                   >
-                    <label className={`ocr-card-control ocr-card-control-${player.cardType}`}>
+                    <label className={`public-ocr-card-control public-ocr-card-control-${player.cardType}`}>
                       <span>카드</span>
                       <select
                         value={player.cardType}
@@ -1042,16 +1010,16 @@ export default function SkillOcrView({
                       </>
                     )}
                   </div>
-                  <strong className="ocr-player-score">{player.totalScore.toFixed(2)}</strong>
+                  <strong className="public-ocr-player-score">{player.totalScore.toFixed(2)}</strong>
                   <SkillOcrOddsBadge player={player} />
                 </div>
                 {player.calculatorMode !== "hitter" && (
-                  <div className="ocr-pitcher-score-grid">
+                  <div className="public-ocr-pitcher-score-grid">
                     {getPitcherScoreItems(player).map((item) => (
                       <button
                         key={item.key}
                         type="button"
-                        className={`ocr-pitcher-score-chip${item.active ? " active" : ""}`}
+                        className={`public-ocr-pitcher-score-chip${item.active ? " active" : ""}`}
                         onClick={() => {
                           if (item.key === "starterRight" || item.key === "starterLeft") {
                             onPlayerPositionChange(playerIndex, "SP");
@@ -1074,22 +1042,19 @@ export default function SkillOcrView({
                     ))}
                   </div>
                 )}
-                <div className="ocr-player-skills">
+                <div className="public-ocr-player-skills">
                   {player.skills.map((skill) => (
                     <div
                       key={`${player.sourceRow}-${skill.slot}`}
-                      className={`ocr-skill-edit-row ${getSkillToneClass(skill)} ${
-                        skill.skillId ? "" : "ocr-skill-edit-row-unmatched"
+                      className={`public-ocr-skill-edit-row ${getSkillToneClass(skill)} ${
+                        skill.skillId ? "" : "public-ocr-skill-edit-row-unmatched"
                       }`}
                     >
                       {!skill.skillId && (
-                        <span className="ocr-match-fail-badge" title="매칭실패">
-                          <OcrIcon name="warning" />
-                          매칭실패
-                        </span>
+                        <span className="public-ocr-match-fail-badge">매칭실패</span>
                       )}
                       <select
-                        className={`ocr-skill-name-select ${getSkillToneClass(skill)}`}
+                        className={`public-ocr-skill-name-select ${getSkillToneClass(skill)}`}
                         data-ocr-required-skill={`${playerIndex}-${skill.slot}`}
                         value={skill.skillId ?? ""}
                         onChange={(event) => {
@@ -1117,7 +1082,7 @@ export default function SkillOcrView({
                         ))}
                       </select>
                       <select
-                        className={`ocr-skill-level-select ${getSkillToneClass(skill)}`}
+                        className={`public-ocr-skill-level-select ${getSkillToneClass(skill)}`}
                         value={skill.level}
                         onChange={(event) =>
                           onSkillLevelChange(
