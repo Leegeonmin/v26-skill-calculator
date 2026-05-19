@@ -1788,15 +1788,6 @@ function App() {
           </section>
         )}
 
-        <footer className="app-footer">
-          <nav className="footer-links" aria-label="사이트 정보">
-            <a href="/about">소개</a>
-            <a href="/guide">사용 가이드</a>
-            <a href="/privacy">개인정보처리방침</a>
-            <a href="/contact">문의</a>
-          </nav>
-          <span>made by 우주</span>
-        </footer>
         <Analytics />
         <SpeedInsights  />
       </div>
