@@ -5,6 +5,10 @@ export const SKILL_SCORES: SkillScoreTable = {
     5: 28.65,
     6: 47.7,
   },
+  hitter_national_ace_no_buff: {
+    5: 12,
+    6: 14.4,
+  },
   hitter_catcher_lead: {
     5: 14.45,
     6: 27.6,

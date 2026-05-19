@@ -12,7 +12,13 @@ const NATIONAL_ONLY: CardType[] = ["national"];
 export const SKILLS: SkillMeta[] = [
   {
     id: "hitter_national_ace",
-    name: "국대에이스",
+    name: "국대에이스(버프o)",
+    grade: "nationalOnly",
+    availableCardTypes: NATIONAL_ONLY,
+  },
+  {
+    id: "hitter_national_ace_no_buff",
+    name: "국대에이스(버프x)",
     grade: "nationalOnly",
     availableCardTypes: NATIONAL_ONLY,
   },

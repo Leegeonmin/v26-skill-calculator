@@ -105,6 +105,11 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.05.20",
+    title: "국대에이스 점수 분리",
+    body: "국대에이스 스킬을 버프 적용/미적용 항목으로 나누고, 라인업 인식과 계산기에서 두 점수를 구분해 선택할 수 있게 했습니다.",
+  },
+  {
     date: "2026.05.13",
     title: "라인업 OCR 확률 표시와 복사 개선",
     body: "라인업 스킬 인식 결과의 상위 확률을 소수점 3자리까지만 표시하고, 복사 내용에 선수별 등급과 확률도 함께 포함되도록 개선했습니다.",
