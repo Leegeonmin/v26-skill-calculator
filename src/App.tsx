@@ -117,6 +117,10 @@ const ADSENSE_CLIENT = "ca-pub-6461439689226359";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "guide",
+  "/methodology": "methodology",
+  "/calculator-guide": "calculatorGuide",
+  "/simulator-guide": "simulatorGuide",
+  "/ocr-guide": "ocrGuide",
   "/privacy": "privacy",
   "/contact": "contact",
 };
@@ -1610,6 +1614,10 @@ function App() {
             <nav className="footer-links" aria-label="사이트 정보">
               <a href="/about">소개</a>
               <a href="/guide">사용 가이드</a>
+              <a href="/methodology">계산 기준</a>
+              <a href="/calculator-guide">계산기 사용법</a>
+              <a href="/simulator-guide">시뮬레이터 안내</a>
+              <a href="/ocr-guide">OCR 안내</a>
               <a href="/privacy">개인정보처리방침</a>
               <a href="/contact">문의</a>
             </nav>

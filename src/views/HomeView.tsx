@@ -16,6 +16,18 @@ type HomeViewProps = {
 
 const HOME_CHANGE_DISMISSED_KEY = "v26-home-change-dismissed";
 
+function getCanDismissHomeChangeMessage() {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
+}
+
+function getDismissedHomeChangeMessage() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return window.sessionStorage.getItem(HOME_CHANGE_DISMISSED_KEY) ?? "";
+}
+
 type HomeWidget = {
   view: Exclude<ToolView, "home">;
   icon: "trophy" | "calculator" | "sparkles" | "compare" | "zap" | "users" | "flame" | "scan";
@@ -167,20 +179,17 @@ export default function HomeView({
   onGoogleLogout,
 }: HomeViewProps) {
   const visibleHomeChangeMessage = homeChangeMessage.trim();
-  const [canDismissHomeChangeMessage, setCanDismissHomeChangeMessage] = useState(false);
-  const [dismissedHomeChangeMessage, setDismissedHomeChangeMessage] = useState("");
+  const [canDismissHomeChangeMessage, setCanDismissHomeChangeMessage] = useState(getCanDismissHomeChangeMessage);
+  const [dismissedHomeChangeMessage, setDismissedHomeChangeMessage] = useState(getDismissedHomeChangeMessage);
 
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
 
-    setDismissedHomeChangeMessage(window.sessionStorage.getItem(HOME_CHANGE_DISMISSED_KEY) ?? "");
-
     const mediaQuery = window.matchMedia("(max-width: 640px)");
     const syncCanDismiss = () => setCanDismissHomeChangeMessage(mediaQuery.matches);
 
-    syncCanDismiss();
     mediaQuery.addEventListener("change", syncCanDismiss);
 
     return () => mediaQuery.removeEventListener("change", syncCanDismiss);
@@ -342,6 +351,10 @@ export default function HomeView({
       <nav className="home-site-links" aria-label="사이트 정보">
         <a href="/about">소개</a>
         <a href="/guide">사용 가이드</a>
+        <a href="/methodology">계산 기준</a>
+        <a href="/calculator-guide">계산기 사용법</a>
+        <a href="/simulator-guide">시뮬레이터 안내</a>
+        <a href="/ocr-guide">OCR 안내</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/contact">문의</a>
       </nav>
