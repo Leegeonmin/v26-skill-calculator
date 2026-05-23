@@ -355,6 +355,7 @@ export default function HomeView({
         <a href="/calculator-guide">계산기 사용법</a>
         <a href="/simulator-guide">시뮬레이터 안내</a>
         <a href="/ocr-guide">OCR 안내</a>
+        <a href="/faq">FAQ</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/contact">문의</a>
       </nav>

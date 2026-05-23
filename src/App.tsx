@@ -121,9 +121,19 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/calculator-guide": "calculatorGuide",
   "/simulator-guide": "simulatorGuide",
   "/ocr-guide": "ocrGuide",
+  "/faq": "faq",
   "/privacy": "privacy",
   "/contact": "contact",
 };
+const ADSENSE_INFO_PAGE_KEYS = new Set<InfoPageKey>([
+  "about",
+  "guide",
+  "methodology",
+  "calculatorGuide",
+  "simulatorGuide",
+  "ocrGuide",
+  "faq",
+]);
 
 type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
@@ -404,15 +414,12 @@ function App() {
   const shouldLoadAdsense =
     !isAdminRoute &&
     !isOcrRoute &&
-    (Boolean(infoPageKey) ||
+    ((infoPageKey ? ADSENSE_INFO_PAGE_KEYS.has(infoPageKey) : false) ||
       toolView === "home" ||
-      toolView === "notice" ||
-      toolView === "ranking" ||
       toolView === "skillCompareBeta" ||
       toolView === "calculator" ||
       toolView === "simulator" ||
-      toolView === "impactChange" ||
-      (toolView === "lineupSkillOcr" && Boolean(authSession)));
+      toolView === "impactChange");
   const faqStructuredData = useMemo(
     () =>
       JSON.stringify({
@@ -1618,6 +1625,7 @@ function App() {
               <a href="/calculator-guide">계산기 사용법</a>
               <a href="/simulator-guide">시뮬레이터 안내</a>
               <a href="/ocr-guide">OCR 안내</a>
+              <a href="/faq">FAQ</a>
               <a href="/privacy">개인정보처리방침</a>
               <a href="/contact">문의</a>
             </nav>
