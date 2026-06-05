@@ -122,6 +122,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/ocr-guide": "ocrGuide",
   "/faq": "faq",
   "/privacy": "privacy",
+  "/terms": "terms",
   "/contact": "contact",
 };
 const ADSENSE_INFO_PAGE_KEYS = new Set<InfoPageKey>([
@@ -1624,6 +1625,7 @@ function App() {
               <a href="/ocr-guide">OCR 안내</a>
               <a href="/faq">FAQ</a>
               <a href="/privacy">개인정보처리방침</a>
+              <a href="/terms">이용약관</a>
               <a href="/contact">문의</a>
             </nav>
             <span>made by 우주</span>

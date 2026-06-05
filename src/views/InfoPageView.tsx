@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 type InfoPageKey =
   | "about"
@@ -9,17 +9,21 @@ type InfoPageKey =
   | "ocrGuide"
   | "faq"
   | "privacy"
+  | "terms"
   | "contact";
 
 type InfoPage = {
   eyebrow: string;
   title: string;
   description: string;
+  path: string;
   sections: Array<{
     title: string;
     body: ReactNode;
   }>;
 };
+
+const SITE_ORIGIN = "https://www.cpbv-lab.com";
 
 const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
   about: {
@@ -27,6 +31,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "V26 스킬 계산기 소개",
     description:
       "V26 스킬 계산기는 야구 게임 이용자가 스킬 조합을 빠르게 비교하고 기록할 수 있도록 만든 비공식 팬 도구입니다.",
+    path: "/about",
     sections: [
       {
         title: "제공하는 기능",
@@ -35,6 +40,8 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
             <li>타자, 선발, 중계, 마무리 스킬 조합 점수 계산</li>
             <li>카드 타입별 기준 점수와 판정 등급 확인</li>
             <li>고급스킬변경권과 임팩트 스킬 변경 시뮬레이션</li>
+            <li>라인업 이미지 인식 후 선수별 스킬 점수와 평균 점수 확인</li>
+            <li>주간 랭킹 챌린지를 통한 고스변 결과 기록 비교</li>
           </ul>
         ),
       },
@@ -45,6 +52,19 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
             계산기는 입력한 카드 타입, 포지션, 스킬 레벨을 기준으로 동일한 조건의 조합을
             비교할 수 있도록 구성했습니다. 단순 점수만 보여주는 대신 등급, 상위 확률,
             목표 등급까지의 예상 시도 횟수를 함께 제공해 사용자가 결과를 해석할 수 있게 돕습니다.
+            사용자가 직접 고른 조합과 시뮬레이션 결과를 같은 화면에서 비교할 수 있도록 계산 과정과
+            결과 문구를 계속 조정하고 있습니다.
+          </p>
+        ),
+      },
+      {
+        title: "도구가 해결하려는 문제",
+        body: (
+          <p>
+            스킬 조합은 카드 타입, 선수 역할, 스킬 레벨이 함께 바뀌기 때문에 단순히 스킬 이름만
+            보고 판단하기 어렵습니다. CPBV LAB은 여러 화면을 오가며 점수표를 대조해야 하는 과정을
+            줄이고, 같은 조건에서 어떤 조합이 더 희귀하거나 목표에 가까운지 빠르게 확인하도록 만든
+            웹 도구입니다.
           </p>
         ),
       },
@@ -65,6 +85,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "사용 가이드",
     description:
       "스킬 계산기와 시뮬레이터를 처음 사용하는 사용자를 위한 기본 사용 방법입니다.",
+    path: "/guide",
     sections: [
       {
         title: "스킬 점수 계산",
@@ -73,6 +94,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
             <li>타자 또는 투수 보직을 선택합니다.</li>
             <li>카드 타입과 스킬 3개, 레벨을 입력합니다.</li>
             <li>결과 영역에서 총점, 판정 등급, 고스변 희귀도를 확인합니다.</li>
+            <li>다른 카드 타입이나 보직으로 바꿔 같은 스킬 조합의 기준 차이를 비교합니다.</li>
           </ol>
         ),
       },
@@ -92,6 +114,19 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
             등급은 선택한 카드와 포지션 기준표에 따라 달라집니다. 같은 총점이라도 타자와
             투수, 선발과 불펜의 기준이 다를 수 있으므로 결과 화면의 기준 타입을 함께 확인하는
             것이 좋습니다. 자동 롤 결과는 확률 기반 참고값이며 실제 게임 결과를 보장하지 않습니다.
+            특히 기대 횟수는 평균적인 난이도를 읽기 위한 값이므로, 실제 사용 횟수는 짧은 구간에서
+            크게 흔들릴 수 있습니다.
+          </p>
+        ),
+      },
+      {
+        title: "추천 사용 흐름",
+        body: (
+          <p>
+            먼저 계산기에서 현재 보유 카드의 점수를 확인하고, 목표 등급을 정한 뒤 고스변 시뮬로
+            목표 도달 난이도를 확인하는 방식이 가장 안정적입니다. 임팩트 카드는 1번 스킬을 고정한
+            상태에서 2번과 3번 스킬을 바꾸는 경우가 많으므로, 임팩트 변경 시뮬에서 별도로 확인하는
+            편이 결과를 읽기 쉽습니다.
           </p>
         ),
       },
@@ -112,6 +147,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "계산 기준 안내",
     description:
       "CPBV LAB에서 스킬 점수와 등급을 해석하는 기본 방식과 결과를 볼 때 주의할 점을 정리했습니다.",
+    path: "/methodology",
     sections: [
       {
         title: "점수 계산의 목적",
@@ -120,6 +156,8 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
             스킬 점수는 서로 다른 조합을 같은 기준으로 비교하기 위한 참고 지표입니다. 카드 타입,
             선수 포지션, 스킬 레벨을 함께 입력하면 조합의 총점을 계산하고, 같은 조건에서 어느
             정도의 희귀도인지 확인할 수 있도록 구성했습니다.
+            점수는 선택한 세 스킬의 레벨별 기준값을 합산하는 방식으로 계산하며, 카드 타입과 보직에
+            따라 사용할 수 있는 스킬 목록과 평가 기준을 분리합니다.
           </p>
         ),
       },
@@ -143,6 +181,27 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
           </p>
         ),
       },
+      {
+        title: "상위 확률을 읽는 방법",
+        body: (
+          <p>
+            상위 확률은 현재 입력한 조합 점수 이상이 나올 가능성을 보여주는 값입니다. 예를 들어
+            같은 총점이라도 사용 가능한 스킬 풀이 좁은 카드와 넓은 카드에서는 희귀도가 다르게
+            보일 수 있습니다. 그래서 CPBV LAB은 총점만 표시하지 않고 등급, 상위 확률, 기대 시도
+            횟수를 함께 보여줍니다.
+          </p>
+        ),
+      },
+      {
+        title: "데이터 보정 방식",
+        body: (
+          <p>
+            스킬 점수표와 사용 가능 카드 타입은 사이트 내부 데이터로 관리합니다. 게임 업데이트로
+            스킬명이 추가되거나 역할별 평가가 바뀌면 공지사항에 변경 내역을 남기고, 계산기와 OCR
+            결과가 같은 기준을 사용하도록 함께 보정합니다.
+          </p>
+        ),
+      },
     ],
   },
   calculatorGuide: {
@@ -150,6 +209,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "스킬 계산기 사용법",
     description:
       "타자와 투수 스킬 점수 계산기를 사용할 때 입력해야 하는 항목과 결과 화면을 읽는 방법입니다.",
+    path: "/calculator-guide",
     sections: [
       {
         title: "입력 순서",
@@ -172,6 +232,16 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
         ),
       },
       {
+        title: "예시로 읽는 계산 결과",
+        body: (
+          <p>
+            같은 3개 스킬을 입력해도 레벨이 6-5-5인지 6-3-3인지에 따라 총점과 희귀도가 달라집니다.
+            타자 카드에서 좋은 결과로 보이는 조합도 선발 또는 중계 기준에서는 다른 등급으로 표시될
+            수 있으므로, 실제 카드의 역할을 먼저 맞춘 뒤 점수를 비교해야 합니다.
+          </p>
+        ),
+      },
+      {
         title: "자주 생기는 입력 실수",
         body: (
           <p>
@@ -188,6 +258,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "시뮬레이터 사용법",
     description:
       "고급 스킬 변경권 시뮬레이터와 임팩트 변경 시뮬레이터의 차이, 결과 해석 방법을 안내합니다.",
+    path: "/simulator-guide",
     sections: [
       {
         title: "고스변 시뮬",
@@ -196,6 +267,16 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
             고스변 시뮬은 고급 스킬 변경권을 사용했을 때 나올 수 있는 조합을 가정해 점수와 등급을
             확인하는 기능입니다. 1회 결과를 빠르게 확인하거나, 목표 등급을 정해 자동으로 반복
             시뮬레이션할 수 있습니다.
+          </p>
+        ),
+      },
+      {
+        title: "목표 등급 자동 롤",
+        body: (
+          <p>
+            자동 롤은 사용자가 정한 등급 이상이 나올 때까지 반복 시뮬레이션한 결과를 보여줍니다.
+            이 기능은 실제 변경권을 대신 쓰는 기능이 아니라, 목표를 정했을 때 어느 정도의 난이도를
+            감수해야 하는지 감으로 확인하기 위한 참고 도구입니다.
           </p>
         ),
       },
@@ -226,6 +307,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "라인업 OCR 사용법",
     description:
       "라인업 스킬 인식 기능을 사용할 때 필요한 캡처 조건, 저장 방식, 결과 검토 방법입니다.",
+    path: "/ocr-guide",
     sections: [
       {
         title: "캡처 준비",
@@ -233,6 +315,18 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
           <p>
             선수명, 카드 타입, 스킬명이 화면에 선명하게 보이는 이미지를 사용해야 합니다. 화면이
             흐리거나 일부가 잘려 있으면 스킬명 또는 레벨이 잘못 인식될 수 있습니다.
+            모바일 캡처는 확대나 압축 과정에서 글자가 뭉개질 수 있으므로, 가능하면 원본 해상도에
+            가까운 이미지를 사용하는 것이 좋습니다.
+          </p>
+        ),
+      },
+      {
+        title: "점수 보정",
+        body: (
+          <p>
+            OCR은 이미지를 읽어 초기 후보를 채워주는 기능이고, 최종 점수는 화면에서 선택된 카드 타입,
+            포지션, 스킬명, 레벨을 기준으로 다시 계산합니다. 인식된 값이 틀렸더라도 저장 전에 직접
+            수정하면 계산기와 같은 기준으로 선수별 점수와 라인업 평균을 확인할 수 있습니다.
           </p>
         ),
       },
@@ -263,6 +357,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "자주 묻는 질문",
     description:
       "CPBV LAB의 스킬 계산기, 시뮬레이터, OCR 기능을 사용할 때 자주 확인하는 내용을 정리했습니다.",
+    path: "/faq",
     sections: [
       {
         title: "스킬 점수는 실제 성능을 그대로 의미하나요?",
@@ -343,6 +438,17 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
           </p>
         ),
       },
+      {
+        title: "도구 결과를 다른 사람에게 공유해도 되나요?",
+        body: (
+          <p>
+            개인적인 비교나 커뮤니티 논의 목적으로 결과를 공유할 수 있습니다. 다만 계산 결과는
+            참고용이며, 게임 공식 확률이나 공식 성능 평가를 대신하지 않습니다. 오류가 의심되는
+            결과를 공유할 때는 카드 타입과 보직, 스킬 레벨을 함께 적어야 다른 사용자가 같은 조건을
+            재현할 수 있습니다.
+          </p>
+        ),
+      },
     ],
   },
   privacy: {
@@ -350,6 +456,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
     title: "개인정보처리방침",
     description:
       "V26 스킬 계산기에서 수집하거나 저장할 수 있는 정보와 그 사용 목적을 안내합니다.",
+    path: "/privacy",
     sections: [
       {
         title: "수집하는 정보",
@@ -381,6 +488,16 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
         ),
       },
       {
+        title: "광고와 쿠키",
+        body: (
+          <p>
+            Google AdSense가 적용되는 경우 Google과 파트너는 광고 제공, 광고 성과 측정, 부정 사용
+            방지를 위해 쿠키 또는 유사 기술을 사용할 수 있습니다. 사용자는 브라우저 설정이나 Google
+            광고 설정을 통해 맞춤 광고 사용 방식을 조정할 수 있습니다.
+          </p>
+        ),
+      },
+      {
         title: "문의 및 삭제 요청",
         body: (
           <p>
@@ -391,11 +508,61 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
       },
     ],
   },
+  terms: {
+    eyebrow: "Terms",
+    title: "이용약관 및 면책 안내",
+    description:
+      "CPBV LAB 도구를 사용할 때 적용되는 기본 이용 조건과 계산 결과의 한계를 안내합니다.",
+    path: "/terms",
+    sections: [
+      {
+        title: "서비스 성격",
+        body: (
+          <p>
+            CPBV LAB은 야구 게임 이용자가 스킬 조합을 비교하고 시뮬레이션 결과를 참고할 수 있도록
+            제공되는 비공식 팬 제작 웹 도구입니다. 게임사, 리그, 선수 단체와 공식 제휴되어 있지
+            않으며, 사이트 내 명칭은 사용자가 기능을 이해하기 위한 설명 목적으로 사용됩니다.
+          </p>
+        ),
+      },
+      {
+        title: "결과의 한계",
+        body: (
+          <p>
+            계산 결과, 등급, 상위 확률, 기대 시도 횟수는 사이트 내부 기준과 확률 계산에 따른
+            참고값입니다. 실제 게임 결과, 업데이트, 이벤트, 밸런스 조정, 사용자의 입력 조건에 따라
+            결과가 달라질 수 있으며 특정 결과나 성능을 보장하지 않습니다.
+          </p>
+        ),
+      },
+      {
+        title: "사용자 책임",
+        body: (
+          <p>
+            사용자는 계산기와 시뮬레이터 결과를 참고 자료로 활용해야 합니다. 게임 내 재화 사용,
+            카드 선택, 변경권 사용 여부는 사용자가 직접 판단해야 하며, 사이트는 그 결정으로 발생한
+            손실이나 기대와 다른 결과를 보상하지 않습니다.
+          </p>
+        ),
+      },
+      {
+        title: "콘텐츠와 데이터 수정",
+        body: (
+          <p>
+            운영자는 오류 제보나 게임 업데이트를 확인하면 점수표, 스킬 목록, 안내 문구를 수정할 수
+            있습니다. 변경 내역은 가능한 범위에서 공지사항에 기록하며, 이전 계산 결과와 최신 기준의
+            결과가 다르게 보일 수 있습니다.
+          </p>
+        ),
+      },
+    ],
+  },
   contact: {
     eyebrow: "Contact",
     title: "문의",
     description:
       "버그 제보, 기능 요청, 데이터 수정 요청이 있으면 아래 안내를 통해 보내주세요.",
+    path: "/contact",
     sections: [
       {
         title: "문의 방법",
@@ -429,6 +596,37 @@ type InfoPageViewProps = {
 
 export default function InfoPageView({ page, themeAction, onGoHome }: InfoPageViewProps) {
   const content = INFO_PAGES[page];
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const title = `${content.title} | CPBV LAB`;
+    const canonicalUrl = `${SITE_ORIGIN}${content.path}`;
+    document.title = title;
+
+    const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    description?.setAttribute("content", content.description);
+
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
+
+    document
+      .querySelector<HTMLMetaElement>('meta[property="og:title"]')
+      ?.setAttribute("content", title);
+    document
+      .querySelector<HTMLMetaElement>('meta[property="og:description"]')
+      ?.setAttribute("content", content.description);
+    document
+      .querySelector<HTMLMetaElement>('meta[property="og:url"]')
+      ?.setAttribute("content", canonicalUrl);
+  }, [content]);
 
   return (
     <main className="info-page" aria-labelledby="info-page-title">

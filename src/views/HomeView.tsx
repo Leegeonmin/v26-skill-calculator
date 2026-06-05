@@ -113,6 +113,31 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
   },
 ];
 
+const HOME_CONTENT_SECTIONS = [
+  {
+    title: "보직부터 맞춰 계산합니다",
+    body:
+      "타자, 선발, 중계, 마무리는 보는 스킬이 다릅니다. 같은 스킬이어도 역할을 잘못 고르면 점수가 엉뚱하게 보일 수 있어서, 먼저 보직과 카드 타입을 나눈 뒤 계산합니다.",
+  },
+  {
+    title: "총점 옆에 희귀도를 붙였습니다",
+    body:
+      "총점만 높다고 끝은 아닙니다. 이 조합이 고스변에서 어느 정도 보기 힘든지 같이 봐야 판단이 쉬워서, 상위 확률과 기대 시도 횟수를 같이 보여줍니다.",
+  },
+  {
+    title: "변경권 쓰기 전에 먼저 굴려봅니다",
+    body:
+      "시뮬레이터가 실제 결과를 맞혀주는 건 아닙니다. 대신 목표 등급이나 2메이저 조합을 노릴 때 어느 정도 각오해야 하는지 미리 감을 잡는 용도로 씁니다.",
+  },
+];
+
+const HOME_EXAMPLE_STEPS = [
+  "카드 타입, 보직, 스킬 3개와 레벨을 그대로 넣습니다.",
+  "총점만 보지 말고 등급, 상위 확률, 기대 횟수를 같이 봅니다.",
+  "목표 등급이 있으면 고스변 시뮬에서 자동 롤로 난이도를 확인합니다.",
+  "OCR 결과는 저장 전에 카드 타입과 포지션이 맞는지 한 번 더 봅니다.",
+];
+
 // Shared with NoticeView; keep this colocated with the home announcement source.
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
@@ -258,7 +283,7 @@ export default function HomeView({
         </div>
         <div className="home-hero-copy">
           <h1 id="home-title">v26-lab</h1>
-          <p>계산기, 시뮬레이터, 랭킹챌린지를 한 화면에서 바로 선택하세요.</p>
+          <p>스킬 조합을 계산하고, 변경권을 쓰기 전에 먼저 굴려보세요.</p>
         </div>
       </section>
 
@@ -348,6 +373,38 @@ export default function HomeView({
         </section>
       </section>
 
+      <section className="home-content-guide" aria-labelledby="home-content-guide-title">
+        <div className="home-content-guide-head">
+          <span>How it works</span>
+          <h2 id="home-content-guide-title">계산할 때 확인하는 것들</h2>
+          <p>
+            스킬 이름만 보고 고르면 헷갈리는 경우가 많습니다. 역할, 카드 타입, 레벨을 맞춘 뒤
+            총점과 희귀도를 같이 보는 쪽으로 정리했습니다.
+          </p>
+        </div>
+
+        <div className="home-content-grid">
+          {HOME_CONTENT_SECTIONS.map((section) => (
+            <article key={section.title} className="home-content-card">
+              <h3>{section.title}</h3>
+              <p>{section.body}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="home-example-panel">
+          <div>
+            <span>Example workflow</span>
+            <h3>보통 이렇게 봅니다</h3>
+          </div>
+          <ol>
+            {HOME_EXAMPLE_STEPS.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       <nav className="home-site-links" aria-label="사이트 정보">
         <a href="/about">소개</a>
         <a href="/guide">사용 가이드</a>
@@ -357,6 +414,7 @@ export default function HomeView({
         <a href="/ocr-guide">OCR 안내</a>
         <a href="/faq">FAQ</a>
         <a href="/privacy">개인정보처리방침</a>
+        <a href="/terms">이용약관</a>
         <a href="/contact">문의</a>
       </nav>
     </main>
