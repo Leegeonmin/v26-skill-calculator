@@ -396,3 +396,14 @@ export async function skillOcrListPublicUploads(limit = 20): Promise<SkillOcrSav
 
   return mapPublicUploadRows(data);
 }
+
+export async function skillOcrDeletePublicUpload(uploadId: string): Promise<void> {
+  const supabase = requireSupabase();
+  const { error } = await supabase.rpc("skill_ocr_delete_public_upload", {
+    p_upload_id: uploadId,
+  });
+
+  if (error) {
+    throw normalizeRpcError(error, "OCR 스냅샷을 삭제하지 못했습니다.");
+  }
+}

@@ -24,6 +24,12 @@ export const SKILLS: SkillMeta[] = [
   },
   {
     id: "hitter_catcher_lead",
+    name: "포수리드(버프포함)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_catcher_lead_no_buff",
     name: "포수리드",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
@@ -107,8 +113,20 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ["impact"],
   },
   {
-    id: "hitter_table_setter_captain_on",
-    name: "선봉장(타순배치O)",
+    id: "hitter_table_setter_captain_on_run_142",
+    name: "선봉장(타순배치,주루142+)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_table_setter_captain_on_run_130_141",
+    name: "선봉장(타순배치,주루130~141)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_table_setter_captain_on_run_129",
+    name: "선봉장(타순배치,주루129이하)",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
   },
@@ -156,7 +174,7 @@ export const SKILLS: SkillMeta[] = [
   },
   {
     id: "hitter_base_stealer",
-    name: "대도(버프)",
+    name: "대도",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
   },
@@ -293,8 +311,20 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
-    id: "hitter_table_setter_captain_off",
-    name: "선봉장(타순배치X)",
+    id: "hitter_table_setter_captain_off_run_142",
+    name: "선봉장(타순배치X,주루142+)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_table_setter_captain_off_run_130_141",
+    name: "선봉장(타순배치X,주루130~141)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_table_setter_captain_off_run_129",
+    name: "선봉장(타순배치X,주루129이하)",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
   },

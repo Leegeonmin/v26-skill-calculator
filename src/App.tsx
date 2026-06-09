@@ -21,6 +21,7 @@ import {
   recognizeSkillImage,
   skillOcrClaimPublicWeeklyUsage,
   skillOcrCreatePublicSnapshot,
+  skillOcrDeletePublicUpload,
   skillOcrFinalizePublicUpload,
   skillOcrGetPublicWeeklyQuota,
   skillOcrListUploads,
@@ -1370,6 +1371,27 @@ function App() {
     setOcrDraftAverageScore(summary.averageScore);
   };
 
+  const handleDeletePublicOcrSnapshot = async (uploadId: string) => {
+    try {
+      setOcrUploadError(null);
+      await skillOcrDeletePublicUpload(uploadId);
+      setOcrUploads(await skillOcrListPublicUploads(20));
+
+      if (ocrDraftPublicUploadId === uploadId || ocrSavedUpload?.id === uploadId) {
+        setOcrSavedUpload(null);
+        setOcrDraftPublicUploadId(null);
+        setOcrDraftPlayers([]);
+        setOcrDraftImageName(null);
+        setOcrDraftRole(null);
+        setOcrDraftRawResponse(null);
+        setOcrDraftTotalScore(0);
+        setOcrDraftAverageScore(0);
+      }
+    } catch (error) {
+      setOcrUploadError(error instanceof Error ? error.message : "OCR 스냅샷을 삭제하지 못했습니다.");
+    }
+  };
+
   const updateOcrDraftPlayers = (
     updater: (players: SkillOcrSelectedPlayer[]) => SkillOcrSelectedPlayer[]
   ) => {
@@ -1688,6 +1710,7 @@ function App() {
               onSkillLevelChange={handleOcrSkillLevelChange}
               onSaveDraft={() => void handleOcrSaveDraft()}
               onSelectSnapshot={handleOpenPublicOcrSnapshot}
+              onDeleteSnapshot={(uploadId) => void handleDeletePublicOcrSnapshot(uploadId)}
               onGoHome={() => setToolView("home")}
             />
           ) : toolView === "ranking" ? (

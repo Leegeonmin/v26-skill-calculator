@@ -40,6 +40,7 @@ type PublicSkillOcrViewProps = {
   onSkillLevelChange: (playerIndex: number, slot: number, level: SkillLevel) => void;
   onSaveDraft: () => void;
   onSelectSnapshot: (upload: SkillOcrSavedUpload) => void;
+  onDeleteSnapshot: (uploadId: string) => void;
   onGoHome: () => void;
 };
 
@@ -220,6 +221,7 @@ export default function PublicSkillOcrView({
   onSkillLevelChange,
   onSaveDraft,
   onSelectSnapshot,
+  onDeleteSnapshot,
   onGoHome,
 }: PublicSkillOcrViewProps) {
   const pitcherInputRef = useRef<HTMLInputElement | null>(null);
@@ -523,19 +525,32 @@ export default function PublicSkillOcrView({
               </div>
               <div className="public-ocr-saved-list">
                 {pendingUploads.map((upload) => (
-                  <button
-                    key={upload.id}
-                    type="button"
-                    className="public-ocr-saved-row public-ocr-review-row"
-                    onClick={() => {
-                      onSelectSnapshot(upload);
-                      setActiveTab("upload");
-                    }}
-                  >
-                    <strong>{formatRole(upload.role)} 스냅샷</strong>
-                    <span>{formatDate(upload.created_at)}</span>
-                    <em>검수하기</em>
-                  </button>
+                  <div key={upload.id} className="public-ocr-snapshot-row">
+                    <button
+                      type="button"
+                      className="public-ocr-saved-row public-ocr-review-row"
+                      onClick={() => {
+                        onSelectSnapshot(upload);
+                        setActiveTab("upload");
+                      }}
+                    >
+                      <strong>{formatRole(upload.role)} 스냅샷</strong>
+                      <span>{formatDate(upload.created_at)}</span>
+                      <em>검수하기</em>
+                    </button>
+                    <button
+                      type="button"
+                      className="public-ocr-snapshot-delete"
+                      aria-label={`${formatRole(upload.role)} 스냅샷 삭제`}
+                      onClick={() => {
+                        if (window.confirm("이 OCR 스냅샷을 삭제할까요?")) {
+                          onDeleteSnapshot(upload.id);
+                        }
+                      }}
+                    >
+                      삭제
+                    </button>
+                  </div>
                 ))}
               </div>
             </section>
