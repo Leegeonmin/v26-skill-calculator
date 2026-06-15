@@ -348,7 +348,7 @@ export const SKILLS: SkillMeta[] = [
   },
   {
     id: "hitter_thrilling_handtaste",
-    name: "짜릿한순간",
+    name: "짜릿한손맛",
     grade: "major",
     availableCardTypes: ALL_CARD_TYPES,
   },
