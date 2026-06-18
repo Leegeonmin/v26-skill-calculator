@@ -9065,6 +9065,27 @@ input {
   text-decoration: underline;
 }
 
+.info-guide-figure {
+  width: min(100%, 520px);
+  margin: 4px 0 0;
+}
+
+.info-guide-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(216, 224, 238, 0.92);
+  border-radius: 16px;
+}
+
+.info-guide-figure figcaption {
+  margin-top: 8px;
+  color: #66758f;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
 .app-bg[data-theme="dark"] .info-page-toolbar,
 .app-bg[data-theme="dark"] .info-page-card {
   background: rgba(15, 23, 42, 0.72);
@@ -9078,6 +9099,14 @@ input {
 .app-bg[data-theme="dark"] .info-page-section p,
 .app-bg[data-theme="dark"] .info-page-section li {
   color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .info-guide-image {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.app-bg[data-theme="dark"] .info-guide-figure figcaption {
+  color: #94a3b8;
 }
 
 .modal-backdrop {
