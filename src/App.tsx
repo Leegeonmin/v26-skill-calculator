@@ -47,7 +47,6 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
-import type { InfoPageKey } from "./views/InfoPageView";
 import type {
   CalculatorMode,
   CardType,
@@ -80,9 +79,9 @@ import {
   adminUpdateHomeChangeMessage,
   getHomeChangeMessage,
 } from "./lib/siteSettings";
+import HomeView from "./views/HomeView";
+import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
 
-const HomeView = lazy(() => import("./views/HomeView"));
-const InfoPageView = lazy(() => import("./views/InfoPageView"));
 const NoticeView = lazy(() => import("./views/NoticeView"));
 const SkillCompareBetaView = lazy(() => import("./views/SkillCompareBetaView"));
 const RankingView = lazy(() => import("./views/RankingView"));
@@ -1620,9 +1619,7 @@ function App() {
       <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
           <AppChrome>
-            <Suspense fallback={<ViewFallback />}>
-              <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
-            </Suspense>
+            <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
           </AppChrome>
           <footer className="app-footer">
             <nav className="footer-links" aria-label="사이트 정보">

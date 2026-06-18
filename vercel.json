@@ -60,7 +60,11 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/admin",
+      "destination": "/"
+    },
+    {
+      "source": "/tyrant",
       "destination": "/"
     }
   ]
