@@ -116,10 +116,10 @@ const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
 const ADSENSE_CLIENT = "ca-pub-6461439689226359";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
-  "/guide": "guide",
-  "/methodology": "methodology",
+  "/guide": "skillScoreMethod",
+  "/methodology": "skillScoreMethod",
   "/skill-score-method": "skillScoreMethod",
-  "/calculator-guide": "calculatorGuide",
+  "/calculator-guide": "skillScoreMethod",
   "/simulator-guide": "simulatorGuide",
   "/ocr-guide": "ocrGuide",
   "/faq": "faq",
@@ -127,17 +127,6 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/terms": "terms",
   "/contact": "contact",
 };
-const ADSENSE_INFO_PAGE_KEYS = new Set<InfoPageKey>([
-  "about",
-  "guide",
-  "methodology",
-  "skillScoreMethod",
-  "calculatorGuide",
-  "simulatorGuide",
-  "ocrGuide",
-  "faq",
-]);
-
 type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
 
@@ -417,12 +406,8 @@ function App() {
   const shouldLoadAdsense =
     !isAdminRoute &&
     !isOcrRoute &&
-    ((infoPageKey ? ADSENSE_INFO_PAGE_KEYS.has(infoPageKey) : false) ||
-      toolView === "home" ||
-      toolView === "skillCompareBeta" ||
-      toolView === "calculator" ||
-      toolView === "simulator" ||
-      toolView === "impactChange");
+    typeof window !== "undefined" &&
+    window.location.pathname.replace(/\/+$/, "") === "/skill-score-method";
   const faqStructuredData = useMemo(
     () =>
       JSON.stringify({
@@ -1642,9 +1627,7 @@ function App() {
           <footer className="app-footer">
             <nav className="footer-links" aria-label="사이트 정보">
               <a href="/about">소개</a>
-              <a href="/guide">사용 가이드</a>
-              <a href="/methodology">계산 기준</a>
-              <a href="/calculator-guide">계산기 사용법</a>
+              <a href="/skill-score-method">스킬 점수 기준</a>
               <a href="/simulator-guide">시뮬레이터 안내</a>
               <a href="/ocr-guide">OCR 안내</a>
               <a href="/faq">FAQ</a>

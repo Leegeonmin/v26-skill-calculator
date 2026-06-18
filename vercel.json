@@ -1,6 +1,21 @@
 {
   "redirects": [
     {
+      "source": "/guide",
+      "destination": "https://www.cpbv-lab.com/skill-score-method",
+      "permanent": true
+    },
+    {
+      "source": "/methodology",
+      "destination": "https://www.cpbv-lab.com/skill-score-method",
+      "permanent": true
+    },
+    {
+      "source": "/calculator-guide",
+      "destination": "https://www.cpbv-lab.com/skill-score-method",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
