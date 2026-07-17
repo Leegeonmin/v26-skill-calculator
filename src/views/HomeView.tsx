@@ -1,5 +1,5 @@
 import { IconGlyph } from "../components/AppChrome";
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ToolView } from "../types";
 
@@ -26,6 +26,17 @@ function getDismissedHomeChangeMessage() {
   }
 
   return window.sessionStorage.getItem(HOME_CHANGE_DISMISSED_KEY) ?? "";
+}
+
+function UserIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="ui-icon">
+      <path
+        d="M12 4a4.2 4.2 0 1 1 0 8.4A4.2 4.2 0 0 1 12 4Zm0 10.4c4.05 0 7.2 2.15 7.2 4.9V21H4.8v-1.7c0-2.75 3.15-4.9 7.2-4.9Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 
 type HomeWidget = {
@@ -135,7 +146,7 @@ const HOME_EXAMPLE_STEPS = [
   "카드 타입, 보직, 스킬 3개와 레벨을 그대로 넣습니다.",
   "총점만 보지 말고 등급, 상위 확률, 기대 횟수를 같이 봅니다.",
   "목표 등급이 있으면 고스변 시뮬에서 자동 롤로 난이도를 확인합니다.",
-  "OCR 결과는 저장 전에 카드 타입과 포지션이 맞는지 한 번 더 봅니다.",
+  "이미지 인식 결과는 저장 전에 카드 타입과 포지션이 맞는지 한 번 더 봅니다.",
 ];
 
 // Shared with NoticeView; keep this colocated with the home announcement source.
@@ -148,23 +159,23 @@ export const NOTICE_ITEMS = [
   },
   {
     date: "2026.05.13",
-    title: "라인업 OCR 확률 표시와 복사 개선",
+    title: "라인업 스킬 인식 확률 표시와 복사 개선",
     body: "라인업 스킬 인식 결과의 상위 확률을 소수점 3자리까지만 표시하고, 복사 내용에 선수별 등급과 확률도 함께 포함되도록 개선했습니다.",
   },
   {
     date: "2026.05.05",
-    title: "고스변 확률 계산과 라인업 OCR 등급 표시 개선",
+    title: "고스변 확률 계산과 라인업 스킬 인식 등급 표시 개선",
     body: "스킬 점수 계산기, 고스변 점수 비교, 라인업 스킬 인식에 상위 확률과 등급 정보를 추가하고 자동롤 및 호버 UI를 다듬었습니다.",
   },
   {
     date: "2026.05.02",
     title: "라인업 스킬 인식 공개 베타 추가",
-    body: "Google 로그인 사용자에게 주 1회 타자/투수 라인업 OCR을 제공하고, 미저장 스냅샷 복구와 최근 기록 복사 기능을 추가했습니다.",
+    body: "Google 로그인 사용자에게 주 1회 타자/투수 라인업 스킬 인식을 제공하고, 미저장 스냅샷 복구와 최근 기록 복사 기능을 추가했습니다.",
   },
   {
     date: "2026.05.02",
-    title: "관리자 OCR 통계 세분화",
-    body: "관리자 대시보드에서 공개 라인업 OCR, tyrant 라인업 OCR, 스킬 비교 OCR, 공개 스냅샷 저장/미저장 현황을 나눠 확인할 수 있게 했습니다.",
+    title: "관리자 이미지 인식 통계 세분화",
+    body: "관리자 대시보드에서 공개 라인업 스킬 인식, tyrant 라인업 스킬 인식, 스킬 화면 인식, 공개 스냅샷 저장/미저장 현황을 나눠 확인할 수 있게 했습니다.",
   },
   {
     date: "2026.05.02",
@@ -178,8 +189,8 @@ export const NOTICE_ITEMS = [
   },
   {
     date: "2026.05.02",
-    title: "관리자 OCR 사용량 통계 추가",
-    body: "관리자 대시보드에서 라인업 OCR, 투수/타자 OCR, 고스변 점수 비교 OCR 호출량과 저장 횟수를 확인할 수 있게 했습니다.",
+    title: "관리자 이미지 인식 사용량 통계 추가",
+    body: "관리자 대시보드에서 라인업 스킬 인식, 투수/타자 라인업 인식, 고스변 점수 비교 인식 호출량과 저장 횟수를 확인할 수 있게 했습니다.",
   },
   {
     date: "2026.04.30",
@@ -206,6 +217,8 @@ export default function HomeView({
   const visibleHomeChangeMessage = homeChangeMessage.trim();
   const [canDismissHomeChangeMessage, setCanDismissHomeChangeMessage] = useState(getCanDismissHomeChangeMessage);
   const [dismissedHomeChangeMessage, setDismissedHomeChangeMessage] = useState(getDismissedHomeChangeMessage);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -219,6 +232,31 @@ export default function HomeView({
 
     return () => mediaQuery.removeEventListener("change", syncCanDismiss);
   }, []);
+
+  useEffect(() => {
+    if (!accountMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [accountMenuOpen]);
 
   const showHomeChangeMessage =
     visibleHomeChangeMessage &&
@@ -261,29 +299,65 @@ export default function HomeView({
       <section className="home-hero">
         <div className="home-hero-action">
           {themeAction}
-          <div className="home-auth-card">
+          <div className="home-auth-card" ref={accountMenuRef}>
             {authSession ? (
-              <>
+              <button
+                type="button"
+                className="home-auth-button home-auth-button-user"
+                onClick={() => setAccountMenuOpen((open) => !open)}
+                aria-label="계정 메뉴"
+                aria-expanded={accountMenuOpen}
+              >
+                <UserIcon />
                 <span>{authDisplayName ?? "Google 사용자"}</span>
-                <button type="button" className="ghost-btn" onClick={onGoogleLogout}>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="home-auth-button"
+                disabled={!supabaseReady}
+                onClick={() => {
+                  setAccountMenuOpen(false);
+                  onGoogleLogin();
+                }}
+                aria-label="로그인"
+              >
+                <UserIcon />
+                <span>로그인</span>
+              </button>
+            )}
+            {authSession && accountMenuOpen && (
+              <div className="home-account-menu" role="menu">
+                <div className="home-account-menu-user">
+                  <span>로그인 중</span>
+                  <strong>{authDisplayName ?? "Google 사용자"}</strong>
+                </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    onSelectView("lineupSkillOcr");
+                  }}
+                >
+                  라인업 스킬 인식
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    onGoogleLogout();
+                  }}
+                >
                   로그아웃
                 </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="primary-btn"
-              disabled={!supabaseReady}
-              onClick={onGoogleLogin}
-            >
-              Google 로그인
-            </button>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="home-hero-copy">
           <h1 id="home-title">v26-lab</h1>
-          <p>스킬 조합을 계산하고, 변경권을 쓰기 전에 먼저 굴려보세요.</p>
         </div>
       </section>
 
@@ -409,7 +483,7 @@ export default function HomeView({
         <a href="/about">소개</a>
         <a href="/skill-score-method">스킬 점수 기준</a>
         <a href="/simulator-guide">시뮬레이터 안내</a>
-        <a href="/ocr-guide">OCR 안내</a>
+        <a href="/ocr-guide">라인업 인식 안내</a>
         <a href="/faq">FAQ</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/terms">이용약관</a>

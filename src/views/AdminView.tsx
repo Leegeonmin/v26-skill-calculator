@@ -27,8 +27,8 @@ const toolLabels: Record<string, string> = {
   advanced_manual_roll: "고스변 수동",
   advanced_auto_roll: "고스변 자동",
   impact_auto_roll: "임팩트 자동",
-  ocr_lineup_recognize: "OCR 라인업 인식",
-  ocr_skill_compare_recognize: "OCR 스킬 비교",
+  ocr_lineup_recognize: "라인업 이미지 인식",
+  ocr_skill_compare_recognize: "스킬 화면 인식",
 };
 
 function formatNumber(value: number | null | undefined) {
@@ -58,7 +58,7 @@ function renderOcrRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
   if (statsLoading) {
     return (
       <tr>
-        <td colSpan={6}>OCR 통계를 불러오는 중입니다.</td>
+        <td colSpan={6}>이미지 인식 통계를 불러오는 중입니다.</td>
       </tr>
     );
   }
@@ -66,7 +66,7 @@ function renderOcrRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
   if (!stats?.ocr_breakdown?.length) {
     return (
       <tr>
-        <td colSpan={6}>아직 OCR 사용 기록이 없습니다.</td>
+        <td colSpan={6}>아직 이미지 인식 사용 기록이 없습니다.</td>
       </tr>
     );
   }
@@ -242,7 +242,7 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Dashboard</p>
           <h1>운영 대시보드</h1>
           <p className="admin-copy">
-            오늘 사용량, OCR 호출량, 기능별 사용 비중, 최근 문의를 한 화면에서 확인합니다.
+            한국시간 오늘 0시 이후 사용량과 기능별 사용 비중을 먼저 보고, 저장/스냅샷 누적 지표를 함께 확인합니다.
           </p>
         </div>
 
@@ -291,37 +291,35 @@ export default function AdminView({
         {homeChangeStatus === "error" && homeChangeError && <p className="modal-error">{homeChangeError}</p>}
       </section>
 
-      <div className="admin-grid">
+      <div className="admin-grid admin-metric-grid">
         <section className="admin-panel">
           <h2>오늘 사용량</h2>
           <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.today_events)}</p>
-          <p>오늘 0시 이후 쌓인 전체 이벤트 수입니다.</p>
+          <p>한국시간 오늘 0시 이후 쌓인 전체 이벤트 수입니다.</p>
         </section>
 
         <section className="admin-panel">
           <h2>고유 세션</h2>
           <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.unique_sessions)}</p>
-          <p>오늘 기준으로 중복을 제거한 방문 세션 수입니다.</p>
+          <p>한국시간 오늘 기준으로 중복을 제거한 방문 세션 수입니다.</p>
         </section>
 
         <section className="admin-panel">
-          <h2>OCR 호출</h2>
+          <h2>오늘 이미지 인식 호출</h2>
           <p className="admin-metric">
             {statsLoading ? "-" : formatNumber(stats?.ocr_total_requests)}
           </p>
-          <p>외부 OCR API를 호출한 전체 횟수입니다.</p>
+          <p>한국시간 오늘 0시 이후 외부 이미지 인식 API를 호출한 횟수입니다.</p>
         </section>
 
         <section className="admin-panel">
-          <h2>OCR 저장</h2>
+          <h2>전체 이미지 인식 저장</h2>
           <p className="admin-metric">
             {statsLoading ? "-" : formatNumber(stats?.ocr_saved_uploads)}
           </p>
-          <p>라인업 OCR 결과를 사용자가 저장한 횟수입니다.</p>
+          <p>라인업 스킬 인식 결과를 사용자가 저장한 누적 횟수입니다.</p>
         </section>
-      </div>
 
-      <div className="admin-grid admin-grid-compact">
         <section className="admin-panel">
           <h2>타자 vs 투수</h2>
           <p className="admin-metric">
@@ -329,7 +327,7 @@ export default function AdminView({
               ? "-"
               : `${formatNumber(stats?.hitter_events)} / ${formatNumber(stats?.pitcher_events)}`}
           </p>
-          <p>오늘 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
+          <p>한국시간 오늘 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
         </section>
 
         <section className="admin-panel">
@@ -341,22 +339,22 @@ export default function AdminView({
                   stats?.avg_rolls_to_ssr_plus
                 )}`}
           </p>
-          <p>오늘 고스변 자동 롤에서 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
+          <p>한국시간 오늘 고스변 자동 롤에서 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
         </section>
       </div>
 
       <section className="admin-panel admin-table-panel">
         <div className="admin-section-head">
           <div>
-            <p className="admin-eyebrow">OCR Cost</p>
-            <h2>OCR 사용량</h2>
+            <p className="admin-eyebrow">Image Scan Cost</p>
+            <h2>오늘 이미지 인식 사용량</h2>
           </div>
-          <p>OCR API 호출을 라인업/스킬 비교와 투수/타자로 나눠 봅니다.</p>
+          <p>호출/세션/최근 사용은 한국시간 오늘 기준입니다. 저장과 스냅샷은 현재까지의 누적 기준입니다.</p>
         </div>
 
         <div className="admin-grid admin-grid-compact">
           <section className="admin-subpanel">
-            <span>라인업 OCR</span>
+            <span>오늘 라인업 스킬 인식</span>
             <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_lineup_requests)}</strong>
             <p>
               투수 {statsLoading ? "-" : formatNumber(stats?.ocr_pitcher_requests)} / 타자{" "}
@@ -364,12 +362,12 @@ export default function AdminView({
             </p>
           </section>
           <section className="admin-subpanel">
-            <span>스킬 비교 OCR</span>
+            <span>오늘 스킬 화면 인식</span>
             <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_skill_compare_requests)}</strong>
             <p>고급 스킬 변경권 점수 비교에서 발생한 인식 요청입니다.</p>
           </section>
           <section className="admin-subpanel">
-            <span>저장된 라인업</span>
+            <span>전체 저장된 라인업</span>
             <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_saved_uploads)}</strong>
             <p>
               투수 {statsLoading ? "-" : formatNumber(stats?.ocr_saved_pitcher_uploads)} / 타자{" "}
@@ -377,12 +375,12 @@ export default function AdminView({
             </p>
           </section>
           <section className="admin-subpanel">
-            <span>공개 라인업 OCR</span>
+            <span>오늘 공개 라인업 스킬 인식</span>
             <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_lineup_requests)}</strong>
             <p>Google 로그인 사용자의 공개 라인업 인식 요청입니다.</p>
           </section>
           <section className="admin-subpanel">
-            <span>공개 OCR 스냅샷</span>
+            <span>전체 공개 인식 스냅샷</span>
             <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_snapshots)}</strong>
             <p>
               저장 {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_uploads)} / 미저장{" "}
@@ -390,7 +388,7 @@ export default function AdminView({
             </p>
           </section>
           <section className="admin-subpanel">
-            <span>공개 저장 라인업</span>
+            <span>전체 공개 저장 라인업</span>
             <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_uploads)}</strong>
             <p>
               투수 {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_pitcher_uploads)} / 타자{" "}
@@ -404,10 +402,10 @@ export default function AdminView({
             <thead>
               <tr>
                 <th>구분</th>
-                <th>호출</th>
-                <th>비중</th>
-                <th>세션</th>
-                <th>저장</th>
+                <th>오늘 호출</th>
+                <th>오늘 비중</th>
+                <th>오늘 세션</th>
+                <th>전체 저장</th>
                 <th>최근 사용</th>
               </tr>
             </thead>
@@ -420,9 +418,9 @@ export default function AdminView({
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Usage</p>
-            <h2>기능별 사용량</h2>
+            <h2>오늘 기능별 사용량</h2>
           </div>
-          <p>오늘 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
+          <p>한국시간 오늘 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
         </div>
 
         <div className="admin-table-wrap">
