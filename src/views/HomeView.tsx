@@ -128,7 +128,7 @@ const HOME_CONTENT_SECTIONS = [
   {
     title: "보직부터 맞춰 계산합니다",
     body:
-      "타자, 선발, 중계, 마무리는 보는 스킬이 다릅니다. 같은 스킬이어도 역할을 잘못 고르면 점수가 엉뚱하게 보일 수 있어서, 먼저 보직과 카드 타입을 나눈 뒤 계산합니다.",
+      "타자, 선발, 중계, 마무리는 스킬 종류, 점수가 다릅니다. 같은 스킬이어도 역할을 잘못 고르면 점수가 엉뚱하게 보일 수 있어서, 먼저 보직과 카드 타입을 나눈 뒤 계산합니다.",
   },
   {
     title: "총점 옆에 희귀도를 붙였습니다",
@@ -136,7 +136,7 @@ const HOME_CONTENT_SECTIONS = [
       "총점만 높다고 끝은 아닙니다. 이 조합이 고스변에서 어느 정도 보기 힘든지 같이 봐야 판단이 쉬워서, 상위 확률과 기대 시도 횟수를 같이 보여줍니다.",
   },
   {
-    title: "변경권 쓰기 전에 먼저 굴려봅니다",
+    title: "변경권 쓰기 전에 먼저 테스트",
     body:
       "시뮬레이터가 실제 결과를 맞혀주는 건 아닙니다. 대신 목표 등급이나 2메이저 조합을 노릴 때 어느 정도 각오해야 하는지 미리 감을 잡는 용도로 씁니다.",
   },
@@ -396,8 +396,7 @@ export default function HomeView({
                     </span>
                     <strong>
                       {widget.title}
-                      {(widget.view === "skillCompareBeta" ||
-                        widget.view === "lineupSkillOcr") && <em>베타</em>}
+
                     </strong>
                     <span>{widget.description}</span>
                   </span>
@@ -450,7 +449,7 @@ export default function HomeView({
       <section className="home-content-guide" aria-labelledby="home-content-guide-title">
         <div className="home-content-guide-head">
           <span>How it works</span>
-          <h2 id="home-content-guide-title">계산할 때 확인하는 것들</h2>
+          <h2 id="home-content-guide-title">계산할 때 체크리스트</h2>
           <p>
             스킬 이름만 보고 고르면 헷갈리는 경우가 많습니다. 역할, 카드 타입, 레벨을 맞춘 뒤
             총점과 희귀도를 같이 보는 쪽으로 정리했습니다.
@@ -469,7 +468,7 @@ export default function HomeView({
         <div className="home-example-panel">
           <div>
             <span>Example workflow</span>
-            <h3>보통 이렇게 봅니다</h3>
+            <h3>사용법</h3>
           </div>
           <ol>
             {HOME_EXAMPLE_STEPS.map((step) => (
