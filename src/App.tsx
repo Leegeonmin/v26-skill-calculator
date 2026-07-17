@@ -287,7 +287,6 @@ function App() {
   const [ocrSaving, setOcrSaving] = useState(false);
   const [ocrSavedUpload, setOcrSavedUpload] = useState<SkillOcrSavedUpload | null>(null);
   const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
-  const loggedToolViewsRef = useRef<Set<string>>(new Set());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
   const applyingPopStateRef = useRef(false);
 
@@ -579,7 +578,7 @@ function App() {
         setOcrUploads(uploads);
       } catch (error) {
         setOcrUploadsError(
-          error instanceof Error ? error.message : "OCR 저장 기록을 불러오지 못했습니다."
+          error instanceof Error ? error.message : "이미지 인식 저장 기록을 불러오지 못했습니다."
         );
       } finally {
         setOcrUploadsLoading(false);
@@ -611,7 +610,7 @@ function App() {
         setOcrPublicQuota(quota);
       } catch (error) {
         setOcrUploadsError(
-          error instanceof Error ? error.message : "OCR 정보를 불러오지 못했습니다."
+          error instanceof Error ? error.message : "이미지 인식 정보를 불러오지 못했습니다."
         );
       } finally {
         setOcrUploadsLoading(false);
@@ -718,47 +717,6 @@ function App() {
 
     window.history.pushState({}, "", url.toString());
   }, [infoPageKey, isAdminRoute, isOcrRoute, toolView]);
-
-  useEffect(() => {
-    if (
-      isAdminRoute ||
-      isOcrRoute ||
-      infoPageKey ||
-      toolView === "ranking" ||
-      !supabaseReady ||
-      !toolUsageSessionId
-    ) {
-      return;
-    }
-
-    const viewKey = `${toolUsageSessionId}:${toolView}`;
-    if (loggedToolViewsRef.current.has(viewKey)) {
-      return;
-    }
-
-    loggedToolViewsRef.current.add(viewKey);
-
-    void logToolUsageEvent({
-      tool: "tool_view",
-      mode,
-      cardType: activeCardType,
-      metadata: {
-        session_id: toolUsageSessionId,
-        view: toolView,
-      },
-    }).catch(() => {
-      loggedToolViewsRef.current.delete(viewKey);
-    });
-  }, [
-    activeCardType,
-    infoPageKey,
-    isAdminRoute,
-    isOcrRoute,
-    mode,
-    supabaseReady,
-    toolUsageSessionId,
-    toolView,
-  ]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -1169,7 +1127,7 @@ function App() {
 
   const handleOcrLogin = async () => {
     if (!OCR_FIXED_USERNAME) {
-      setOcrAuthError("OCR 접속 설정이 필요합니다.");
+      setOcrAuthError("이미지 인식 접속 설정이 필요합니다.");
       return;
     }
 
@@ -1184,7 +1142,7 @@ function App() {
       setOcrSession(session);
       window.localStorage.setItem(OCR_SESSION_KEY, session.session_token);
     } catch (error) {
-      setOcrAuthError(error instanceof Error ? error.message : "OCR 로그인에 실패했습니다.");
+      setOcrAuthError(error instanceof Error ? error.message : "이미지 인식 로그인에 실패했습니다.");
     }
   };
 
@@ -1304,7 +1262,7 @@ function App() {
     const isPublicLineupOcr = toolView === "lineupSkillOcr";
 
     if ((!ocrSession && !isPublicLineupOcr) || !ocrDraftRole || !ocrDraftRawResponse) {
-      setOcrUploadError("저장할 OCR 결과가 없습니다.");
+      setOcrUploadError("저장할 이미지 인식 결과가 없습니다.");
       return;
     }
 
@@ -1357,7 +1315,7 @@ function App() {
       setOcrDraftAverageScore(0);
       setOcrDraftPublicUploadId(null);
     } catch (error) {
-      setOcrUploadError(error instanceof Error ? error.message : "OCR 결과 저장에 실패했습니다.");
+      setOcrUploadError(error instanceof Error ? error.message : "이미지 인식 결과 저장에 실패했습니다.");
     } finally {
       setOcrSaving(false);
     }
@@ -1393,7 +1351,7 @@ function App() {
         setOcrDraftAverageScore(0);
       }
     } catch (error) {
-      setOcrUploadError(error instanceof Error ? error.message : "OCR 스냅샷을 삭제하지 못했습니다.");
+      setOcrUploadError(error instanceof Error ? error.message : "이미지 인식 스냅샷을 삭제하지 못했습니다.");
     }
   };
 
@@ -1646,7 +1604,7 @@ function App() {
               <a href="/about">소개</a>
               <a href="/skill-score-method">스킬 점수 기준</a>
               <a href="/simulator-guide">시뮬레이터 안내</a>
-              <a href="/ocr-guide">OCR 안내</a>
+              <a href="/ocr-guide">라인업 인식 안내</a>
               <a href="/faq">FAQ</a>
               <a href="/privacy">개인정보처리방침</a>
               <a href="/terms">이용약관</a>

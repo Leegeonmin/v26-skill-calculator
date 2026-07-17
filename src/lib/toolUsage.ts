@@ -26,6 +26,9 @@ const queuedEvents: QueuedToolUsageEvent[] = [];
 let flushScheduled = false;
 let flushInFlight = false;
 
+const MANUAL_ROLL_SAMPLE_RATE = 10;
+const sampledEventCounts = new Map<string, number>();
+
 function requireSupabase() {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -115,7 +118,37 @@ function scheduleFlush() {
   });
 }
 
+function getSessionId(input: ToolUsageEventInput) {
+  const sessionId = input.metadata?.session_id;
+  return typeof sessionId === "string" ? sessionId : "anonymous";
+}
+
+function shouldSendToolUsageEvent(input: ToolUsageEventInput) {
+  if (input.tool === "tool_view") {
+    return false;
+  }
+
+  if (input.tool !== "advanced_manual_roll") {
+    return true;
+  }
+
+  const sampleKey = [
+    input.tool,
+    getSessionId(input),
+    input.mode ?? "",
+    input.cardType ?? "",
+  ].join(":");
+  const nextCount = (sampledEventCounts.get(sampleKey) ?? 0) + 1;
+  sampledEventCounts.set(sampleKey, nextCount);
+
+  return nextCount === 1 || nextCount % MANUAL_ROLL_SAMPLE_RATE === 0;
+}
+
 export async function logToolUsageEvent(input: ToolUsageEventInput): Promise<void> {
+  if (!shouldSendToolUsageEvent(input)) {
+    return;
+  }
+
   return await new Promise<void>((resolve, reject) => {
     queuedEvents.push({ input, resolve, reject });
     scheduleFlush();
