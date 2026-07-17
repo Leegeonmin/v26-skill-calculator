@@ -48,6 +48,7 @@ import {
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
 import AdFitBanner from "./components/AdFitBanner";
+import SiteHeader from "./components/SiteHeader";
 import type {
   CalculatorMode,
   CardType,
@@ -423,7 +424,8 @@ function App() {
         toolView === "skillCompareBeta" ||
         toolView === "calculator" ||
         toolView === "simulator" ||
-        toolView === "impactChange");
+        toolView === "impactChange" ||
+        toolView === "ranking");
   const adFitSlotKey = infoPageKey ? `info-${infoPageKey}` : `tool-${toolView}`;
   const faqStructuredData = useMemo(
     () =>
@@ -1595,6 +1597,16 @@ function App() {
     return (
       <div className="app-bg" data-theme={theme}>
         <div className="app-shell">
+          <SiteHeader
+            authDisplayName={authDisplayName}
+            authSession={authSession}
+            currentView={toolView}
+            onGoogleLogin={() => void handleGoogleLogin(toolView)}
+            onGoogleLogout={() => void handleGoogleLogout()}
+            onSelectView={handleToolViewChange}
+            supabaseReady={supabaseReady}
+            themeAction={themeToggle}
+          />
           <AppChrome>
             <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
           </AppChrome>
@@ -1621,6 +1633,16 @@ function App() {
   return (
     <div className="app-bg" data-theme={theme}>
       <div className="app-shell">
+        <SiteHeader
+          authDisplayName={authDisplayName}
+          authSession={authSession}
+          currentView={toolView}
+          onGoogleLogin={() => void handleGoogleLogin(toolView)}
+          onGoogleLogout={() => void handleGoogleLogout()}
+          onSelectView={handleToolViewChange}
+          supabaseReady={supabaseReady}
+          themeAction={themeToggle}
+        />
         <AppChrome>
           {authError && <p className="auth-error">{authError}</p>}
 
@@ -1628,13 +1650,8 @@ function App() {
           {toolView === "home" ? (
             <HomeView
               onSelectView={handleToolViewChange}
-              themeAction={themeToggle}
-              authSession={authSession}
-              authDisplayName={authDisplayName}
-              supabaseReady={supabaseReady}
               homeChangeMessage={homeChangeMessage}
-              onGoogleLogin={() => void handleGoogleLogin("home")}
-              onGoogleLogout={() => void handleGoogleLogout()}
+              currentUserId={authSession?.user.id ?? null}
             />
           ) : toolView === "notice" ? (
             <NoticeView themeAction={themeToggle} onGoHome={() => setToolView("home")} />

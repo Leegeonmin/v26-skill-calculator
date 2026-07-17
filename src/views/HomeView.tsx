@@ -1,47 +1,20 @@
 import { IconGlyph } from "../components/AppChrome";
-import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
+import { useEffect, useState, type CSSProperties } from "react";
+import { getGameDataSet } from "../data/gameData";
+import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { getMobileHomeTopRankings } from "../lib/ranking";
 import type { ToolView } from "../types";
+import type { RankingCategory, RankingRow } from "../types/ranking";
 
 type HomeViewProps = {
   onSelectView: (view: Exclude<ToolView, "home">) => void;
-  themeAction?: ReactNode;
-  authSession: Session | null;
-  authDisplayName: string | null;
-  supabaseReady: boolean;
   homeChangeMessage: string;
-  onGoogleLogin: () => void;
-  onGoogleLogout: () => void;
+  currentUserId?: string | null;
 };
-
-const HOME_CHANGE_DISMISSED_KEY = "v26-home-change-dismissed";
-
-function getCanDismissHomeChangeMessage() {
-  return typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
-}
-
-function getDismissedHomeChangeMessage() {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return window.sessionStorage.getItem(HOME_CHANGE_DISMISSED_KEY) ?? "";
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="ui-icon">
-      <path
-        d="M12 4a4.2 4.2 0 1 1 0 8.4A4.2 4.2 0 0 1 12 4Zm0 10.4c4.05 0 7.2 2.15 7.2 4.9V21H4.8v-1.7c0-2.75 3.15-4.9 7.2-4.9Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
 
 type HomeWidget = {
   view: Exclude<ToolView, "home">;
-  icon: "trophy" | "calculator" | "sparkles" | "compare" | "zap" | "users" | "flame" | "scan";
+  icon: "trophy" | "calculator" | "sparkles" | "compare" | "zap" | "users" | "flame" | "scan" | "notice" | "chart" | "userScan";
   title: string;
   description: string;
   meta: string;
@@ -78,7 +51,7 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
       },
       {
         view: "lineupSkillOcr",
-        icon: "users",
+        icon: "userScan",
         title: "라인업 스킬 인식",
         description: "Google 로그인 후 주 1회씩 타자/투수 라인업 스킬 점수를 인식합니다.",
         meta: "LINEUP SKILL",
@@ -93,7 +66,7 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
     widgets: [
       {
         view: "simulator",
-        icon: "sparkles",
+        icon: "chart",
         title: "고스변 시뮬",
         description: "인게임 내 고급스킬변경권과 같은 기능 + 원하는 등급까지 자동 롤",
         meta: "Advanced Roll",
@@ -149,9 +122,41 @@ const HOME_EXAMPLE_STEPS = [
   "이미지 인식 결과는 저장 전에 카드 타입과 포지션이 맞는지 한 번 더 봅니다.",
 ];
 
+const RANKING_CATEGORY_LABELS: Record<RankingCategory, string> = {
+  hitter: "타자",
+  pitcher_starter: "투수",
+};
+
+function formatRankScore(score: number) {
+  return new Intl.NumberFormat("ko-KR", {
+    maximumFractionDigits: 2,
+  }).format(score);
+}
+
+function getHomeRankSkillItems(row: RankingRow) {
+  const gameData = getGameDataSet({
+    playerType: row.category === "hitter" ? "hitter" : "pitcher",
+    pitcherRole: "starter",
+  });
+
+  return row.current_skills.skillIds.map((skillId, index) => {
+    const skill = gameData?.skills.find((item) => item.id === skillId);
+    return {
+      key: `${row.entry_id}-${skillId}-${index}`,
+      name: skill?.name ?? skillId ?? "-",
+      color: skill ? SKILL_GRADE_COLORS[skill.grade] : "var(--text)",
+    };
+  });
+}
+
 // Shared with NoticeView; keep this colocated with the home announcement source.
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
+  {
+    date: "2026.07.17",
+    title: "메인 화면 UI 개편",
+    body: "대표 도구, 최근 업데이트, 고스변 랭킹 TOP3 배치를 정리하고 모바일 홈 구성을 간결하게 개선했습니다.",
+  },
   {
     date: "2026.05.20",
     title: "국대에이스 점수 분리",
@@ -206,232 +211,190 @@ export const NOTICE_ITEMS = [
 
 export default function HomeView({
   onSelectView,
-  themeAction,
-  authSession,
-  authDisplayName,
-  supabaseReady,
   homeChangeMessage,
-  onGoogleLogin,
-  onGoogleLogout,
+  currentUserId,
 }: HomeViewProps) {
-  const visibleHomeChangeMessage = homeChangeMessage.trim();
-  const [canDismissHomeChangeMessage, setCanDismissHomeChangeMessage] = useState(getCanDismissHomeChangeMessage);
-  const [dismissedHomeChangeMessage, setDismissedHomeChangeMessage] = useState(getDismissedHomeChangeMessage);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  void homeChangeMessage;
+  const [mobileRankingState, setMobileRankingState] = useState<{
+    category: RankingCategory;
+    rankings: RankingRow[];
+    status: "loading" | "idle" | "error";
+  }>({
+    category: "hitter",
+    rankings: [],
+    status: "loading",
+  });
+
+  const primaryWidgets: HomeWidget[] = [
+    HOME_WIDGET_SECTIONS[0].widgets[0],
+    HOME_WIDGET_SECTIONS[1].widgets[0],
+    HOME_WIDGET_SECTIONS[0].widgets[2],
+  ];
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    let mounted = true;
 
-    const mediaQuery = window.matchMedia("(max-width: 640px)");
-    const syncCanDismiss = () => setCanDismissHomeChangeMessage(mediaQuery.matches);
-
-    mediaQuery.addEventListener("change", syncCanDismiss);
-
-    return () => mediaQuery.removeEventListener("change", syncCanDismiss);
-  }, []);
-
-  useEffect(() => {
-    if (!accountMenuOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!accountMenuRef.current?.contains(event.target as Node)) {
-        setAccountMenuOpen(false);
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setAccountMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
+    const selectedCategory: RankingCategory = Math.random() < 0.5 ? "hitter" : "pitcher_starter";
+    getMobileHomeTopRankings(selectedCategory, 3)
+      .then((rankings) => {
+        if (!mounted) {
+          return;
+        }
+        setMobileRankingState({
+          category: selectedCategory,
+          rankings,
+          status: "idle",
+        });
+      })
+      .catch(() => {
+        if (!mounted) {
+          return;
+        }
+        setMobileRankingState({
+          category: selectedCategory,
+          rankings: [],
+          status: "error",
+        });
+      });
 
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
+      mounted = false;
     };
-  }, [accountMenuOpen]);
-
-  const showHomeChangeMessage =
-    visibleHomeChangeMessage &&
-    (!canDismissHomeChangeMessage || visibleHomeChangeMessage !== dismissedHomeChangeMessage);
-
-  function handleDismissHomeChangeMessage() {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(HOME_CHANGE_DISMISSED_KEY, visibleHomeChangeMessage);
-    }
-
-    setDismissedHomeChangeMessage(visibleHomeChangeMessage);
-  }
+  }, []);
 
   return (
-    <main className="home-stage" aria-labelledby="home-title">
+    <main className="home-stage" aria-label="v26-lab 홈">
       <div className="home-gradient-aura" aria-hidden="true" />
       <div className="home-particle-field" aria-hidden="true">
         {Array.from({ length: 18 }, (_, index) => (
           <span key={index} style={{ "--particle-index": index } as CSSProperties} />
         ))}
       </div>
-      {showHomeChangeMessage && (
-        <aside className="home-change-note" aria-label="공지사항">
-          <div className="home-change-note-head">
-            <span>공지사항</span>
-            {canDismissHomeChangeMessage && (
+      <section className="home-dashboard" aria-label="주요 도구">
+        <div className="home-primary-panel">
+          <div className="home-primary-grid">
+            {primaryWidgets.map((widget) => (
               <button
+                key={widget.view}
                 type="button"
-                className="home-change-note-close"
-                aria-label="공지사항 닫기"
-                onClick={handleDismissHomeChangeMessage}
+                className={`home-widget home-widget-${widget.view}`}
+                onClick={() => onSelectView(widget.view)}
               >
-                닫기
+                <span className="home-widget-icon" aria-hidden="true">
+                  <IconGlyph name={widget.icon} className="ui-icon" />
+                </span>
+                <span className="home-widget-copy">
+                  <strong>{widget.title}</strong>
+                  <span>{widget.description}</span>
+                </span>
+                <span className="home-widget-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="ui-icon">
+                    <path
+                      d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
               </button>
-            )}
+            ))}
           </div>
-          <strong>{visibleHomeChangeMessage}</strong>
-        </aside>
-      )}
-      <section className="home-hero">
-        <div className="home-hero-action">
-          {themeAction}
-          <div className="home-auth-card" ref={accountMenuRef}>
-            {authSession ? (
-              <button
-                type="button"
-                className="home-auth-button home-auth-button-user"
-                onClick={() => setAccountMenuOpen((open) => !open)}
-                aria-label="계정 메뉴"
-                aria-expanded={accountMenuOpen}
-              >
-                <UserIcon />
-                <span>{authDisplayName ?? "Google 사용자"}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="home-auth-button"
-                disabled={!supabaseReady}
-                onClick={() => {
-                  setAccountMenuOpen(false);
-                  onGoogleLogin();
-                }}
-                aria-label="로그인"
-              >
-                <UserIcon />
-                <span>로그인</span>
-              </button>
-            )}
-            {authSession && accountMenuOpen && (
-              <div className="home-account-menu" role="menu">
-                <div className="home-account-menu-user">
-                  <span>로그인 중</span>
-                  <strong>{authDisplayName ?? "Google 사용자"}</strong>
-                </div>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    onSelectView("lineupSkillOcr");
-                  }}
-                >
-                  라인업 스킬 인식
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    onGoogleLogout();
-                  }}
-                >
-                  로그아웃
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="home-hero-copy">
-          <h1 id="home-title">v26-lab</h1>
         </div>
       </section>
 
-      <section className="home-widget-sections" aria-label="도구 선택">
-        {HOME_WIDGET_SECTIONS.map((section) => (
-          <section
-            key={section.id}
-            className={`home-widget-section home-widget-section-${section.id}${
-              section.grouped ? " home-widget-section-grouped" : ""
-            }`}
-          >
-            <div className="home-widget-section-head">
-              <h2>{section.title}</h2>
-              <p>{section.description}</p>
+      <div className="home-feed-grid">
+        <section className="home-mobile-rank-dashboard" aria-labelledby="home-mobile-rank-title">
+          <div className="home-mobile-rank-head">
+            <div>
+              <span>랭킹 챌린지</span>
+              <h2 id="home-mobile-rank-title">
+                고스변 {RANKING_CATEGORY_LABELS[mobileRankingState.category]} TOP 3
+              </h2>
             </div>
-            <div className="home-widget-grid">
-              {section.widgets.map((widget) => (
+            <button type="button" onClick={() => onSelectView("ranking")}>
+              참여하기
+            </button>
+          </div>
+          <div className="home-mobile-rank-list">
+            {mobileRankingState.status === "loading" ? (
+              <p className="home-mobile-rank-empty">랭킹을 불러오는 중입니다.</p>
+            ) : mobileRankingState.status === "error" || mobileRankingState.rankings.length === 0 ? (
+              <p className="home-mobile-rank-empty">아직 표시할 랭킹이 없습니다.</p>
+            ) : (
+              mobileRankingState.rankings.map((row) => (
                 <button
-                  key={widget.view}
+                  key={row.entry_id}
                   type="button"
-                  className={`home-widget home-widget-${widget.view}`}
-                  onClick={() => onSelectView(widget.view)}
+                  className={`home-mobile-rank-card ${
+                    row.user_id === currentUserId ? "is-current-user" : ""
+                  }`}
+                  onClick={() => onSelectView("ranking")}
                 >
-                  <span className="home-widget-icon" aria-hidden="true">
-                    <IconGlyph name={widget.icon} className="ui-icon" />
+                  <span className="home-mobile-rank-position">{row.rank_position}</span>
+                  {row.user_id === currentUserId && (
+                    <span className="home-mobile-rank-me-badge">MY</span>
+                  )}
+                  <span className="home-mobile-rank-user">
+                    <strong>{row.display_name ?? "자동 닉네임"}</strong>
+                    <span>{RANKING_CATEGORY_LABELS[row.category]}</span>
                   </span>
-                  <span className="home-widget-copy">
-                    <span
-                      className={`home-widget-meta${
-                        widget.view === "skillCompareBeta" || widget.view === "lineupSkillOcr"
-                          ? " home-widget-beta"
-                          : ""
-                      }`}
-                    >
-                      {widget.meta}
-                    </span>
-                    <strong>
-                      {widget.title}
-
-                    </strong>
-                    <span>{widget.description}</span>
-                  </span>
-                  <span className="home-widget-arrow" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" className="ui-icon">
-                      <path
-                        d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
-                        fill="currentColor"
-                      />
-                    </svg>
+                  <span className="home-mobile-rank-score">{formatRankScore(row.current_score)}</span>
+                  <span className="home-mobile-rank-skills">
+                    {getHomeRankSkillItems(row).map((skill) => (
+                      <span key={skill.key}>
+                        <strong style={{ color: skill.color }}>{skill.name}</strong>
+                      </span>
+                    ))}
                   </span>
                 </button>
-              ))}
-            </div>
-          </section>
-        ))}
-
-        <section className="home-widget-section home-widget-section-notice">
-          <div className="home-widget-section-head">
-            <h2>공지사항</h2>
-            <p>업데이트 내역과 문의를 확인합니다.</p>
+              ))
+            )}
           </div>
-          <div className="home-widget-grid">
+        </section>
+
+        <section className="home-updates" aria-labelledby="home-updates-title">
+          <div className="home-section-title-row">
+            <h2 id="home-updates-title">최근 업데이트</h2>
+            <button type="button" onClick={() => onSelectView("notice")}>
+              더보기
+            </button>
+          </div>
+          <div className="home-update-list">
+            {NOTICE_ITEMS.slice(0, 3).map((item, index) => (
+              <button
+                key={`${item.date}-${item.title}`}
+                type="button"
+                className="home-update-item"
+                onClick={() => onSelectView("notice")}
+              >
+                <span className="home-update-dot" aria-hidden="true" />
+                <strong>{item.title}</strong>
+                <em>{index === 1 ? "이벤트" : "업데이트"}</em>
+                <time>{item.date.replace("2026.", "")}</time>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="home-all-tools" aria-labelledby="home-all-tools-title">
+        <div className="home-section-title-row">
+          <h2 id="home-all-tools-title">전체 도구</h2>
+        </div>
+        <div className="home-widget-grid">
+          {HOME_WIDGET_SECTIONS.flatMap((section) => section.widgets).map((widget) => (
             <button
+              key={widget.view}
               type="button"
-              className="home-widget home-widget-notice"
-              onClick={() => onSelectView("notice")}
+              className={`home-widget home-widget-${widget.view}`}
+              onClick={() => onSelectView(widget.view)}
             >
               <span className="home-widget-icon" aria-hidden="true">
-                <IconGlyph name="notice" className="ui-icon" />
+                <IconGlyph name={widget.icon} className="ui-icon" />
               </span>
               <span className="home-widget-copy">
-                <span className="home-widget-meta">Notice</span>
-                <strong>공지사항</strong>
-                <span>업데이트 내역 확인과 버그/기능 문의를 보낼 수 있습니다.</span>
+                <span className="home-widget-meta">{widget.meta}</span>
+                <strong>{widget.title}</strong>
+                <span>{widget.description}</span>
               </span>
               <span className="home-widget-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" className="ui-icon">
@@ -442,8 +405,30 @@ export default function HomeView({
                 </svg>
               </span>
             </button>
+          ))}
+          <button
+            type="button"
+            className="home-widget home-widget-notice"
+            onClick={() => onSelectView("notice")}
+          >
+            <span className="home-widget-icon" aria-hidden="true">
+              <IconGlyph name="notice" className="ui-icon" />
+            </span>
+            <span className="home-widget-copy">
+              <span className="home-widget-meta">Notice</span>
+              <strong>공지사항</strong>
+              <span>업데이트 내역과 문의를 확인합니다.</span>
+            </span>
+            <span className="home-widget-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="ui-icon">
+                <path
+                  d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+          </button>
           </div>
-        </section>
       </section>
 
       <section className="home-content-guide" aria-labelledby="home-content-guide-title">

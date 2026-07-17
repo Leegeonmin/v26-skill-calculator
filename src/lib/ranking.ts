@@ -105,6 +105,45 @@ export async function getRankingHomeSnapshot(
   };
 }
 
+export async function getMobileHomeTopRankings(
+  category: RankingCategory,
+  limit = 3
+): Promise<RankingRow[]> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("get_mobile_home_top_rankings", {
+    p_category: category,
+    p_limit: limit,
+  });
+
+  if (!error) {
+    return (Array.isArray(data) ? data : []) as RankingRow[];
+  }
+
+  const message = normalizeErrorMessage(error).toLowerCase();
+  if (!message.includes("get_mobile_home_top_rankings") && !message.includes("pgrst202")) {
+    throw error;
+  }
+
+  const season = await getCurrentSeason();
+  if (!season) {
+    return [];
+  }
+
+  const { data: rankings, error: rankingsError } = await supabase
+    .from("season_rankings")
+    .select("*")
+    .eq("season_id", season.id)
+    .eq("category", category)
+    .order("rank_position", { ascending: true })
+    .limit(limit);
+
+  if (rankingsError) {
+    throw rankingsError;
+  }
+
+  return (rankings ?? []) as RankingRow[];
+}
+
 export async function ensureWeeklyActiveSeason(): Promise<Season> {
   const supabase = requireSupabase();
   const { data, error } = await supabase.rpc("ensure_weekly_active_season");

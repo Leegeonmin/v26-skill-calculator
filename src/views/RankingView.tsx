@@ -758,20 +758,21 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         )}
       </section>
 
-      <section className="ranking-card ranking-guide-card">
-        <div className="ranking-section-head">
+      <details className="ranking-card ranking-guide-card ranking-guide-disclosure">
+        <summary className="ranking-section-head">
           <div className="ranking-section-icon">i</div>
           <div>
-            <h2>이용 가이드</h2>
+            <h2>고스변 랭챌 이용 가이드</h2>
           </div>
-        </div>
+          <span className="ranking-guide-toggle" aria-hidden="true">펼치기</span>
+        </summary>
 
         <div className="ranking-guide-list">
           <p>1. Google 로그인 후 타자와 투수 중 하나를 선택하고 시즌에 참가합니다.</p>
           <p>2. 참가 후 매일 무료 1회 고급스킬변경권 기능을 사용하고, 기존 결과와 변경 결과 중 하나를 고릅니다.</p>
           <p>3. 확정된 최종 점수가 리더보드에 반영되며, 어떤 스킬 조합인지도 함께 확인할 수 있습니다.</p>
         </div>
-      </section>
+      </details>
 
       <div className="ranking-grid">
         <section className="ranking-card">

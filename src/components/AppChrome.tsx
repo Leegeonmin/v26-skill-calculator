@@ -10,6 +10,8 @@ type IconName =
   | "flame"
   | "notice"
   | "scan"
+  | "chart"
+  | "userScan"
   | "google";
 
 export function IconGlyph({ name, className = "" }: { name: IconName; className?: string }) {
@@ -106,6 +108,28 @@ export function IconGlyph({ name, className = "" }: { name: IconName; className?
       <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
         <path
           d="M4 7V4h3v2H6v1H4Zm13-3h3v3h-2V6h-1V4ZM4 17h2v1h1v2H4v-3Zm14 1v-1h2v3h-3v-2h1ZM7 8h10v8H7V8Zm2 2v4h6v-4H9Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "chart") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M4 19h16v2H2V3h2v16Zm2-2v-5h3v5H6Zm5 0V9h3v8h-3Zm5 0V6h3v11h-3Zm-8.3-6.7L6.3 8.9 11 4.2l3 3 4.6-4.6H15V.6h7v7h-2V4L14 10l-3-3-3.3 3.3Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "userScan") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M4 8V4h4v2H6v2H4Zm12-4h4v4h-2V6h-2V4ZM4 16h2v2h2v2H4v-4Zm14 2v-2h2v4h-4v-2h2ZM12 6.4a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4Zm0 8c3.05 0 5.4 1.58 5.4 3.55V19H6.6v-1.05c0-1.97 2.35-3.55 5.4-3.55Z"
           fill="currentColor"
         />
       </svg>
