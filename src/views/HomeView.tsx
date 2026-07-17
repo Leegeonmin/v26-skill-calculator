@@ -154,6 +154,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 export const NOTICE_ITEMS = [
   {
     date: "2026.07.17",
+    title: "국가대표 고스변 시뮬 스킬 풀 조정",
+    body: "국가대표 카드 고스변 시뮬레이션에서 국대에이스(버프o)가 결과와 기대횟수 계산에 포함되지 않도록 제외했습니다.",
+  },
+  {
+    date: "2026.07.17",
     title: "메인 화면 UI 개편",
     body: "대표 도구, 최근 업데이트, 고스변 랭킹 TOP3 배치를 정리하고 모바일 홈 구성을 간결하게 개선했습니다.",
   },

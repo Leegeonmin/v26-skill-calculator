@@ -9,6 +9,7 @@ import type {
 } from "../types";
 import {
   buildSkillFamilies,
+  getAdvancedSkillChangeSkillPool,
   normalizeSkillBaseName,
   type SkillFamily,
 } from "./skillChangeRollCore";
@@ -181,6 +182,7 @@ export function calculateAdvancedSkillOdds({
   }
 
   const distributionLevels = getDistributionLevels(cardType);
+  const skillPool = getAdvancedSkillChangeSkillPool(skills, cardType);
 
   const cacheKey = getDistributionCacheKey({
     mode,
@@ -188,7 +190,7 @@ export function calculateAdvancedSkillOdds({
     hitterPositionGroup,
     skillIds,
     skillLevels: distributionLevels,
-    skills,
+    skills: skillPool,
   });
   const cachedDistribution = scoreDistributionCache.get(cacheKey);
 
@@ -209,7 +211,7 @@ export function calculateAdvancedSkillOdds({
     hitterPositionGroup,
     cardType === "national"
   );
-  const families = buildSkillFamilies(skills, cardType, hitterPositionGroup);
+  const families = buildSkillFamilies(skillPool, cardType, hitterPositionGroup);
 
   let states: RollState[] = [
     {
@@ -220,7 +222,7 @@ export function calculateAdvancedSkillOdds({
   ];
 
   if (isImpact) {
-    const fixedSkill = skills.find((skill) => skill.id === skillIds[0]);
+    const fixedSkill = skillPool.find((skill) => skill.id === skillIds[0]);
 
     if (!fixedSkill) {
       return null;

@@ -16,6 +16,7 @@ import type {
 } from "../types";
 import type { SkillOddsResult } from "../utils/advancedSkillOdds";
 import { formatTopPercent } from "../utils/formatOdds";
+import { getAdvancedSkillChangeSkillPool } from "../utils/skillChangeRollCore";
 
 type ToolboxStageProps = {
   toolView: Exclude<ToolView, "home" | "ranking" | "notice">;
@@ -149,6 +150,7 @@ export default function ToolboxStage({
     toolView,
     complete: false,
   });
+  const advancedSimulatorSkills = getAdvancedSkillChangeSkillPool(filteredSkills, activeCardType);
   const simulatorSetupComplete =
     toolView === "simulator" &&
     simulatorSetupState.toolView === "simulator" &&
@@ -521,7 +523,7 @@ export default function ToolboxStage({
                       totalScore={totalScore}
                       selectedSkillMeta={selectedSkillMeta}
                       skillScores={skillScores}
-                      filteredSkills={filteredSkills}
+                      filteredSkills={advancedSimulatorSkills}
                       resolvedSkill1={resolvedSkill1}
                       resolvedSkill2={resolvedSkill2}
                       resolvedSkill3={resolvedSkill3}

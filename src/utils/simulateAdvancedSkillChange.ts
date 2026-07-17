@@ -7,6 +7,7 @@ import type {
 import { getAdvancedSkillChangeProfileByCard } from "../data/advancedSkillChange";
 import {
   buildSkillFamilies,
+  getAdvancedSkillChangeSkillPool,
   normalizeSkillBaseName,
   pickSkillFromFamily,
   pickWeightedFamily,
@@ -37,12 +38,13 @@ export function simulateAdvancedSkillChange({
     cardType === "national"
   );
 
-  const skillFamilies = buildSkillFamilies(skills, cardType, hitterPositionGroup);
+  const skillPool = getAdvancedSkillChangeSkillPool(skills, cardType);
+  const skillFamilies = buildSkillFamilies(skillPool, cardType, hitterPositionGroup);
   const excludedBaseNames = new Set<string>();
   const rolledSkillIds: string[] = [];
 
   if (cardType === "impact" && fixedSkillId) {
-    const fixedSkill = skills.find((skill) => skill.id === fixedSkillId);
+    const fixedSkill = skillPool.find((skill) => skill.id === fixedSkillId);
 
     if (fixedSkill) {
       rolledSkillIds.push(fixedSkill.id);

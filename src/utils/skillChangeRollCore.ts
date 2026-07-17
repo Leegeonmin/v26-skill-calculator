@@ -7,6 +7,13 @@ export interface SkillFamily {
   members: SkillMeta[];
 }
 
+const NATIONAL_ACE_BUFFED_SKILL_IDS = new Set([
+  "hitter_national_ace",
+  "starter_skill_024",
+  "middle_skill_024",
+  "closer_skill_024",
+]);
+
 const FAMILY_ALIAS_RULES: Array<[RegExp, string]> = [
   [/^철완/, "철완"],
   [/^좌승사자/, "좌승사자"],
@@ -38,6 +45,17 @@ export function normalizeSkillBaseName(name: string): string {
   }
 
   return compactName;
+}
+
+export function shouldExcludeFromAdvancedSkillChange(skill: SkillMeta, cardType: CardType): boolean {
+  return cardType === "national" && NATIONAL_ACE_BUFFED_SKILL_IDS.has(skill.id);
+}
+
+export function getAdvancedSkillChangeSkillPool(
+  skills: SkillMeta[],
+  cardType: CardType
+): SkillMeta[] {
+  return skills.filter((skill) => !shouldExcludeFromAdvancedSkillChange(skill, cardType));
 }
 
 export function buildSkillFamilies(
