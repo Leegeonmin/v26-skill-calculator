@@ -47,6 +47,7 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
+import AdFitBanner from "./components/AdFitBanner";
 import type {
   CalculatorMode,
   CardType,
@@ -126,6 +127,13 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/terms": "terms",
   "/contact": "contact",
 };
+const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
+  "about",
+  "skillScoreMethod",
+  "simulatorGuide",
+  "ocrGuide",
+  "faq",
+]);
 type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
 
@@ -407,6 +415,17 @@ function App() {
     !isOcrRoute &&
     typeof window !== "undefined" &&
     window.location.pathname.replace(/\/+$/, "") === "/skill-score-method";
+  const shouldShowAdFitBanner =
+    !isAdminRoute &&
+    !isOcrRoute &&
+    (infoPageKey
+      ? ADFIT_INFO_PAGE_KEYS.has(infoPageKey)
+      : toolView === "home" ||
+        toolView === "skillCompareBeta" ||
+        toolView === "calculator" ||
+        toolView === "simulator" ||
+        toolView === "impactChange");
+  const adFitSlotKey = infoPageKey ? `info-${infoPageKey}` : `tool-${toolView}`;
   const faqStructuredData = useMemo(
     () =>
       JSON.stringify({
@@ -1621,6 +1640,7 @@ function App() {
           <AppChrome>
             <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
           </AppChrome>
+          {shouldShowAdFitBanner && <AdFitBanner slotKey={adFitSlotKey} />}
           <footer className="app-footer">
             <nav className="footer-links" aria-label="사이트 정보">
               <a href="/about">소개</a>
@@ -1807,6 +1827,7 @@ function App() {
           </section>
         )}
 
+        {shouldShowAdFitBanner && <AdFitBanner slotKey={adFitSlotKey} />}
         <Analytics />
       </div>
     </div>

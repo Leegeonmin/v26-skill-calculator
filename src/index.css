@@ -7710,6 +7710,20 @@ input {
   font-size: 0.86rem;
 }
 
+.adfit-banner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin: 22px 0 0;
+}
+
+.adfit-banner .kakao_ad_area {
+  width: 320px;
+  max-width: 100%;
+  min-height: 50px;
+}
+
 .footer-links {
   display: inline-flex;
   align-items: center;
