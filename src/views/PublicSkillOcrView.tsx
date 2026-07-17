@@ -235,7 +235,7 @@ export default function PublicSkillOcrView({
     return (
       <main className="public-ocr-view">
         <section className="public-ocr-auth">
-          <p className="ocr-eyebrow">Lineup OCR Beta</p>
+          <p className="ocr-eyebrow">Lineup Skill Scan Beta</p>
           <h1>라인업 스킬 인식</h1>
           <p>Google 로그인 후 주 1회씩 타자와 투수 라인업 스킬 점수를 인식할 수 있습니다.</p>
           {uploadsError && <p className="modal-error">{uploadsError}</p>}
@@ -315,7 +315,7 @@ export default function PublicSkillOcrView({
     <main className="public-ocr-view">
       <header className="public-ocr-header">
         <div>
-          <p className="ocr-eyebrow">Lineup OCR Beta</p>
+          <p className="ocr-eyebrow">Lineup Skill Scan Beta</p>
           <h1>라인업 스킬 인식</h1>
         </div>
         <div className="public-ocr-top-actions">
@@ -332,7 +332,7 @@ export default function PublicSkillOcrView({
         </div>
       </header>
 
-      <nav className="ocr-tabs public-ocr-tabs" aria-label="라인업 OCR 화면">
+      <nav className="ocr-tabs public-ocr-tabs" aria-label="라인업 스킬 인식 화면">
         <button
           type="button"
           className={activeTab === "summary" ? "active" : ""}
@@ -453,7 +453,7 @@ export default function PublicSkillOcrView({
                   <li>
                     게임 환경설정 &gt; 해상도에서 <strong>최고</strong> 또는 <strong>높음</strong>으로 설정하세요.
                   </li>
-                  <li>OCR 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하세요.</li>
+                  <li>이미지 인식 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하세요.</li>
                   <li>투수/타자는 각각 최대 9명만 선택해 저장하세요.</li>
                 </ul>
               </div>
@@ -511,7 +511,7 @@ export default function PublicSkillOcrView({
                 <span />
               </div>
               <strong>{formatRole(uploadBusyRole)} 이미지를 분석하고 있습니다.</strong>
-              <p>OCR 처리와 스냅샷 저장이 끝나면 검수 카드가 표시됩니다.</p>
+              <p>이미지 인식 처리와 스냅샷 저장이 끝나면 검수 카드가 표시됩니다.</p>
             </section>
           )}
 
@@ -543,7 +543,7 @@ export default function PublicSkillOcrView({
                       className="public-ocr-snapshot-delete"
                       aria-label={`${formatRole(upload.role)} 스냅샷 삭제`}
                       onClick={() => {
-                        if (window.confirm("이 OCR 스냅샷을 삭제할까요?")) {
+                        if (window.confirm("이 이미지 인식 스냅샷을 삭제할까요?")) {
                           onDeleteSnapshot(upload.id);
                         }
                       }}

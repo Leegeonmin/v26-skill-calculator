@@ -278,7 +278,7 @@ export default function SkillOcrView({
     return (
       <div className="ocr-view">
         <section className="ocr-auth-card">
-          <p className="ocr-eyebrow">Skill OCR</p>
+          <p className="ocr-eyebrow">Skill Image Scan</p>
           <h1>세션 확인 중</h1>
           <p className="ocr-copy">저장된 접속 정보를 확인하고 있습니다.</p>
         </section>
@@ -290,7 +290,7 @@ export default function SkillOcrView({
     return (
       <div className="ocr-view">
         <section className="ocr-auth-card">
-          <p className="ocr-eyebrow">Skill OCR</p>
+          <p className="ocr-eyebrow">Skill Image Scan</p>
           <h1>tyrant 접속</h1>
           <p className="ocr-copy">공유받은 비밀번호를 입력하면 이미지 업로드 기능을 사용할 수 있습니다.</p>
 
@@ -505,7 +505,7 @@ export default function SkillOcrView({
         </div>
       </header>
 
-      <nav className="ocr-tabs ocr-bottom-tabs" aria-label="OCR 화면">
+      <nav className="ocr-tabs ocr-bottom-tabs" aria-label="이미지 인식 화면">
         <button
           type="button"
           className={activeTab === "summary" ? "active" : ""}
@@ -657,7 +657,7 @@ export default function SkillOcrView({
             {uploadsError && <p className="modal-error">{uploadsError}</p>}
 
             {!uploadsLoading && uploads.length === 0 && (
-              <p className="ocr-empty">아직 저장된 OCR 결과가 없습니다.</p>
+              <p className="ocr-empty">아직 저장된 이미지 인식 결과가 없습니다.</p>
             )}
 
             <div className="ocr-stats-table-wrap">
@@ -751,7 +751,7 @@ export default function SkillOcrView({
                 게임 환경설정 &gt; 해상도에서 <strong>최고</strong> 또는 <strong>높음</strong>으로
                 설정하세요.
               </li>
-              <li>OCR 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하세요.</li>
+              <li>이미지 인식 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하세요.</li>
               <li>투수/타자는 각각 최대 9명만 선택해 저장하세요.</li>
             </ul>
           </div>
@@ -840,7 +840,7 @@ export default function SkillOcrView({
             <span />
           </div>
           <strong>{formatRole(uploadBusyRole)} 이미지를 분석하고 있습니다.</strong>
-          <p>OCR 요청은 시간이 걸릴 수 있습니다. 결과가 오면 자동으로 검수 목록이 표시됩니다.</p>
+          <p>이미지 인식 요청은 시간이 걸릴 수 있습니다. 결과가 오면 자동으로 검수 목록이 표시됩니다.</p>
         </section>
       )}
 
