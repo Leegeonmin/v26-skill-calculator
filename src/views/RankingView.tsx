@@ -180,6 +180,8 @@ const MY_RECORD_WIREFRAME_SEASONS: MyRecordWireframeSeason[] = [
   },
 ];
 
+void MY_RECORD_WIREFRAME_SEASONS;
+
 function buildInitialSkillSet(category: RankingCategory): {
   skillSet: StoredSkillSet;
   score: number;
@@ -573,24 +575,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
       }));
     }
 
-    return MY_RECORD_WIREFRAME_SEASONS.map((season) => ({
-      id: season.id,
-      seasonNumber: season.seasonNumber,
-      title: season.title,
-      range: season.range,
-      participated: season.participated,
-      category: season.participated ? season.category : undefined,
-      score: season.participated ? season.score : undefined,
-      rank: season.participated ? season.rank : undefined,
-      participantCount: season.participated ? season.participantCount : undefined,
-      skills: season.participated
-        ? season.skills.map((skill) => ({
-            name: skill.name,
-            color:
-              SKILL_GRADE_COLORS[skill.grade as keyof typeof SKILL_GRADE_COLORS] ?? "#334155",
-          }))
-        : [],
-    }));
+    return [];
   }, [myRankingArchive]);
   const rankedSeasonCount =
     myRankingArchive?.ranked_count ??
@@ -1285,7 +1270,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
           </div>
 
-          <div className="ranking-my-archive-summary">
+          {authSession && <div className="ranking-my-archive-summary">
             <div>
               <span>최고 시즌 기록</span>
               <strong>
@@ -1306,14 +1291,23 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
               <strong>{rankedSeasonCount}회</strong>
               <p>TOP3 기준</p>
             </div>
-          </div>
+          </div>}
 
           <div className="ranking-archive-table-shell ranking-my-archive-table">
             <div className="ranking-archive-table-head">
               <strong>내 시즌 기록</strong>
               <span>{myRankingArchiveLoading ? "불러오는 중" : "이전 시즌부터 최대 10시즌"}</span>
             </div>
-            {myRecordRows.map((season) => {
+            {!authSession ? (
+              <p className="ranking-my-record-empty">
+                Google 로그인 후 내 시즌 기록을 확인할 수 있습니다.
+              </p>
+            ) : myRankingArchiveLoading ? (
+              <p className="ranking-my-record-empty">내 기록을 불러오는 중입니다.</p>
+            ) : myRecordRows.length === 0 ? (
+              <p className="ranking-my-record-empty">아직 참여한 이전 시즌 기록이 없습니다.</p>
+            ) : (
+              myRecordRows.map((season) => {
               const rank = season.participated ? season.rank : undefined;
               const isPodiumSeason = typeof rank === "number" && rank <= 3;
 
@@ -1365,7 +1359,8 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                   </div>
                 </article>
               );
-            })}
+              })
+            )}
           </div>
         </section>
       )}
