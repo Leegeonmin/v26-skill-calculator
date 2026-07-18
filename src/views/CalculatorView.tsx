@@ -22,6 +22,7 @@ interface CalculatorViewProps {
   resultGradeColor: string;
   judgeGrade: string;
   totalScore: number | string;
+  impactTotalScoreWithFirst: number | string;
   selectedSkillMeta: SelectedSkillMetaMap;
   rolledSkillColors: {
     skill1: string;
@@ -63,6 +64,7 @@ export default function CalculatorView({
   resultGradeColor,
   judgeGrade,
   totalScore,
+  impactTotalScoreWithFirst,
   selectedSkillMeta,
   rolledSkillColors,
   skillScores,
@@ -244,7 +246,14 @@ export default function CalculatorView({
           <span style={{ color: resultGradeColor }}>{judgeGrade}</span>
         </div>
         <div className="mobile-live-summary-stats">
-          <div>점수 {gameData ? totalScore : "-"}</div>
+          {activeCardType === "impact" ? (
+            <>
+              <div>1옵 포함 {gameData ? impactTotalScoreWithFirst : "-"}</div>
+              <div>1옵 제외 {gameData ? totalScore : "-"}</div>
+            </>
+          ) : (
+            <div>점수 {gameData ? totalScore : "-"}</div>
+          )}
         </div>
         <div className="mobile-current-skill-list">
           {mobileSelectedSkills.length === 0 ? (
@@ -370,7 +379,7 @@ export default function CalculatorView({
       <div className="skill-grid">
         <div className="skill-col">
           <SkillSelect
-            label={activeCardType === "impact" ? "스킬 1 (고정)" : "스킬 1"}
+            label="스킬 1"
             value={resolvedSkill1}
             options={filteredSkills}
             slotNumber={1}
@@ -381,7 +390,6 @@ export default function CalculatorView({
           <select
             value={level1}
             onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
-            disabled={activeCardType === "impact"}
           >
             {[5, 6, 7, 8].map((level) => (
               <option key={level} value={level}>

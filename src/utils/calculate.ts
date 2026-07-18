@@ -5,6 +5,7 @@ interface CalculateParams {
   skillIds: string[];
   skillLevels: SkillLevel[];
   scoreTable: SkillScoreTable;
+  includeImpactFixedSkill?: boolean;
 }
 
 export function calculateSkillTotal({
@@ -12,6 +13,7 @@ export function calculateSkillTotal({
   skillIds,
   skillLevels,
   scoreTable,
+  includeImpactFixedSkill = false,
 }: CalculateParams): number {
   const scores = skillIds.map((skillId, index) => {
     const level = skillLevels[index];
@@ -19,7 +21,7 @@ export function calculateSkillTotal({
     return score ?? 0;
   });
 
-  if (cardType === "impact") {
+  if (cardType === "impact" && !includeImpactFixedSkill) {
     return Number((scores[1] + scores[2]).toFixed(2));
   }
 

@@ -359,8 +359,19 @@ function App() {
           scoreTable: gameData.scoreTable,
         })
       : null;
+  const impactTotalScoreWithFirst =
+    gameData && hasAnySkillSelection && activeCardType === "impact"
+      ? calculateSkillTotal({
+          cardType: activeCardType,
+          skillIds: [resolvedSkill1, resolvedSkill2, resolvedSkill3],
+          skillLevels: [level1, level2, level3],
+          scoreTable: gameData.scoreTable,
+          includeImpactFixedSkill: true,
+        })
+      : null;
 
   const totalScoreDisplay = totalScore ?? "-";
+  const impactTotalScoreWithFirstDisplay = impactTotalScoreWithFirst ?? "-";
   const skillOdds = useMemo(
     () =>
       gameData && totalScore !== null
@@ -1723,6 +1734,7 @@ function App() {
               resultGradeColor={resultGradeColor}
               judgeGrade={judgeGrade}
               totalScore={gameData ? totalScoreDisplay : "-"}
+              impactTotalScoreWithFirst={gameData ? impactTotalScoreWithFirstDisplay : "-"}
               skillOdds={skillOdds}
               selectedSkillMeta={selectedSkillMeta}
               rolledSkillColors={rolledSkillColors}

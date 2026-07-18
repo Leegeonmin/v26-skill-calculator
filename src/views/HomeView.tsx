@@ -153,6 +153,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.07.18",
+    title: "임팩트 스킬 점수 계산 방식 개선",
+    body: "임팩트 카드 계산기에서 1번 스킬과 레벨을 직접 바꿀 수 있게 하고, 1옵 포함 점수와 1옵 제외 점수를 함께 확인할 수 있도록 개선했습니다.",
+  },
+  {
     date: "2026.07.17",
     title: "국가대표 고스변 시뮬 스킬 풀 조정",
     body: "국가대표 카드 고스변 시뮬레이션에서 국대에이스(버프o)가 결과와 기대횟수 계산에 포함되지 않도록 제외했습니다.",

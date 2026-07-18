@@ -29,6 +29,7 @@ type ToolboxStageProps = {
   resultGradeColor: string;
   judgeGrade: string;
   totalScore: number | string;
+  impactTotalScoreWithFirst: number | string;
   skillOdds: SkillOddsResult | null;
   selectedSkillMeta: {
     skill1: SkillMeta | undefined;
@@ -107,6 +108,7 @@ export default function ToolboxStage({
   resultGradeColor,
   judgeGrade,
   totalScore,
+  impactTotalScoreWithFirst,
   skillOdds,
   selectedSkillMeta,
   rolledSkillColors,
@@ -474,6 +476,7 @@ export default function ToolboxStage({
                   resultGradeColor={resultGradeColor}
                   judgeGrade={judgeGrade}
                   totalScore={totalScore}
+                  impactTotalScoreWithFirst={impactTotalScoreWithFirst}
                   selectedSkillMeta={selectedSkillMeta}
                   rolledSkillColors={rolledSkillColors}
                   skillScores={skillScores}
@@ -580,8 +583,18 @@ export default function ToolboxStage({
           </div>
 
           <div className="result-hero-card" style={{ borderColor: resultGradeColor }}>
-            <div className="result-hero-eyebrow">총 스킬 점수</div>
-            <div className="result-hero-score">{gameData ? totalScore : "-"}</div>
+            <div className="result-hero-eyebrow">
+              {toolView === "calculator" && activeCardType === "impact"
+                ? "총 스킬 점수 · 1옵 포함"
+                : "총 스킬 점수"}
+            </div>
+            <div className="result-hero-score">
+              {gameData
+                ? toolView === "calculator" && activeCardType === "impact"
+                  ? impactTotalScoreWithFirst
+                  : totalScore
+                : "-"}
+            </div>
             {/* <div className="result-hero-meta">
               <div className="result-hero-pill">
                 <span>등급</span>
@@ -590,8 +603,15 @@ export default function ToolboxStage({
             </div> */}
           </div>
 
+          {toolView === "calculator" && activeCardType === "impact" && (
+            <div className="result-stat">
+              <span>1옵 제외 점수</span>
+              <strong>{gameData ? totalScore : "-"}</strong>
+            </div>
+          )}
+
           <div className="result-stat">
-            <span>등급</span>
+            <span>{toolView === "calculator" && activeCardType === "impact" ? "등급 · 1옵 제외" : "등급"}</span>
             <strong style={{ color: resultGradeColor }}>{judgeGrade}</strong>
           </div>
 
@@ -610,7 +630,11 @@ export default function ToolboxStage({
                 <strong>{expectedRollsLabel}</strong>
               </div>
             </div>
-            <p>상위 확률은 카드 타입별 기본 레벨 분포에서 같은 점수 이상이 나올 확률입니다.</p>
+            <p>
+              {toolView === "calculator" && activeCardType === "impact"
+                ? "상위 확률과 기대 횟수는 1옵 제외 점수 기준입니다."
+                : "상위 확률은 카드 타입별 기본 레벨 분포에서 같은 점수 이상이 나올 확률입니다."}
+            </p>
           </div>
 
           <div className="result-grade-guide">
@@ -637,8 +661,12 @@ export default function ToolboxStage({
             </p>
           )}
 
-          {activeCardType === "impact" && (
-            <p className="impact-note">임팩트 카드는 1번 스킬 고정 + 2, 3번 스킬만 계산합니다.</p>
+          {toolView === "calculator" && activeCardType === "impact" && (
+            <p className="impact-note">임팩트 계산기는 1옵 포함 점수와 1옵 제외 점수를 함께 표시합니다.</p>
+          )}
+
+          {toolView === "impactChange" && (
+            <p className="impact-note">임팩트 변경 시뮬은 1번 스킬 고정 + 2, 3번 스킬만 계산합니다.</p>
           )}
         </aside>
       </main>
