@@ -8,6 +8,7 @@ import {
   getRankingHomeSnapshot,
   getLatestEndedSeasonSummary,
   getLastSeenSettlementSeasonId,
+  getMyRankingArchive,
   getSeasonWithFallback,
   setLastSeenSettlementSeasonId,
   joinSeason,
@@ -16,6 +17,7 @@ import {
 import { signInWithGoogle } from "../lib/auth";
 import type {
   EndedSeasonSummary,
+  MyRankingArchive,
   PendingDailyRoll,
   RankingCategory,
   RankingRow,
@@ -36,6 +38,147 @@ const CATEGORY_LABELS: Record<RankingCategory, string> = {
   hitter: "타자",
   pitcher_starter: "투수(선발)",
 };
+
+type RankingPageTab = "current" | "mine";
+
+type MyRecordWireframeSeason =
+  | {
+      id: string;
+      seasonNumber: number;
+      title: string;
+      range: string;
+      participated: true;
+      category: RankingCategory;
+      score: string;
+      rank: number;
+      participantCount: number;
+      skills: Array<{ name: string; grade: string }>;
+    }
+  | {
+      id: string;
+      seasonNumber: number;
+      title: string;
+      range: string;
+      participated: false;
+    };
+
+const MY_RECORD_WIREFRAME_SEASONS: MyRecordWireframeSeason[] = [
+  {
+    id: "2026-w28",
+    seasonNumber: 12,
+    title: "2026년 7월 2주차",
+    range: "2026.07.06 - 2026.07.12",
+    participated: true,
+    category: "hitter",
+    score: "31.22",
+    rank: 2,
+    participantCount: 128,
+    skills: [
+      { name: "콘택트히터", grade: "legend" },
+      { name: "대표타자", grade: "major" },
+      { name: "좌완킬러", grade: "rare" },
+    ],
+  },
+  {
+    id: "2026-w27",
+    seasonNumber: 11,
+    title: "2026년 7월 1주차",
+    range: "2026.06.29 - 2026.07.05",
+    participated: true,
+    category: "pitcher_starter",
+    score: "30.04",
+    rank: 18,
+    participantCount: 112,
+    skills: [
+      { name: "끝판왕", grade: "legend" },
+      { name: "철완", grade: "major" },
+      { name: "국대에이스", grade: "rare" },
+    ],
+  },
+  {
+    id: "2026-w26",
+    seasonNumber: 10,
+    title: "2026년 6월 4주차",
+    range: "2026.06.22 - 2026.06.28",
+    participated: false,
+  },
+  {
+    id: "2026-w25",
+    seasonNumber: 9,
+    title: "2026년 6월 3주차",
+    range: "2026.06.15 - 2026.06.21",
+    participated: true,
+    category: "pitcher_starter",
+    score: "29.76",
+    rank: 24,
+    participantCount: 98,
+    skills: [
+      { name: "언터처블", grade: "legend" },
+      { name: "에이스", grade: "major" },
+      { name: "우완킬러", grade: "rare" },
+    ],
+  },
+  {
+    id: "2026-w24",
+    seasonNumber: 8,
+    title: "2026년 6월 2주차",
+    range: "2026.06.08 - 2026.06.14",
+    participated: false,
+  },
+  {
+    id: "2026-w23",
+    seasonNumber: 7,
+    title: "2026년 6월 1주차",
+    range: "2026.06.01 - 2026.06.07",
+    participated: true,
+    category: "hitter",
+    score: "28.91",
+    rank: 31,
+    participantCount: 86,
+    skills: [
+      { name: "배팅머신", grade: "major" },
+      { name: "정교함", grade: "rare" },
+      { name: "우완킬러", grade: "rare" },
+    ],
+  },
+  {
+    id: "2026-w22",
+    seasonNumber: 6,
+    title: "2026년 5월 4주차",
+    range: "2026.05.25 - 2026.05.31",
+    participated: false,
+  },
+  {
+    id: "2026-w21",
+    seasonNumber: 5,
+    title: "2026년 5월 3주차",
+    range: "2026.05.18 - 2026.05.24",
+    participated: true,
+    category: "pitcher_starter",
+    score: "27.84",
+    rank: 42,
+    participantCount: 74,
+    skills: [
+      { name: "끝판왕", grade: "legend" },
+      { name: "철완", grade: "major" },
+      { name: "승부사", grade: "normal" },
+    ],
+  },
+  {
+    id: "2026-w20",
+    seasonNumber: 4,
+    title: "2026년 5월 2주차",
+    range: "2026.05.11 - 2026.05.17",
+    participated: false,
+  },
+  {
+    id: "2026-w19",
+    seasonNumber: 3,
+    title: "2026년 5월 1주차",
+    range: "2026.05.04 - 2026.05.10",
+    participated: false,
+  },
+];
 
 function buildInitialSkillSet(category: RankingCategory): {
   skillSet: StoredSkillSet;
@@ -339,6 +482,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
   const [entry, setEntry] = useState<SeasonEntry | null>(null);
   const [todayRollLogId, setTodayRollLogId] = useState<string | null>(null);
+  const [activeRankingTab, setActiveRankingTab] = useState<RankingPageTab>("current");
   const [participationCategory, setParticipationCategory] =
     useState<RankingCategory>("pitcher_starter");
   const [leaderboardCategory, setLeaderboardCategory] =
@@ -363,15 +507,22 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [myRankingRow, setMyRankingRow] = useState<RankingRow | null>(null);
+  const [myRankingArchive, setMyRankingArchive] = useState<MyRankingArchive | null>(null);
+  const [myRankingArchiveLoading, setMyRankingArchiveLoading] = useState(false);
   const [endedSeasonSummary, setEndedSeasonSummary] = useState<EndedSeasonSummary | null>(null);
   const [participantCounts, setParticipantCounts] = useState<Record<RankingCategory, number>>({
     hitter: 0,
     pitcher_starter: 0,
   });
   const userId = authSession?.user.id ?? null;
-  const activeParticipationCategory = entry?.category ?? participationCategory;
+  const fixedCompetitionCategory = currentSeason?.competition_category ?? null;
+  const effectiveParticipationCategory =
+    entry?.category ?? fixedCompetitionCategory ?? participationCategory;
+  const activeLeaderboardCategory = fixedCompetitionCategory ?? leaderboardCategory;
+  const isFixedCompetitionSeason = Boolean(fixedCompetitionCategory);
+  const activeParticipationCategory = effectiveParticipationCategory;
   const showSettlementNotice = useMemo(() => isSettlementWindowKst(), []);
-  const participationLabel = CATEGORY_LABELS[participationCategory];
+  const participationLabel = CATEGORY_LABELS[effectiveParticipationCategory];
   const visibleRolledScore = useMemo(
     () =>
       entry
@@ -400,6 +551,53 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     : pendingRoll
     ? "결과 처리 중"
     : "사용 가능";
+  const myRecordRows = useMemo(() => {
+    if (myRankingArchive?.records.length) {
+      return myRankingArchive.records.map((record) => ({
+        id: record.season_id,
+        seasonNumber: record.season_number,
+        title: record.season_name,
+        range: formatSeasonRange(record.starts_at, record.ends_at),
+        participated: record.participated,
+        category: record.category ?? undefined,
+        score: record.current_score != null ? formatScore(record.current_score) : undefined,
+        rank: record.rank_position ?? undefined,
+        participantCount: record.participant_count ?? undefined,
+        skills:
+          record.participated && record.category && record.current_skills
+            ? getSkillDisplayItems(record.category, record.current_skills).map((skill) => ({
+                name: skill.name,
+                color: skill.color,
+              }))
+            : [],
+      }));
+    }
+
+    return MY_RECORD_WIREFRAME_SEASONS.map((season) => ({
+      id: season.id,
+      seasonNumber: season.seasonNumber,
+      title: season.title,
+      range: season.range,
+      participated: season.participated,
+      category: season.participated ? season.category : undefined,
+      score: season.participated ? season.score : undefined,
+      rank: season.participated ? season.rank : undefined,
+      participantCount: season.participated ? season.participantCount : undefined,
+      skills: season.participated
+        ? season.skills.map((skill) => ({
+            name: skill.name,
+            color:
+              SKILL_GRADE_COLORS[skill.grade as keyof typeof SKILL_GRADE_COLORS] ?? "#334155",
+          }))
+        : [],
+    }));
+  }, [myRankingArchive]);
+  const rankedSeasonCount =
+    myRankingArchive?.ranked_count ??
+    myRecordRows.filter((record) => record.participated && (record.rank ?? 999) <= 3).length;
+  const bestSeasonRecord =
+    myRecordRows.find((record) => record.participated && (record.rank ?? 999) <= 3) ??
+    myRecordRows.find((record) => record.participated);
 
   useEffect(() => {
     if (rolledSkillSet) {
@@ -488,6 +686,11 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         setPendingRoll(snapshot.pendingRoll);
         setParticipantCounts(snapshot.participantCounts);
 
+        if (snapshot.season?.competition_category) {
+          setLeaderboardCategory(snapshot.season.competition_category);
+          setParticipationCategory(snapshot.season.competition_category);
+        }
+
         if (snapshot.entry) {
           setParticipationCategory(snapshot.entry.category);
         }
@@ -570,6 +773,39 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     setError(null);
   }, [authSession, entry, pendingRoll, todayRollLogId]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMyArchive() {
+      if (activeRankingTab !== "mine" || !supabaseReady || !authSession) {
+        return;
+      }
+
+      setMyRankingArchiveLoading(true);
+
+      try {
+        const archive = await getMyRankingArchive(10);
+        if (isMounted) {
+          setMyRankingArchive(archive);
+        }
+      } catch {
+        if (isMounted) {
+          setMyRankingArchive(null);
+        }
+      } finally {
+        if (isMounted) {
+          setMyRankingArchiveLoading(false);
+        }
+      }
+    }
+
+    void loadMyArchive();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeRankingTab, authSession, supabaseReady]);
+
   const handleJoinSeason = async () => {
     if (!currentSeason) return;
 
@@ -577,12 +813,14 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     setError(null);
 
     try {
-      const { skillSet, score } = buildInitialSkillSet(participationCategory);
-      const nextEntry = await joinSeason(participationCategory, skillSet, score);
-      const snapshot = await getRankingHomeSnapshot(leaderboardCategory);
+      const joinCategory = currentSeason.competition_category ?? participationCategory;
+      const { skillSet, score } = buildInitialSkillSet(joinCategory);
+      const nextEntry = await joinSeason(joinCategory, skillSet, score);
+      const snapshot = await getRankingHomeSnapshot(currentSeason.competition_category ?? leaderboardCategory);
 
       setEntry(nextEntry);
       setParticipationCategory(nextEntry.category);
+      setLeaderboardCategory(nextEntry.category);
       setCurrentSeason(snapshot.season);
       setRankings(snapshot.rankings);
       setMyRankingRow(snapshot.myRanking);
@@ -661,7 +899,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
 
     try {
       const nextEntry = await resolvePendingDailyRankRoll(entry.id, selectedResult);
-      const snapshot = await getRankingHomeSnapshot(leaderboardCategory);
+      const snapshot = await getRankingHomeSnapshot(activeLeaderboardCategory);
 
       setEntry(nextEntry);
       setCurrentSeason(snapshot.season);
@@ -710,7 +948,23 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         <p>하루 한 번, 이번 주 최고 점수를 겨루는 챌린지</p>
       </div>
 
-      {showSettlementNotice && (
+      <div className="ranking-page-tabs" aria-label="랭킹 화면 탭">
+        {[
+          { value: "current", label: "현재 시즌" },
+          { value: "mine", label: "내 기록" },
+        ].map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            className={activeRankingTab === tab.value ? "is-active" : undefined}
+            onClick={() => setActiveRankingTab(tab.value as RankingPageTab)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeRankingTab === "current" && showSettlementNotice && (
         <section className="ranking-card ranking-alert-card">
           <p className="ranking-alert-copy">
             매주 월요일 00:00 ~ 02:00(KST)는 주간 집계 중입니다. 집계가 끝나면 새 시즌 기준으로
@@ -719,7 +973,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         </section>
       )}
 
-      <section className="ranking-card ranking-season-card">
+      {activeRankingTab === "current" && <section className="ranking-card ranking-season-card">
         <div className="ranking-section-head">
           <div className="ranking-section-icon">
             <SectionIcon kind="season" />
@@ -737,6 +991,10 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         {currentSeason && (
           <div className="ranking-season-meta ranking-season-meta-horizontal">
             <div className="ranking-season-meta-item">
+              <span>시즌 번호</span>
+              <strong>{currentSeason.season_number ? `S${currentSeason.season_number}` : "-"}</strong>
+            </div>
+            <div className="ranking-season-meta-item">
               <span>시즌명</span>
               <strong>{currentSeason.name}</strong>
             </div>
@@ -746,19 +1004,27 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
             <div className="ranking-season-meta-item">
               <span>진행 방식</span>
-              <strong>매주 월요일 시작 / 일요일 종료</strong>
+              <strong>
+                {fixedCompetitionCategory
+                  ? `${CATEGORY_LABELS[fixedCompetitionCategory]} 고정 시즌`
+                  : "자유 선택 시즌"}
+              </strong>
             </div>
             <div className="ranking-season-meta-item">
               <span>참가 현황</span>
               <strong>
-                타자 {participantCounts.hitter}명 / 투수 {participantCounts.pitcher_starter}명
+                {fixedCompetitionCategory
+                  ? `${CATEGORY_LABELS[fixedCompetitionCategory]} ${
+                      participantCounts[fixedCompetitionCategory]
+                    }명`
+                  : `타자 ${participantCounts.hitter}명 / 투수 ${participantCounts.pitcher_starter}명`}
               </strong>
             </div>
           </div>
         )}
-      </section>
+      </section>}
 
-      <details className="ranking-card ranking-guide-card ranking-guide-disclosure">
+      {activeRankingTab === "current" && <details className="ranking-card ranking-guide-card ranking-guide-disclosure">
         <summary className="ranking-section-head">
           <div className="ranking-section-icon">i</div>
           <div>
@@ -768,13 +1034,13 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
         </summary>
 
         <div className="ranking-guide-list">
-          <p>1. Google 로그인 후 타자와 투수 중 하나를 선택하고 시즌에 참가합니다.</p>
+          <p>1. 현재 시즌은 기존처럼 선택할 수 있고, 다음 고정 보직 시즌부터는 시즌 보직으로 자동 참가합니다.</p>
           <p>2. 참가 후 매일 무료 1회 고급스킬변경권 기능을 사용하고, 기존 결과와 변경 결과 중 하나를 고릅니다.</p>
           <p>3. 확정된 최종 점수가 리더보드에 반영되며, 어떤 스킬 조합인지도 함께 확인할 수 있습니다.</p>
         </div>
-      </details>
+      </details>}
 
-      <div className="ranking-grid">
+      {activeRankingTab === "current" && <div className="ranking-grid">
         <section className="ranking-card">
           <div className="ranking-section-head">
             <div className="ranking-section-icon ranking-section-icon-warm">
@@ -785,26 +1051,34 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
           </div>
 
-          <div className="ranking-toggle-row">
-            {(["hitter", "pitcher_starter"] as RankingCategory[]).map((category) => (
-              <button
-                key={category}
-                type="button"
-                className={`ranking-toggle-btn ${
-                  activeParticipationCategory === category ? "active" : ""
-                }`}
-                onClick={() => setParticipationCategory(category)}
-                disabled={Boolean(entry)}
-              >
-                {CATEGORY_LABELS[category]}
-              </button>
-            ))}
-          </div>
+          {isFixedCompetitionSeason ? (
+            <div className="ranking-fixed-season-banner">
+              이번 시즌 경쟁 보직은 <strong>{CATEGORY_LABELS[activeParticipationCategory]}</strong>입니다.
+            </div>
+          ) : (
+            <div className="ranking-toggle-row">
+              {(["hitter", "pitcher_starter"] as RankingCategory[]).map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`ranking-toggle-btn ${
+                    activeParticipationCategory === category ? "active" : ""
+                  }`}
+                  onClick={() => setParticipationCategory(category)}
+                  disabled={Boolean(entry)}
+                >
+                  {CATEGORY_LABELS[category]}
+                </button>
+              ))}
+            </div>
+          )}
 
           {!authSession && (
             <>
               <p className="ranking-support-copy">
-                Google 로그인 후 타자 또는 투수 중 하나를 선택해서 참여할 수 있습니다.
+                {isFixedCompetitionSeason
+                  ? `Google 로그인 후 ${participationLabel} 시즌에 참여할 수 있습니다.`
+                  : "Google 로그인 후 타자 또는 투수 중 하나를 선택해서 참여할 수 있습니다."}
               </p>
 
               <button
@@ -835,7 +1109,9 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                 이번 시즌은 {participationLabel}로 참가합니다.
               </p>
               <p className="ranking-support-copy">
-                선택한 종목은 이번 주 동안 유지되며, 매일 무료 1회 고급스킬변경권 기능을 사용할 수 있습니다.
+                {isFixedCompetitionSeason
+                  ? "시즌 보직은 이번 주 동안 모든 참가자에게 동일하게 적용됩니다."
+                  : "선택한 종목은 이번 주 동안 유지되며, 매일 무료 1회 고급스킬변경권 기능을 사용할 수 있습니다."}
               </p>
 
               <button
@@ -929,18 +1205,24 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
           </div>
 
-          <div className="ranking-toggle-row">
-            {(["hitter", "pitcher_starter"] as RankingCategory[]).map((category) => (
-              <button
-                key={category}
-                type="button"
-                className={`ranking-toggle-btn ${leaderboardCategory === category ? "active" : ""}`}
-                onClick={() => setLeaderboardCategory(category)}
-              >
-                {CATEGORY_LABELS[category]}
-              </button>
-            ))}
-          </div>
+          {isFixedCompetitionSeason ? (
+            <div className="ranking-fixed-season-banner">
+              {CATEGORY_LABELS[activeLeaderboardCategory]} 리더보드만 표시됩니다.
+            </div>
+          ) : (
+            <div className="ranking-toggle-row">
+              {(["hitter", "pitcher_starter"] as RankingCategory[]).map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`ranking-toggle-btn ${leaderboardCategory === category ? "active" : ""}`}
+                  onClick={() => setLeaderboardCategory(category)}
+                >
+                  {CATEGORY_LABELS[category]}
+                </button>
+              ))}
+            </div>
+          )}
 
           {myRankingRow && (
             <div className="ranking-my-card">
@@ -989,7 +1271,104 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </table>
           </div>
         </section>
-      </div>
+      </div>}
+
+      {activeRankingTab === "mine" && (
+        <section className="ranking-card ranking-archive-wireframe">
+          <div className="ranking-section-head">
+            <div className="ranking-section-icon ranking-section-icon-warm">
+              <SectionIcon kind="participation" />
+            </div>
+            <div>
+              <h2>내 기록</h2>
+              <p>시즌 번호는 랭킹챌린지 시작 후 생성된 주간 시즌의 누적 순번입니다.</p>
+            </div>
+          </div>
+
+          <div className="ranking-my-archive-summary">
+            <div>
+              <span>최고 시즌 기록</span>
+              <strong>
+                {bestSeasonRecord
+                  ? `${bestSeasonRecord.title} · ${bestSeasonRecord.rank ?? "-"}위`
+                  : "-"}
+              </strong>
+              <p>
+                {bestSeasonRecord
+                  ? `${bestSeasonRecord.score ?? "-"}점 / ${
+                      bestSeasonRecord.category ? CATEGORY_LABELS[bestSeasonRecord.category] : "-"
+                    }`
+                  : "기록 없음"}
+              </p>
+            </div>
+            <div>
+              <span>순위권 진입 횟수</span>
+              <strong>{rankedSeasonCount}회</strong>
+              <p>TOP3 기준</p>
+            </div>
+          </div>
+
+          <div className="ranking-archive-table-shell ranking-my-archive-table">
+            <div className="ranking-archive-table-head">
+              <strong>내 시즌 기록</strong>
+              <span>{myRankingArchiveLoading ? "불러오는 중" : "이전 시즌부터 최대 10시즌"}</span>
+            </div>
+            {myRecordRows.map((season) => {
+              const rank = season.participated ? season.rank : undefined;
+              const isPodiumSeason = typeof rank === "number" && rank <= 3;
+
+              return (
+                <article
+                  key={season.id}
+                  className={`ranking-my-record-card ${season.participated ? "" : "is-empty"} ${
+                    isPodiumSeason ? "is-podium" : ""
+                  }`}
+                >
+                  <div className="ranking-my-record-rank">
+                    <span>
+                      <small>SEASON</small>
+                      S{season.seasonNumber}
+                    </span>
+                  </div>
+                  <div className="ranking-my-record-main">
+                    <span>{season.range}</span>
+                    <strong>
+                      {season.title}
+                      {isPodiumSeason ? (
+                        <em className="ranking-my-record-podium-badge">TOP 3</em>
+                      ) : null}
+                    </strong>
+                    {season.participated ? (
+                      <div className="ranking-archive-skill-line">
+                        {season.skills.map((skill) => (
+                          <b key={skill.name} style={{ color: skill.color }}>
+                            {skill.name}
+                          </b>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="ranking-my-record-empty">이번 시즌은 참여하지 않았습니다.</p>
+                    )}
+                  </div>
+                  <div className="ranking-my-record-score">
+                    <span>
+                      {season.participated && season.category
+                        ? CATEGORY_LABELS[season.category]
+                        : "미참가"}
+                    </span>
+                    <strong>{season.participated ? `${season.score}점` : "-"}</strong>
+                    <em>
+                      {season.participated && season.participantCount && rank
+                        ? `${season.participantCount}명 중 ${rank}등`
+                        : "기록 없음"}
+                    </em>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {endedSeasonSummary && (
         <div className="modal-backdrop" role="presentation">

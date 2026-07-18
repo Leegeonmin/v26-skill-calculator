@@ -26,7 +26,7 @@ const queuedEvents: QueuedToolUsageEvent[] = [];
 let flushScheduled = false;
 let flushInFlight = false;
 
-const MANUAL_ROLL_SAMPLE_RATE = 10;
+const MANUAL_ROLL_SAMPLE_RATE = 50;
 const sampledEventCounts = new Map<string, number>();
 
 function requireSupabase() {
@@ -123,13 +123,24 @@ function getSessionId(input: ToolUsageEventInput) {
   return typeof sessionId === "string" ? sessionId : "anonymous";
 }
 
-function shouldSendToolUsageEvent(input: ToolUsageEventInput) {
+function withSampleMetadata(input: ToolUsageEventInput, sampleWeight: number) {
+  return {
+    ...input,
+    metadata: {
+      ...(input.metadata ?? {}),
+      sample_rate: sampleWeight,
+      sample_weight: sampleWeight,
+    },
+  };
+}
+
+function getSampledToolUsageEvent(input: ToolUsageEventInput): ToolUsageEventInput | null {
   if (input.tool === "tool_view") {
-    return false;
+    return null;
   }
 
   if (input.tool !== "advanced_manual_roll") {
-    return true;
+    return input;
   }
 
   const sampleKey = [
@@ -141,16 +152,26 @@ function shouldSendToolUsageEvent(input: ToolUsageEventInput) {
   const nextCount = (sampledEventCounts.get(sampleKey) ?? 0) + 1;
   sampledEventCounts.set(sampleKey, nextCount);
 
-  return nextCount === 1 || nextCount % MANUAL_ROLL_SAMPLE_RATE === 0;
+  if (nextCount === 1) {
+    return withSampleMetadata(input, 1);
+  }
+
+  if (nextCount % MANUAL_ROLL_SAMPLE_RATE === 0) {
+    return withSampleMetadata(input, MANUAL_ROLL_SAMPLE_RATE);
+  }
+
+  return null;
 }
 
 export async function logToolUsageEvent(input: ToolUsageEventInput): Promise<void> {
-  if (!shouldSendToolUsageEvent(input)) {
+  const sampledInput = getSampledToolUsageEvent(input);
+
+  if (!sampledInput) {
     return;
   }
 
   return await new Promise<void>((resolve, reject) => {
-    queuedEvents.push({ input, resolve, reject });
+    queuedEvents.push({ input: sampledInput, resolve, reject });
     scheduleFlush();
   });
 }

@@ -7,6 +7,7 @@ export type HomeChangeMessageSetting = {
 
 const HOME_CHANGE_CACHE_KEY = "v26-home-change-message-cache";
 const HOME_CHANGE_CACHE_TTL_MS = 10 * 60 * 1000;
+const PUBLIC_HOME_CHANGE_MESSAGE_ENABLED = false;
 
 type CachedHomeChangeMessage = HomeChangeMessageSetting & {
   cached_at: number;
@@ -72,6 +73,14 @@ function writeHomeChangeMessageCache(setting: HomeChangeMessageSetting) {
 }
 
 export async function getHomeChangeMessage(): Promise<HomeChangeMessageSetting> {
+  if (!PUBLIC_HOME_CHANGE_MESSAGE_ENABLED) {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(HOME_CHANGE_CACHE_KEY);
+    }
+
+    return { message: "", updated_at: null };
+  }
+
   const cachedSetting = readHomeChangeMessageCache();
   if (cachedSetting) {
     return cachedSetting;

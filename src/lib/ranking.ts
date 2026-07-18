@@ -3,6 +3,7 @@ import { getSupabaseClient } from "./supabase";
 import type {
   DailyRollLog,
   EndedSeasonSummary,
+  MyRankingArchive,
   PendingDailyRoll,
   RankingCategory,
   RankingRow,
@@ -486,6 +487,24 @@ export async function getLatestEndedSeasonSummary(): Promise<EndedSeasonSummary 
     current_skills: latestEntry.current_skills,
     current_score: latestEntry.current_score,
     rank_position: ranking.rank_position,
+  };
+}
+
+export async function getMyRankingArchive(limit = 10): Promise<MyRankingArchive> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("get_my_ranking_archive", {
+    p_limit: limit,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const archive = (Array.isArray(data) ? data[0] : data) as Partial<MyRankingArchive> | null;
+
+  return {
+    records: archive?.records ?? [],
+    ranked_count: archive?.ranked_count ?? 0,
   };
 }
 

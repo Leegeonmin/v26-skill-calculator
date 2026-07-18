@@ -345,7 +345,6 @@ export default function HomeView({
                   )}
                   <span className="home-mobile-rank-user">
                     <strong>{row.display_name ?? "자동 닉네임"}</strong>
-                    <span>{RANKING_CATEGORY_LABELS[row.category]}</span>
                   </span>
                   <span className="home-mobile-rank-score">{formatRankScore(row.current_score)}</span>
                   <span className="home-mobile-rank-skills">

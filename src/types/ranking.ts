@@ -12,6 +12,8 @@ export type SeasonStatus = "upcoming" | "active" | "ended";
 export type Season = {
   id: string;
   name: string;
+  season_number: number | null;
+  competition_category: RankingCategory | null;
   starts_at: string;
   ends_at: string;
   status: SeasonStatus;
@@ -75,4 +77,26 @@ export type EndedSeasonSummary = {
   current_skills: StoredSkillSet;
   current_score: number;
   rank_position: number;
+};
+
+export type MyRankingArchiveRecord = {
+  season_id: string;
+  season_number: number;
+  competition_category: RankingCategory | null;
+  season_name: string;
+  starts_at: string;
+  ends_at: string;
+  participated: boolean;
+  category: RankingCategory | null;
+  current_skills: StoredSkillSet | null;
+  current_score: number | null;
+  score_reached_at: string | null;
+  rank_position: number | null;
+  participant_count: number | null;
+  is_ranked: boolean;
+};
+
+export type MyRankingArchive = {
+  records: MyRankingArchiveRecord[];
+  ranked_count: number;
 };

@@ -28,7 +28,10 @@ function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking
   if (name === "calculator") {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
-        <path d="M5 2.5h10A1.5 1.5 0 0 1 16.5 4v12A1.5 1.5 0 0 1 15 17.5H5A1.5 1.5 0 0 1 3.5 16V4A1.5 1.5 0 0 1 5 2.5Zm1 3v3h8v-3H6Zm2 5H6v2h2v-2Zm3 0H9v2h2v-2Zm3 0h-2v2h2v-2ZM8 14H6v2h2v-2Zm3 0H9v2h2v-2Zm3 0h-2v2h2v-2Z" fill="currentColor" />
+        <path
+          d="M5 2.5h10A1.5 1.5 0 0 1 16.5 4v12A1.5 1.5 0 0 1 15 17.5H5A1.5 1.5 0 0 1 3.5 16V4A1.5 1.5 0 0 1 5 2.5Zm1 3v3h8v-3H6Zm2 5H6v2h2v-2Zm3 0H9v2h2v-2Zm3 0h-2v2h2v-2ZM8 14H6v2h2v-2Zm3 0H9v2h2v-2Zm3 0h-2v2h2v-2Z"
+          fill="currentColor"
+        />
       </svg>
     );
   }
@@ -36,7 +39,10 @@ function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking
   if (name === "chart") {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
-        <path d="M3 16.5h14v1.5H1.5V2H3v14.5Zm2-1.5v-4h2.5v4H5Zm4 0V8h2.5v7H9Zm4 0V5h2.5v10H13ZM6 8.4 5 7.3 9.1 3.2l2.7 2.7 3.9-3.9v3.1h-1.5V4.6l-2.4 2.4-2.7-2.7L6 8.4Z" fill="currentColor" />
+        <path
+          d="M3 16.5h14v1.5H1.5V2H3v14.5Zm2-1.5v-4h2.5v4H5Zm4 0V8h2.5v7H9Zm4 0V5h2.5v10H13ZM6 8.4 5 7.3 9.1 3.2l2.7 2.7 3.9-3.9v3.1h-1.5V4.6l-2.4 2.4-2.7-2.7L6 8.4Z"
+          fill="currentColor"
+        />
       </svg>
     );
   }
@@ -44,7 +50,10 @@ function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking
   if (name === "scan") {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
-        <path d="M3 6.5V3h3.5v1.5h-2v2H3Zm10.5-3.5H17v3.5h-1.5v-2h-2V3ZM3 13.5h1.5v2h2V17H3v-3.5Zm12.5 2v-2H17V17h-3.5v-1.5h2ZM10 5.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 7.2c2.7 0 4.8 1.35 4.8 3V16H5.2v-.3c0-1.65 2.1-3 4.8-3Z" fill="currentColor" />
+        <path
+          d="M3 6.5V3h3.5v1.5h-2v2H3Zm10.5-3.5H17v3.5h-1.5v-2h-2V3ZM3 13.5h1.5v2h2V17H3v-3.5Zm12.5 2v-2H17V17h-3.5v-1.5h2ZM10 5.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 7.2c2.7 0 4.8 1.35 4.8 3V16H5.2v-.3c0-1.65 2.1-3 4.8-3Z"
+          fill="currentColor"
+        />
       </svg>
     );
   }
@@ -52,14 +61,20 @@ function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking
   if (name === "ranking") {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
-        <path d="M3 17.5V3h1.5v13H17v1.5H3Zm3-3v-4h2.5v4H6Zm4 0V6h2.5v8.5H10Zm4 0V8.5h2.5v6H14Z" fill="currentColor" />
+        <path
+          d="M3 17.5V3h1.5v13H17v1.5H3Zm3-3v-4h2.5v4H6Zm4 0V6h2.5v8.5H10Zm4 0V8.5h2.5v6H14Z"
+          fill="currentColor"
+        />
       </svg>
     );
   }
 
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
-      <path d="M4 3h9.5A2.5 2.5 0 0 1 16 5.5V17H5a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1Zm1 10.2V15h9.5v-1.8H5ZM5 5v6.7h9.5V5.5A1 1 0 0 0 13.5 5H5Z" fill="currentColor" />
+      <path
+        d="M4 3h9.5A2.5 2.5 0 0 1 16 5.5V17H5a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1Zm1 10.2V15h9.5v-1.8H5ZM5 5v6.7h9.5V5.5A1 1 0 0 0 13.5 5H5Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -76,6 +91,8 @@ export default function SiteHeader({
 }: SiteHeaderProps) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const displayName = authDisplayName ?? "Google 사용자";
+  const email = authSession?.user.email ?? null;
 
   useEffect(() => {
     if (!accountMenuOpen) {
@@ -163,7 +180,7 @@ export default function SiteHeader({
                 aria-expanded={accountMenuOpen}
               >
                 <UserIcon />
-                <span>{authDisplayName ?? "Google 사용자"}</span>
+                <span>{displayName}</span>
               </button>
             ) : (
               <button
@@ -184,7 +201,8 @@ export default function SiteHeader({
               <div className="home-account-menu" role="menu">
                 <div className="home-account-menu-user">
                   <span>로그인 중</span>
-                  <strong>{authDisplayName ?? "Google 사용자"}</strong>
+                  <strong>{displayName}</strong>
+                  {email ? <em>{email}</em> : null}
                 </div>
                 <button
                   type="button"
