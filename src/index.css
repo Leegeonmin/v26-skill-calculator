@@ -8433,6 +8433,16 @@ input {
   min-height: 50px;
 }
 
+.adfit-mobile-top-banner {
+  display: none;
+}
+
+.adfit-mobile-top-banner .kakao_ad_area {
+  width: 320px;
+  max-width: 100%;
+  min-height: 50px;
+}
+
 .adfit-side-rail {
   display: none;
 }
@@ -8459,6 +8469,16 @@ input {
 
   .adfit-side-rail-right {
     right: max(22px, calc((100vw - 1180px) / 2 - 268px));
+  }
+}
+
+@media (max-width: 760px) {
+  .adfit-mobile-top-banner {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 50px;
+    margin: 18px auto 16px;
   }
 }
 

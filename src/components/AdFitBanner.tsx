@@ -7,6 +7,21 @@ type AdFitBannerProps = {
   showSide?: boolean;
 };
 
+export function AdFitMobileTopBanner({ slotKey }: { slotKey: string }) {
+  return (
+    <aside className="adfit-mobile-top-banner" aria-label="광고">
+      <ins
+        key={`${slotKey}-mobile-top`}
+        className="kakao_ad_area"
+        style={{ display: "none" }}
+        data-ad-unit="DAN-mzOAh4ii66DEoLwq"
+        data-ad-width="320"
+        data-ad-height="50"
+      />
+    </aside>
+  );
+}
+
 export default function AdFitBanner({ slotKey, showSide = true }: AdFitBannerProps) {
   useEffect(() => {
     if (typeof document === "undefined") {

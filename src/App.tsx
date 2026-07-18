@@ -47,7 +47,7 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
-import AdFitBanner from "./components/AdFitBanner";
+import AdFitBanner, { AdFitMobileTopBanner } from "./components/AdFitBanner";
 import SiteHeader from "./components/SiteHeader";
 import type {
   CalculatorMode,
@@ -1655,6 +1655,7 @@ function App() {
           themeAction={themeToggle}
         />
         <AppChrome>
+          {shouldShowAdFitBanner && <AdFitMobileTopBanner slotKey={adFitSlotKey} />}
           {authError && <p className="auth-error">{authError}</p>}
 
           <Suspense fallback={<ViewFallback />}>
