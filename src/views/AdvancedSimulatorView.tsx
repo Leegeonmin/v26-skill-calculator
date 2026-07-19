@@ -236,10 +236,7 @@ export default function AdvancedSimulatorView({
           <button
             type="button"
             className="primary-btn auto-roll-btn simulation-cta-btn"
-            onClick={() => {
-              onAutoRoll();
-              startRolling(() => undefined, 720, { keepMajorFirst: true });
-            }}
+            onClick={() => startRolling(onAutoRoll, 720, { keepMajorFirst: true })}
             disabled={isRolling}
           >
             <span className="mobile-hidden-label">
