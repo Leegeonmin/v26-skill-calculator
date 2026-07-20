@@ -760,7 +760,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
+  cursor: default;
 }
 
 .player-name {
@@ -770,13 +770,11 @@ body {
 }
 
 .edit-icon {
-  font-size: 0.8rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  display: none;
 }
 
 .player-name-wrap:hover .edit-icon {
-  opacity: 0.7;
+  opacity: 0;
 }
 
 .player-league {

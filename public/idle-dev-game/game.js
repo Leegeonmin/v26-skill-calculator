@@ -47,7 +47,7 @@ function normalizePlayerName(value) {
 
 // 1. 게임 상태 정의 (기본값)
 let state = {
-  saveVersion: 3,
+  saveVersion: 4,
   tp: 0,
   player: {
     name: createDefaultPlayerName(),
@@ -1111,10 +1111,10 @@ function resetAllProgress() {
 
   const preservedGlobalExitCount = state.globalExitCount;
   state = {
-    saveVersion: 3,
+    saveVersion: 4,
     tp: 0,
     player: {
-      name: '홍타자',
+      name: createDefaultPlayerName(),
       tier: 'LIVE',
       league: TIER_INFO['LIVE'].league
     },
@@ -1540,6 +1540,7 @@ async function shareMlbResultCard() {
 }
 
 function openPlayerNameModal(force = false) {
+  return;
   const modal = document.getElementById('player-name-modal');
   const input = document.getElementById('player-name-input');
   if (!modal || !input) return;
@@ -1553,6 +1554,11 @@ function openPlayerNameModal(force = false) {
 }
 
 function savePlayerNameFromModal() {
+  document.getElementById('player-name-modal')?.classList.add('hidden');
+  state.player.name = state.player.name || createDefaultPlayerName();
+  saveGame();
+  updateUI();
+  return;
   const modal = document.getElementById('player-name-modal');
   const input = document.getElementById('player-name-input');
   const nextName = normalizePlayerName(input?.value);
@@ -2203,7 +2209,7 @@ function startCooldownCountdown() {
 
 // 15. 세이브 & 로드 (LocalStorage)
 function saveGame() {
-  state.saveVersion = 3;
+  state.saveVersion = 4;
   state.savedAt = new Date().toISOString();
   localStorage.setItem('cpbv_hitter_save', JSON.stringify(state));
 }
@@ -2220,7 +2226,7 @@ function restoreSavedState(parsed) {
   state = {
     ...state,
     ...parsed,
-    saveVersion: 3,
+    saveVersion: 4,
     tp: Math.max(Number(parsed.tp) || 0, 0),
     player: { ...state.player, ...(parsed.player || {}) },
     stats: restoredStats,
@@ -2237,6 +2243,10 @@ function restoreSavedState(parsed) {
       } : null)
       : state.skills
   };
+  if ((parsed.saveVersion || 0) < 4) {
+    state.player.name = createDefaultPlayerName();
+    localStorage.removeItem('cpbv_hitter_name_set');
+  }
 }
 
 function getStateProgressScore(targetState = state) {
@@ -2266,7 +2276,7 @@ function loadGame() {
       state = {
         ...state,
         ...parsed,
-        saveVersion: 3,
+        saveVersion: 4,
         tp: Math.max(Number(parsed.tp) || 0, 0),
         player: { ...state.player, ...(parsed.player || {}) },
         stats: restoredStats,
@@ -2283,6 +2293,10 @@ function loadGame() {
           } : null)
           : state.skills
       };
+      if ((parsed.saveVersion || 0) < 4) {
+        state.player.name = createDefaultPlayerName();
+        localStorage.removeItem('cpbv_hitter_name_set');
+      }
       if (!normalizePlayerName(state.player.name)) {
         state.player.name = createDefaultPlayerName();
       }
