@@ -135,10 +135,19 @@ export default function SiteHeader({
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <button type="button" className="site-brand" onClick={() => onSelectView("home")}>
-          <img src="/brand/v26-lab-app-icon.svg" alt="" aria-hidden="true" className="site-brand-icon" />
-          <span>v26-lab</span>
-        </button>
+        <div className="site-brand-row">
+          <button type="button" className="site-brand" onClick={() => onSelectView("home")}>
+            <img src="/brand/v26-lab-app-icon.svg" alt="" aria-hidden="true" className="site-brand-icon" />
+            <span>v26-lab</span>
+          </button>
+          {idleDevGameEnabled && (
+            <a className="site-mobile-header-game-link" href="/idle-dev-game/index.html">
+              <HeaderIcon name="bat" />
+              <span>타자 키우기</span>
+              <em>BETA</em>
+            </a>
+          )}
+        </div>
         <nav className="site-primary-nav" aria-label="주요 기능">
           <button type="button" className="site-nav-link" onClick={() => onSelectView("calculator")}>
             <HeaderIcon name="calculator" />
@@ -266,11 +275,6 @@ export default function SiteHeader({
           랭킹
         </button>
         <a href="/skill-score-method">가이드</a>
-        {idleDevGameEnabled && (
-          <a className="site-mobile-game-link" href="/idle-dev-game/index.html">
-            타자 키우기 <em>BETA</em>
-          </a>
-        )}
       </nav>
     </header>
   );
