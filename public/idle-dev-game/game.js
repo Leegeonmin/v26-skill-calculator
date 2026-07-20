@@ -54,6 +54,11 @@ let state = {
   synergyCount: 0, // MLB Exit(환생) 횟수 (스톡옵션 주수)
   mlbSuccessCount: 0,
   globalExitCount: 0,
+  swingCount: 0,
+  homerunCount: 0,
+  bestSwingTraining: 0,
+  bestHomerunTraining: 0,
+  remotePlayerId: null,
   boostActive: false,
   boostCooldown: 0,
   boostActiveTimeRemaining: 0,
@@ -569,6 +574,12 @@ function swingBat(isCritical = false) {
 
   // 훈련량 지급
   state.tp += gainedTp;
+  state.swingCount = (state.swingCount || 0) + 1;
+  state.bestSwingTraining = Math.max(state.bestSwingTraining || 0, gainedTp);
+  if (resultText.includes('홈런')) {
+    state.homerunCount = (state.homerunCount || 0) + 1;
+    state.bestHomerunTraining = Math.max(state.bestHomerunTraining || 0, gainedTp);
+  }
 
   // 전광판 로그 남기기
   addLog(logText, (resultText.includes('홈런') ? 'homerun' : (resultText.includes('안타') || resultText.includes('루타') || resultText.includes('볼넷') ? 'special' : '')));
@@ -1037,6 +1048,7 @@ function triggerMLBExit() {
   lastMlbResult = buildMlbResultSnapshot();
   renderMlbResultCard(lastMlbResult);
   loadMlbResultRank(lastMlbResult);
+  syncIdleGameResult(lastMlbResult);
   const modal = document.getElementById('exit-modal');
   modal.classList.remove('hidden');
   saveGame();
@@ -1131,6 +1143,105 @@ async function loadPublicGameStats() {
     document.getElementById('global-exit-count').textContent = state.globalExitCount.toLocaleString();
   } catch (error) {
     console.warn('Public game stats load failed:', error);
+  }
+}
+
+function getOrCreateAnonId() {
+  const key = 'cpbv_idle_anon_id';
+  let anonId = localStorage.getItem(key);
+  if (!anonId) {
+    anonId = crypto?.randomUUID ? crypto.randomUUID() : `anon-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(key, anonId);
+  }
+  return anonId;
+}
+
+function getSupabaseAccessTokenFromStorage() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('sb-') || !key.endsWith('-auth-token')) continue;
+      const value = JSON.parse(localStorage.getItem(key) || '{}');
+      const token = value?.access_token || value?.currentSession?.access_token;
+      if (token) return token;
+    }
+  } catch (error) {
+    console.warn('Auth token read failed:', error);
+  }
+  return null;
+}
+
+async function postIdleGameApi(path, payload) {
+  const token = getSupabaseAccessTokenFromStorage();
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    'X-CPBV-Anon-ID': getOrCreateAnonId()
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(path, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) throw new Error(`${path} failed: ${response.status}`);
+  return response.json();
+}
+
+function buildProgressPayload(extra = {}) {
+  return {
+    anonId: getOrCreateAnonId(),
+    displayName: state.player.name,
+    state: {
+      player: state.player,
+      stats: state.stats,
+      baseStats: state.baseStats,
+      skills: state.skills,
+      synergyCount: state.synergyCount,
+      mlbSuccessCount: state.mlbSuccessCount || 0
+    },
+    progress: {
+      currentTier: state.player.tier,
+      totalTraining: Math.floor(state.tp),
+      swingCount: state.swingCount || 0,
+      homerunCount: state.homerunCount || 0,
+      mlbSuccessCount: state.mlbSuccessCount || 0,
+      bestSwingTraining: state.bestSwingTraining || 0,
+      bestHomerunTraining: state.bestHomerunTraining || 0,
+      bestTotalLevel: getTrainingLevel()
+    },
+    ...extra
+  };
+}
+
+async function syncIdleGameSession() {
+  try {
+    const payload = await postIdleGameApi('/api/idle-dev-game/session', buildProgressPayload());
+    if (payload?.playerId) {
+      state.remotePlayerId = payload.playerId;
+      saveGame();
+    }
+  } catch (error) {
+    console.warn('Idle game session sync failed:', error);
+  }
+}
+
+async function syncIdleGameResult(result) {
+  try {
+    const payload = await postIdleGameApi('/api/idle-dev-game/result', buildProgressPayload({
+      result
+    }));
+    if (payload?.playerId) state.remotePlayerId = payload.playerId;
+    if (payload?.rank) {
+      result.rankLabel = `${Number(payload.rank).toLocaleString()}등`;
+      document.getElementById('modal-mlb-rank').textContent = result.rankLabel;
+      renderMlbResultCard(result);
+    }
+    saveGame();
+  } catch (error) {
+    console.warn('Idle game result sync failed:', error);
   }
 }
 
@@ -1330,6 +1441,33 @@ async function shareMlbResultCard() {
       });
     }
   }, 'image/png');
+}
+
+function openPlayerNameModal(force = false) {
+  const modal = document.getElementById('player-name-modal');
+  const input = document.getElementById('player-name-input');
+  if (!modal || !input) return;
+
+  const alreadySet = localStorage.getItem('cpbv_hitter_name_set') === '1';
+  if (!force && alreadySet) return;
+
+  input.value = state.player.name || '';
+  modal.classList.remove('hidden');
+  setTimeout(() => input.focus(), 0);
+}
+
+function savePlayerNameFromModal() {
+  const modal = document.getElementById('player-name-modal');
+  const input = document.getElementById('player-name-input');
+  const nextName = (input?.value || '').trim().slice(0, 8);
+  if (!nextName) return;
+
+  state.player.name = nextName;
+  localStorage.setItem('cpbv_hitter_name_set', '1');
+  modal?.classList.add('hidden');
+  saveGame();
+  updateUI();
+  syncIdleGameSession();
 }
 
 // 13. UI 드로잉 및 갱신 (Rendering)
@@ -2118,6 +2256,17 @@ function initEventListeners() {
   });
 
   // 하단 법적 문서 및 모달 바인딩
+  nameWrap.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    openPlayerNameModal(true);
+  }, true);
+
+  document.getElementById('btn-save-player-name').addEventListener('click', savePlayerNameFromModal);
+  document.getElementById('player-name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') savePlayerNameFromModal();
+  });
+
   const legalModal = document.getElementById('legal-modal');
   const legalTitle = document.getElementById('legal-title');
   const legalBody = document.getElementById('legal-body');
@@ -2149,6 +2298,7 @@ function initApp() {
   loadGame();
   placeConsoleBesideRedistribute();
   initEventListeners();
+  syncIdleGameSession();
   
   // 게임 루프: 100ms마다 초당 자동 훈련량 정밀 연산 및 업데이트
   setInterval(() => {
@@ -2164,9 +2314,14 @@ function initApp() {
     saveGame();
   }, 5000);
 
+  setInterval(() => {
+    syncIdleGameSession();
+  }, 30000);
+
   startChanceBallSpawner();
   startLogTicker();
   loadPublicGameStats();
+  openPlayerNameModal(false);
   
   updateUI();
   addLog('⚾ KBO 타자 훈련장에 체크인했습니다. 배트를 휘둘러 타격을 연마하세요!', 'special');
