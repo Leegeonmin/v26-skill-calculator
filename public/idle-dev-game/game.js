@@ -52,12 +52,15 @@ let state = {
   },
   skills: [null, null, null], // [Skill, Skill, Skill]
   synergyCount: 0, // MLB Exit(환생) 횟수 (스톡옵션 주수)
+  mlbSuccessCount: 0,
   globalExitCount: 0,
   boostActive: false,
   boostCooldown: 0,
   boostActiveTimeRemaining: 0,
   lockFirstSkill: false
 };
+
+let lastMlbResult = null;
 
 // 2. 고스변 스킬 풀 (v26-skill-calculator의 타자 스킬 원본 등급 기준)
 const SKILL_NAMES_BY_GRADE = {
@@ -1030,6 +1033,10 @@ function triggerMLBExit() {
   document.getElementById('global-exit-count').textContent = state.globalExitCount.toLocaleString();
 
   // 모달 표시
+  state.mlbSuccessCount = (state.mlbSuccessCount || 0) + 1;
+  lastMlbResult = buildMlbResultSnapshot();
+  renderMlbResultCard(lastMlbResult);
+  loadMlbResultRank(lastMlbResult);
   const modal = document.getElementById('exit-modal');
   modal.classList.remove('hidden');
   saveGame();
@@ -1073,6 +1080,7 @@ function resetAllProgress() {
     upgrades: { active: {}, passive: {} },
     skills: [null, null, null],
     synergyCount: 0,
+    mlbSuccessCount: 0,
     globalExitCount: preservedGlobalExitCount,
     boostActive: false,
     boostCooldown: 0,
@@ -1124,6 +1132,204 @@ async function loadPublicGameStats() {
   } catch (error) {
     console.warn('Public game stats load failed:', error);
   }
+}
+
+function buildMlbResultSnapshot() {
+  const combinedStats = combineStats();
+  const skillSummary = state.skills
+    .filter(Boolean)
+    .map(skill => `${skill.name} (${skill.rank})`);
+
+  return {
+    playerName: state.player.name,
+    tier: state.player.tier,
+    league: state.player.league,
+    totalTraining: Math.floor(state.tp),
+    trainingLevel: getTrainingLevel(),
+    maxTrainingLevel: TIER_INFO[state.player.tier]?.maxStats || 25,
+    stats: combinedStats,
+    skills: skillSummary,
+    synergyCount: state.synergyCount,
+    synergyBoost: state.synergyCount * 100,
+    mlbSuccessCount: state.mlbSuccessCount || 0,
+    globalMlbSuccessCount: state.globalExitCount,
+    achievedAt: new Date().toISOString(),
+    rankLabel: '집계 대기'
+  };
+}
+
+async function loadMlbResultRank(result) {
+  const rankEl = document.getElementById('modal-mlb-rank');
+  if (!rankEl) return;
+
+  rankEl.textContent = '집계 중';
+
+  try {
+    const response = await fetch('/api/idle-dev-game/rank', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        category: 'mlb_success_count',
+        score: result.mlbSuccessCount,
+        metadata: result
+      })
+    });
+
+    if (!response.ok) throw new Error(`Rank request failed: ${response.status}`);
+
+    const payload = await response.json();
+    const rank = Number(payload.rank);
+    if (Number.isFinite(rank) && rank > 0) {
+      result.rankLabel = `${rank.toLocaleString()}등`;
+      rankEl.textContent = result.rankLabel;
+      renderMlbResultCard(result);
+      return;
+    }
+  } catch (error) {
+    console.warn('MLB ranking load failed:', error);
+  }
+
+  result.rankLabel = `집계 대기 · ${result.mlbSuccessCount.toLocaleString()}번째 MLB행`;
+  rankEl.textContent = result.rankLabel;
+  renderMlbResultCard(result);
+}
+
+function renderMlbResultCard(result = lastMlbResult) {
+  if (!result) return null;
+
+  const canvas = document.getElementById('result-card-canvas');
+  if (!canvas) return null;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const width = canvas.width;
+  const height = canvas.height;
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, '#07111f');
+  gradient.addColorStop(0.52, '#101827');
+  gradient.addColorStop(1, '#2a2106');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(28, 28, width - 56, height - 56);
+
+  ctx.fillStyle = 'rgba(0, 210, 255, 0.12)';
+  ctx.beginPath();
+  ctx.arc(580, 160, 170, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#00d2ff';
+  ctx.font = '700 26px Outfit, sans-serif';
+  ctx.fillText('CPBV LAB', 60, 86);
+
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '800 58px Outfit, sans-serif';
+  ctx.fillText('MLB행 성공', 60, 168);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 72px Outfit, sans-serif';
+  ctx.fillText(result.playerName, 60, 260);
+
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '600 28px Outfit, sans-serif';
+  ctx.fillText(`${result.tier} · 훈련 Lv.${result.trainingLevel}/${result.maxTrainingLevel}`, 60, 310);
+
+  const rows = [
+    ['랭킹', result.rankLabel],
+    ['MLB 성공 수', `${result.mlbSuccessCount.toLocaleString()}회`],
+    ['시너지', `+${result.synergyBoost.toLocaleString()}%`],
+    ['누적 훈련량', result.totalTraining.toLocaleString()]
+  ];
+
+  rows.forEach(([label, value], index) => {
+    const y = 390 + index * 72;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.fillRect(60, y - 42, width - 120, 56);
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '700 22px Outfit, sans-serif';
+    ctx.fillText(label, 86, y - 8);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '900 28px JetBrains Mono, monospace';
+    ctx.fillText(value, 320, y - 8);
+  });
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = '800 26px Outfit, sans-serif';
+  ctx.fillText('최종 능력치', 60, 704);
+
+  const statRows = [
+    ['파워', result.stats.power],
+    ['정확', result.stats.contact],
+    ['선구', result.stats.eye],
+    ['인내', result.stats.patience],
+    ['주루', result.stats.speed],
+    ['수비', result.stats.defense]
+  ];
+
+  statRows.forEach(([label, value], index) => {
+    const x = 60 + (index % 2) * 300;
+    const y = 758 + Math.floor(index / 2) * 48;
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '700 22px Outfit, sans-serif';
+    ctx.fillText(label, x, y);
+    ctx.fillStyle = '#00d2ff';
+    ctx.font = '900 26px JetBrains Mono, monospace';
+    ctx.fillText(String(value), x + 86, y);
+  });
+
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '800 24px Outfit, sans-serif';
+  ctx.fillText('cpbv-lab.com/idle-dev-game', 60, 910);
+
+  return canvas;
+}
+
+function downloadMlbResultCard() {
+  const canvas = renderMlbResultCard();
+  if (!canvas) return;
+
+  const link = document.createElement('a');
+  link.download = `cpbv-mlb-result-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+async function shareMlbResultCard() {
+  const canvas = renderMlbResultCard();
+  if (!canvas) return;
+
+  const shareText = `${lastMlbResult?.playerName || '내 선수'} MLB행 성공! ${lastMlbResult?.rankLabel || ''}`;
+
+  if (!navigator.share || !canvas.toBlob) {
+    await navigator.clipboard?.writeText(`${shareText} https://cpbv-lab.com/idle-dev-game/index.html`);
+    addLog('[공유] 결과 문구를 클립보드에 복사했습니다.', 'special');
+    return;
+  }
+
+  canvas.toBlob(async blob => {
+    if (!blob) return;
+    const file = new File([blob], 'cpbv-mlb-result.png', { type: 'image/png' });
+    const shareData = {
+      title: '타자 키우기 MLB행 성공',
+      text: shareText,
+      files: [file]
+    };
+
+    if (navigator.canShare?.(shareData)) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.share({
+        title: shareData.title,
+        text: `${shareText} https://cpbv-lab.com/idle-dev-game/index.html`
+      });
+    }
+  }, 'image/png');
 }
 
 // 13. UI 드로잉 및 갱신 (Rendering)
@@ -1877,6 +2083,8 @@ function initEventListeners() {
 
   // 엔딩 모달 리셋 클릭
   document.getElementById('btn-reset-game').addEventListener('click', resetGameToLive);
+  document.getElementById('btn-download-result-card').addEventListener('click', downloadMlbResultCard);
+  document.getElementById('btn-share-result-card').addEventListener('click', shareMlbResultCard);
   document.getElementById('btn-reset-progress').addEventListener('click', resetAllProgress);
 
   document.getElementById('lock-first-skill').addEventListener('change', (e) => {

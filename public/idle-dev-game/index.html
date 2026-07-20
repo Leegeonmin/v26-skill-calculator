@@ -386,12 +386,19 @@
         <div class="exit-statistics">
           <p>🏅 획득 스톡옵션 (시너지): <span id="modal-synergy-count" class="neon-text">0</span>주</p>
           <p>📈 영구 자동 생산 속도: <span id="modal-synergy-boost" class="neon-text">+0%</span></p>
+          <p>🏆 MLB 성공 랭킹: <span id="modal-mlb-rank" class="neon-text-gold">집계 중</span></p>
         </div>
+      </div>
+
+      <div class="result-card-preview" id="result-card-preview" aria-live="polite">
+        <canvas id="result-card-canvas" width="720" height="960"></canvas>
       </div>
 
       <p class="exit-outro">이제 새로운 신인 선수를 발굴하여 더 빠르게 리그를 정복할 차례입니다. 다시 시작하시겠습니까?</p>
       
       <div class="modal-actions">
+        <button id="btn-download-result-card" class="glass-btn btn-result-card">결과 카드 저장</button>
+        <button id="btn-share-result-card" class="glass-btn btn-result-card">공유하기</button>
         <button id="btn-reset-game" class="btn-reset-game neon-glow-gold">다시 신인부터 키우기</button>
       </div>
     </div>
