@@ -25,7 +25,7 @@ function UserIcon() {
   );
 }
 
-function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking" | "guide" }) {
+function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking" | "guide" | "bat" }) {
   if (name === "calculator") {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
@@ -64,6 +64,17 @@ function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
         <path
           d="M3 17.5V3h1.5v13H17v1.5H3Zm3-3v-4h2.5v4H6Zm4 0V6h2.5v8.5H10Zm4 0V8.5h2.5v6H14Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "bat") {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon site-nav-bat-icon">
+        <path
+          d="M13.9 2.1c.9-.9 2.3-.9 3.1-.1.8.8.8 2.2-.1 3.1l-7.8 7.8-2-2 7.8-7.8Zm-8 9.9 2.1 2.1-2 2 1.2 1.2-1.5 1.5-4.5-4.5 1.5-1.5L4 14l1.9-2Zm8.9-7.2-6.3 6.3.5.5 6.3-6.3-.5-.5Z"
           fill="currentColor"
         />
       </svg>
@@ -171,8 +182,9 @@ export default function SiteHeader({
           </a>
           {idleDevGameEnabled && (
             <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
-              <HeaderIcon name="chart" />
+              <HeaderIcon name="bat" />
               <span>타자 키우기</span>
+              <em>BETA</em>
             </a>
           )}
         </nav>
@@ -254,7 +266,11 @@ export default function SiteHeader({
           랭킹
         </button>
         <a href="/skill-score-method">가이드</a>
-        {idleDevGameEnabled && <a href="/idle-dev-game/index.html">타자 키우기</a>}
+        {idleDevGameEnabled && (
+          <a className="site-mobile-game-link" href="/idle-dev-game/index.html">
+            타자 키우기 <em>BETA</em>
+          </a>
+        )}
       </nav>
     </header>
   );

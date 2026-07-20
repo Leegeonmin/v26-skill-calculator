@@ -12092,16 +12092,77 @@ input {
 }
 
 .site-nav-link-game {
-  padding: 7px 10px;
+  position: relative;
+  isolation: isolate;
+  padding: 8px 12px;
   border-radius: 999px !important;
-  background: var(--accent-soft-bg) !important;
-  color: var(--accent-soft-text) !important;
-  box-shadow: inset 0 0 0 1px var(--accent-soft-border);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, #ff3d81, #ffb000, #48d64c, #00c2ff, #7c3cff, #ff3d81)
+    0 0 / 260% 100% !important;
+  color: #fff !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.36) inset,
+    0 8px 24px rgba(124, 58, 237, 0.22),
+    0 0 18px rgba(0, 194, 255, 0.2);
+  animation: idleGameRainbowShift 5s linear infinite;
+}
+
+.site-nav-link-game::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.02));
+}
+
+.site-nav-link-game em,
+.site-mobile-game-link em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 16px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #7c2d12;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0;
 }
 
 .site-nav-link-game:hover {
-  background: var(--accent-bg) !important;
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    0 12px 30px rgba(236, 72, 153, 0.28),
+    0 0 24px rgba(34, 211, 238, 0.28);
+}
+
+.site-nav-bat-icon {
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.28));
+}
+
+.site-mobile-game-link {
+  background:
+    linear-gradient(90deg, #ff3d81, #ffb000, #48d64c, #00c2ff, #7c3cff)
+    0 0 / 240% 100% !important;
   color: #fff !important;
+  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.2);
+  animation: idleGameRainbowShift 5s linear infinite;
+}
+
+@keyframes idleGameRainbowShift {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 260% 50%;
+  }
 }
 
 .site-nav-icon {
