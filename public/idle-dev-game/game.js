@@ -1190,6 +1190,22 @@ async function postIdleGameApi(path, payload) {
   return response.json();
 }
 
+async function getIdleGameApi(path) {
+  const token = getSupabaseAccessTokenFromStorage();
+  if (!token) return null;
+
+  const headers = {
+    Accept: 'application/json',
+    'X-CPBV-Anon-ID': getOrCreateAnonId(),
+    Authorization: `Bearer ${token}`
+  };
+
+  const url = `${path}?anonId=${encodeURIComponent(getOrCreateAnonId())}`;
+  const response = await fetch(url, { method: 'GET', headers });
+  if (!response.ok) throw new Error(`${path} failed: ${response.status}`);
+  return response.json();
+}
+
 function buildProgressPayload(extra = {}) {
   return {
     anonId: getOrCreateAnonId(),
@@ -1225,6 +1241,33 @@ async function syncIdleGameSession() {
     }
   } catch (error) {
     console.warn('Idle game session sync failed:', error);
+  }
+}
+
+async function loadRemoteGameForSignedInUser() {
+  try {
+    const payload = await getIdleGameApi('/api/idle-dev-game/session');
+    const remoteState = payload?.player?.last_state;
+    if (!remoteState || typeof remoteState !== 'object') return false;
+
+    const localScore = getStateProgressScore(state);
+    const previousState = state;
+    restoreSavedState(remoteState);
+    state.remotePlayerId = payload.playerId || payload.player?.id || state.remotePlayerId;
+    const remoteScore = getStateProgressScore(state);
+
+    if (remoteScore + 0.0001 < localScore) {
+      state = previousState;
+      syncIdleGameSession();
+      return false;
+    }
+
+    saveGame();
+    addLog('[로그인 복구] 이전에 저장한 플레이 기록을 불러왔습니다.', 'special');
+    return true;
+  } catch (error) {
+    console.warn('Idle game remote load failed:', error);
+    return false;
   }
 }
 
@@ -2105,7 +2148,49 @@ function startCooldownCountdown() {
 // 15. 세이브 & 로드 (LocalStorage)
 function saveGame() {
   state.saveVersion = 3;
+  state.savedAt = new Date().toISOString();
   localStorage.setItem('cpbv_hitter_save', JSON.stringify(state));
+}
+
+function restoreSavedState(parsed) {
+  const restoredStats = { ...createFreshStats(), ...(parsed.stats || {}) };
+  const restoredBaseStats = { ...createFreshStats(), ...(parsed.baseStats || {}) };
+  if ((parsed.saveVersion || 0) < 3 && STAT_KEYS.every(key => restoredStats[key] >= 1)) {
+    STAT_KEYS.forEach(key => {
+      restoredStats[key] = Math.max(0, restoredStats[key] - 1);
+    });
+  }
+
+  state = {
+    ...state,
+    ...parsed,
+    saveVersion: 3,
+    tp: Math.max(Number(parsed.tp) || 0, 0),
+    player: { ...state.player, ...(parsed.player || {}) },
+    stats: restoredStats,
+    baseStats: restoredBaseStats,
+    upgrades: {
+      active: { ...(parsed.upgrades?.active || {}) },
+      passive: { ...(parsed.upgrades?.passive || {}) }
+    },
+    skills: Array.isArray(parsed.skills)
+      ? parsed.skills.map(skill => skill ? {
+        ...skill,
+        desc: createSkillDescription(skill.name, skill.rank),
+        effect: createSkillEffect(skill.name, skill.rank)
+      } : null)
+      : state.skills
+  };
+}
+
+function getStateProgressScore(targetState = state) {
+  const tierScore = { LIVE: 1, IMPACT: 2, SIGNATURE: 3, 'GOLDEN GLOVE': 4, MLB: 5 }[targetState.player?.tier] || 0;
+  return (
+    (Number(targetState.mlbSuccessCount) || 0) * 1_000_000_000_000 +
+    tierScore * 1_000_000_000 +
+    (Number(targetState.tp) || 0) +
+    (Number(targetState.swingCount) || 0) * 0.001
+  );
 }
 
 function loadGame() {
@@ -2294,8 +2379,9 @@ function initEventListeners() {
 }
 
 // 17. 앱 시작 진입점
-function initApp() {
+async function initApp() {
   loadGame();
+  await loadRemoteGameForSignedInUser();
   placeConsoleBesideRedistribute();
   initEventListeners();
   syncIdleGameSession();

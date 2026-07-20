@@ -1,7 +1,7 @@
 import { callRpc, getAnonId, sendJson, SUPABASE_ANON_KEY, SUPABASE_URL } from "./_supabase.js";
 
 export default async function handler(request, response) {
-  if (request.method !== "POST") {
+  if (!["GET", "POST"].includes(request.method)) {
     sendJson(response, 405, { error: "METHOD_NOT_ALLOWED" });
     return;
   }
@@ -12,6 +12,20 @@ export default async function handler(request, response) {
   }
 
   try {
+    if (request.method === "GET") {
+      const anonId = getAnonId(request, request.query || {});
+      const player = await callRpc(request, "idle_dev_game_get_progress", {
+        p_anon_id: anonId || null,
+      });
+
+      sendJson(response, 200, {
+        playerId: player?.id || null,
+        player: player || null,
+        ready: true,
+      });
+      return;
+    }
+
     const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
     const anonId = getAnonId(request, body);
     if (!anonId) {
