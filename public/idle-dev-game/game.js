@@ -1347,6 +1347,10 @@ async function syncIdleGameResult(result) {
       return;
     }
     if (payload?.playerId) state.remotePlayerId = payload.playerId;
+    if (Number.isFinite(Number(payload?.elapsedSeconds)) && Number(payload.elapsedSeconds) > 0) {
+      result.elapsedSeconds = Number(payload.elapsedSeconds);
+      state.firstMlbSeconds = Number(payload.elapsedSeconds);
+    }
     if (payload?.rank) {
       result.rankLabel = `${Number(payload.rank).toLocaleString()}등`;
       document.getElementById('modal-mlb-rank').textContent = result.rankLabel;
@@ -1395,38 +1399,7 @@ async function loadMlbResultRank(result) {
     return;
   }
 
-  rankEl.textContent = '집계 중';
-
-  try {
-    const response = await fetch('/api/idle-dev-game/rank', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        category: 'fastest_mlb_seconds',
-        score: result.elapsedSeconds,
-        metadata: result
-      })
-    });
-
-    if (!response.ok) throw new Error(`Rank request failed: ${response.status}`);
-
-    const payload = await response.json();
-    const rank = Number(payload.rank);
-    if (Number.isFinite(rank) && rank > 0) {
-      result.rankLabel = `${rank.toLocaleString()}등`;
-      rankEl.textContent = result.rankLabel;
-      renderMlbResultCard(result);
-      return;
-    }
-  } catch (error) {
-    console.warn('MLB ranking load failed:', error);
-  }
-
-  result.rankLabel = `집계 대기 · ${Math.round(result.elapsedSeconds || 0).toLocaleString()}초`;
+  result.rankLabel = '공식 집계 중';
   rankEl.textContent = result.rankLabel;
   renderMlbResultCard(result);
 }

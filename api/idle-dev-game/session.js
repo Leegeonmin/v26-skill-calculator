@@ -61,6 +61,14 @@ export default async function handler(request, response) {
       p_progress: body.progress || {},
     });
 
+    const shouldStartOfficialRun = body.progress?.currentTier === "LIVE";
+    const officialRun = player?.id && shouldStartOfficialRun
+      ? await callRpc(request, "idle_dev_game_start_official_run", {
+          p_player_id: player.id,
+          p_anon_id: anonId,
+        })
+      : null;
+
     await callRpc(request, "idle_dev_game_log_event", {
       p_player_id: player?.id || null,
       p_anon_id: anonId,
@@ -76,6 +84,7 @@ export default async function handler(request, response) {
     sendJson(response, 200, {
       playerId: player?.id || null,
       player: player || null,
+      officialRun,
       playerCounted: Boolean(player?.id),
       official: true,
       enabled: true,

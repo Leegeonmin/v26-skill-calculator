@@ -68,14 +68,16 @@ export default async function handler(request, response) {
 
     const progress = body.progress || {};
     const result = body.result || {};
-    const score = Number(result.elapsedSeconds || progress.firstMlbSeconds || 0);
-
-    const player = await callRpc(request, "idle_dev_game_save_progress", {
+    const completion = await callRpc(request, "idle_dev_game_complete_official_run", {
       p_anon_id: anonId,
       p_display_name: body.displayName || result.playerName || null,
       p_state: body.state || {},
       p_progress: progress,
+      p_metadata: result,
     });
+
+    const player = completion?.player || null;
+    const score = Number(completion?.elapsedSeconds || 0);
 
     await callRpc(request, "idle_dev_game_log_event", {
       p_player_id: player?.id || null,
@@ -86,24 +88,18 @@ export default async function handler(request, response) {
       p_total_training: progress.totalTraining || result.totalTraining || null,
       p_swing_count: progress.swingCount || null,
       p_homerun_count: progress.homerunCount || null,
-      p_metadata: result,
+      p_metadata: {
+        ...result,
+        serverElapsedSeconds: score,
+        officialRunId: completion?.runId || null,
+      },
     });
-
-    if (player?.id && score > 0) {
-      await callRpc(request, "idle_dev_game_submit_leaderboard_score", {
-        p_player_id: player.id,
-        p_anon_id: anonId,
-        p_display_name: body.displayName || result.playerName || "익명 타자",
-        p_category: "fastest_mlb_seconds",
-        p_score: score,
-        p_score_label: `${Math.round(score).toLocaleString()}초`,
-        p_metadata: result,
-      });
-    }
 
     sendJson(response, 200, {
       playerId: player?.id || null,
       rank: score > 0 ? await getRank("fastest_mlb_seconds", score) : null,
+      elapsedSeconds: score || null,
+      scoreLabel: completion?.scoreLabel || null,
       official: true,
       enabled: true,
       ready: true,
