@@ -20,13 +20,37 @@ const TRAINING_COST_MULTIPLIER_BY_TIER = {
 };
 const TRAINING_COST_GROWTH = 1.18;
 const HOMERUN_SOUND_SRC = 'assets/homerun-crack.mp3';
+const DEFAULT_PLAYER_NAME_PREFIX = '\uD64D\uD0C0\uC790';
+const BLOCKED_NAME_TERMS = [
+  '\uC2DC\uBC1C', '\uC528\uBC1C', '\u3145\u3142', '\uBCD1\uC2E0', '\uBD05\uC2E0',
+  '\uAC1C\uC0C8', '\uC878', '\uC9C0\uB784', '\uAD00\uB9AC\uC790', '\uC6B4\uC601\uC790',
+  '\uCE74\uD1A1', '\uC624\uD508\uCC44\uD305', '\uD154\uB808\uADF8\uB7A8',
+  'fuck', 'shit', 'sex', 'admin'
+];
+
+function createDefaultPlayerName() {
+  return `${DEFAULT_PLAYER_NAME_PREFIX}${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
+function normalizePlayerName(value) {
+  const compactName = String(value || '')
+    .replace(/\s+/g, '')
+    .replace(/[^\u3131-\u318e\uac00-\ud7a3a-zA-Z0-9]/g, '')
+    .slice(0, 8);
+
+  if (compactName.length < 2) return null;
+  const lowerName = compactName.toLowerCase();
+  if (lowerName.includes('http') || lowerName.includes('www')) return null;
+  if (BLOCKED_NAME_TERMS.some(term => lowerName.includes(term.toLowerCase()))) return null;
+  return compactName;
+}
 
 // 1. 게임 상태 정의 (기본값)
 let state = {
   saveVersion: 3,
   tp: 0,
   player: {
-    name: '홍타자',
+    name: createDefaultPlayerName(),
     tier: 'LIVE', // LIVE -> IMPACT -> SIGNATURE -> GOLDEN GLOVE
     league: '루키 리그'
   },
@@ -59,6 +83,9 @@ let state = {
   bestSwingTraining: 0,
   bestHomerunTraining: 0,
   remotePlayerId: null,
+  runStartedAt: new Date().toISOString(),
+  firstMlbSeconds: null,
+  officialRanking: false,
   boostActive: false,
   boostCooldown: 0,
   boostActiveTimeRemaining: 0,
@@ -1045,6 +1072,7 @@ function triggerMLBExit() {
 
   // 모달 표시
   state.mlbSuccessCount = (state.mlbSuccessCount || 0) + 1;
+  state.firstMlbSeconds = state.firstMlbSeconds || Math.max(1, Math.round((Date.now() - new Date(state.runStartedAt || Date.now()).getTime()) / 1000));
   lastMlbResult = buildMlbResultSnapshot();
   renderMlbResultCard(lastMlbResult);
   loadMlbResultRank(lastMlbResult);
@@ -1064,6 +1092,9 @@ function resetGameToLive() {
   state.stats = createFreshStats();
   state.upgrades = { active: {}, passive: {} };
   state.skills = [null, null, null]; // 스킬도 초기화
+  state.runStartedAt = new Date().toISOString();
+  state.firstMlbSeconds = null;
+  state.officialRanking = false;
 
   // 모달 닫기
   document.getElementById('exit-modal').classList.add('hidden');
@@ -1099,6 +1130,10 @@ function resetAllProgress() {
     boostActiveTimeRemaining: 0,
     lockFirstSkill: false
   };
+  state.player.name = createDefaultPlayerName();
+  state.runStartedAt = new Date().toISOString();
+  state.firstMlbSeconds = null;
+  state.officialRanking = false;
 
   localStorage.removeItem('cpbv_hitter_save');
   document.getElementById('exit-modal').classList.add('hidden');
@@ -1206,6 +1241,33 @@ async function getIdleGameApi(path) {
   return response.json();
 }
 
+async function ensureIdleGameEnabled() {
+  try {
+    const response = await fetch('/api/idle-dev-game/config', {
+      headers: { Accept: 'application/json' }
+    });
+    if (!response.ok) return true;
+
+    const payload = await response.json();
+    if (payload?.ready === true && payload?.enabled === false) {
+      document.body.innerHTML = `
+        <main style="min-height:100vh;display:grid;place-items:center;background:#07111f;color:#e5edf8;font-family:Arial,sans-serif;padding:24px;text-align:center;">
+          <section style="max-width:420px;border:1px solid rgba(56,189,248,.35);border-radius:18px;padding:28px;background:rgba(15,23,42,.88);">
+            <h1 style="margin:0 0 12px;font-size:24px;">타자 키우기 점검 중</h1>
+            <p style="margin:0 0 20px;color:#9fb0c7;line-height:1.6;">현재 운영자가 기능을 비활성화했습니다.</p>
+            <a href="/" style="display:inline-flex;padding:11px 16px;border-radius:12px;background:#0ea5e9;color:white;text-decoration:none;font-weight:800;">홈으로 이동</a>
+          </section>
+        </main>
+      `;
+      return false;
+    }
+  } catch {
+    return true;
+  }
+
+  return true;
+}
+
 function buildProgressPayload(extra = {}) {
   return {
     anonId: getOrCreateAnonId(),
@@ -1226,7 +1288,8 @@ function buildProgressPayload(extra = {}) {
       mlbSuccessCount: state.mlbSuccessCount || 0,
       bestSwingTraining: state.bestSwingTraining || 0,
       bestHomerunTraining: state.bestHomerunTraining || 0,
-      bestTotalLevel: getTrainingLevel()
+      bestTotalLevel: getTrainingLevel(),
+      firstMlbSeconds: state.firstMlbSeconds || null
     },
     ...extra
   };
@@ -1276,6 +1339,13 @@ async function syncIdleGameResult(result) {
     const payload = await postIdleGameApi('/api/idle-dev-game/result', buildProgressPayload({
       result
     }));
+    if (payload?.official === false) {
+      result.rankLabel = '로그인 시 공식 집계';
+      document.getElementById('modal-mlb-rank').textContent = result.rankLabel;
+      renderMlbResultCard(result);
+      saveGame();
+      return;
+    }
     if (payload?.playerId) state.remotePlayerId = payload.playerId;
     if (payload?.rank) {
       result.rankLabel = `${Number(payload.rank).toLocaleString()}등`;
@@ -1306,6 +1376,7 @@ function buildMlbResultSnapshot() {
     synergyCount: state.synergyCount,
     synergyBoost: state.synergyCount * 100,
     mlbSuccessCount: state.mlbSuccessCount || 0,
+    elapsedSeconds: state.firstMlbSeconds || Math.max(1, Math.round((Date.now() - new Date(state.runStartedAt || Date.now()).getTime()) / 1000)),
     globalMlbSuccessCount: state.globalExitCount,
     achievedAt: new Date().toISOString(),
     rankLabel: '집계 대기'
@@ -1316,6 +1387,14 @@ async function loadMlbResultRank(result) {
   const rankEl = document.getElementById('modal-mlb-rank');
   if (!rankEl) return;
 
+  const token = getSupabaseAccessTokenFromStorage();
+  if (!token) {
+    result.rankLabel = '로그인 시 공식 집계';
+    rankEl.textContent = result.rankLabel;
+    renderMlbResultCard(result);
+    return;
+  }
+
   rankEl.textContent = '집계 중';
 
   try {
@@ -1323,11 +1402,12 @@ async function loadMlbResultRank(result) {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
-        category: 'mlb_success_count',
-        score: result.mlbSuccessCount,
+        category: 'fastest_mlb_seconds',
+        score: result.elapsedSeconds,
         metadata: result
       })
     });
@@ -1346,7 +1426,7 @@ async function loadMlbResultRank(result) {
     console.warn('MLB ranking load failed:', error);
   }
 
-  result.rankLabel = `집계 대기 · ${result.mlbSuccessCount.toLocaleString()}번째 MLB행`;
+  result.rankLabel = `집계 대기 · ${Math.round(result.elapsedSeconds || 0).toLocaleString()}초`;
   rankEl.textContent = result.rankLabel;
   renderMlbResultCard(result);
 }
@@ -1396,7 +1476,7 @@ function renderMlbResultCard(result = lastMlbResult) {
 
   const rows = [
     ['랭킹', result.rankLabel],
-    ['MLB 성공 수', `${result.mlbSuccessCount.toLocaleString()}회`],
+    ['MLB 달성시간', `${Math.round(result.elapsedSeconds || 0).toLocaleString()}초`],
     ['시너지', `+${result.synergyBoost.toLocaleString()}%`],
     ['누적 훈련량', result.totalTraining.toLocaleString()]
   ];
@@ -1502,8 +1582,11 @@ function openPlayerNameModal(force = false) {
 function savePlayerNameFromModal() {
   const modal = document.getElementById('player-name-modal');
   const input = document.getElementById('player-name-input');
-  const nextName = (input?.value || '').trim().slice(0, 8);
-  if (!nextName) return;
+  const nextName = normalizePlayerName(input?.value);
+  if (!nextName) {
+    alert('선수 이름은 한글/영문/숫자 2~8자로 입력해주세요. 욕설, URL, 운영자 사칭 문구는 사용할 수 없습니다.');
+    return;
+  }
 
   state.player.name = nextName;
   localStorage.setItem('cpbv_hitter_name_set', '1');
@@ -2227,6 +2310,11 @@ function loadGame() {
           } : null)
           : state.skills
       };
+      if (!normalizePlayerName(state.player.name)) {
+        state.player.name = createDefaultPlayerName();
+      }
+      state.runStartedAt = state.runStartedAt || new Date().toISOString();
+      state.firstMlbSeconds = Number.isFinite(Number(state.firstMlbSeconds)) ? Number(state.firstMlbSeconds) : null;
       addLog('💾 로컬 브라우저 세이브 파일로부터 훈련 일지를 복원했습니다.', 'special');
     } catch (e) {
       addLog('❌ 세이브 파일을 불러오는 중 오류가 발생했습니다. 초기화 데이터로 대체합니다.', 'text-muted');
@@ -2330,7 +2418,9 @@ function initEventListeners() {
 
   // 선수 이름 편집 핸들러
   const nameWrap = document.querySelector('.player-name-wrap');
-  nameWrap.addEventListener('click', () => {
+  nameWrap.addEventListener('click', (event) => {
+    event.preventDefault();
+    return;
     const newName = prompt('선수의 새 이름을 입력하세요 (최대 6자):', state.player.name);
     if (newName && newName.trim() !== '') {
       state.player.name = newName.trim().substring(0, 6);
@@ -2380,6 +2470,7 @@ function initEventListeners() {
 
 // 17. 앱 시작 진입점
 async function initApp() {
+  if (!(await ensureIdleGameEnabled())) return;
   loadGame();
   await loadRemoteGameForSignedInUser();
   placeConsoleBesideRedistribute();

@@ -1,4 +1,12 @@
-import { callRpc, getAnonId, sendJson, SUPABASE_ANON_KEY, SUPABASE_URL } from "./_supabase.js";
+import {
+  callRpc,
+  getAnonId,
+  hasUserBearerToken,
+  isIdleDevGameEnabled,
+  sendJson,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+} from "./_supabase.js";
 
 async function getRank(category, score) {
   const operator = category === "fastest_mlb_seconds" ? "lt" : "gt";
@@ -6,6 +14,7 @@ async function getRank(category, score) {
   query.searchParams.set("select", "id");
   query.searchParams.set("category", `eq.${category}`);
   query.searchParams.set("score", `${operator}.${score}`);
+  query.searchParams.set("user_id", "not.is.null");
 
   const rankResponse = await fetch(query, {
     headers: {
@@ -18,8 +27,8 @@ async function getRank(category, score) {
   if (!rankResponse.ok) return null;
 
   const contentRange = rankResponse.headers.get("content-range") || "";
-  const higherCount = Number(contentRange.split("/")[1] || 0);
-  return Number.isFinite(higherCount) ? higherCount + 1 : null;
+  const betterCount = Number(contentRange.split("/")[1] || 0);
+  return Number.isFinite(betterCount) ? betterCount + 1 : null;
 }
 
 export default async function handler(request, response) {
@@ -29,7 +38,23 @@ export default async function handler(request, response) {
   }
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    sendJson(response, 200, { playerId: null, rank: null, ready: false });
+    sendJson(response, 200, { playerId: null, rank: null, official: false, ready: false });
+    return;
+  }
+
+  if (!(await isIdleDevGameEnabled())) {
+    sendJson(response, 200, {
+      playerId: null,
+      rank: null,
+      official: false,
+      enabled: false,
+      ready: true,
+    });
+    return;
+  }
+
+  if (!hasUserBearerToken(request)) {
+    sendJson(response, 200, { playerId: null, rank: null, official: false, ready: true });
     return;
   }
 
@@ -43,7 +68,7 @@ export default async function handler(request, response) {
 
     const progress = body.progress || {};
     const result = body.result || {};
-    const score = Number(progress.mlbSuccessCount || result.mlbSuccessCount || 0);
+    const score = Number(result.elapsedSeconds || progress.firstMlbSeconds || 0);
 
     const player = await callRpc(request, "idle_dev_game_save_progress", {
       p_anon_id: anonId,
@@ -68,21 +93,23 @@ export default async function handler(request, response) {
       await callRpc(request, "idle_dev_game_submit_leaderboard_score", {
         p_player_id: player.id,
         p_anon_id: anonId,
-        p_display_name: body.displayName || result.playerName || "익명 선수",
-        p_category: "mlb_success_count",
+        p_display_name: body.displayName || result.playerName || "익명 타자",
+        p_category: "fastest_mlb_seconds",
         p_score: score,
-        p_score_label: `${score.toLocaleString()}회`,
+        p_score_label: `${Math.round(score).toLocaleString()}초`,
         p_metadata: result,
       });
     }
 
     sendJson(response, 200, {
       playerId: player?.id || null,
-      rank: score > 0 ? await getRank("mlb_success_count", score) : null,
+      rank: score > 0 ? await getRank("fastest_mlb_seconds", score) : null,
+      official: true,
+      enabled: true,
       ready: true,
     });
   } catch (error) {
     console.error(error);
-    sendJson(response, 200, { playerId: null, rank: null, ready: false });
+    sendJson(response, 200, { playerId: null, rank: null, official: false, ready: false });
   }
 }

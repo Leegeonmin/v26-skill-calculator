@@ -10,6 +10,7 @@ type SiteHeaderProps = {
   onGoogleLogout: () => void;
   onSelectView: (view: ToolView) => void;
   supabaseReady: boolean;
+  idleDevGameEnabled: boolean;
   themeAction?: ReactNode;
 };
 
@@ -87,6 +88,7 @@ export default function SiteHeader({
   onGoogleLogout,
   onSelectView,
   supabaseReady,
+  idleDevGameEnabled,
   themeAction,
 }: SiteHeaderProps) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -167,10 +169,12 @@ export default function SiteHeader({
             <HeaderIcon name="guide" />
             <span>가이드</span>
           </a>
-          <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
-            <HeaderIcon name="chart" />
-            <span>타자 키우기</span>
-          </a>
+          {idleDevGameEnabled && (
+            <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
+              <HeaderIcon name="chart" />
+              <span>타자 키우기</span>
+            </a>
+          )}
         </nav>
         <div className="site-header-actions">
           {themeAction}
@@ -250,7 +254,7 @@ export default function SiteHeader({
           랭킹
         </button>
         <a href="/skill-score-method">가이드</a>
-        <a href="/idle-dev-game/index.html">타자 키우기</a>
+        {idleDevGameEnabled && <a href="/idle-dev-game/index.html">타자 키우기</a>}
       </nav>
     </header>
   );

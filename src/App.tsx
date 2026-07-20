@@ -78,8 +78,11 @@ import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpac
 import { logToolUsageEvent } from "./lib/toolUsage";
 import {
   adminGetHomeChangeMessage,
+  adminGetIdleDevGameSetting,
   adminUpdateHomeChangeMessage,
+  adminUpdateIdleDevGameSetting,
   getHomeChangeMessage,
+  getIdleDevGameSetting,
 } from "./lib/siteSettings";
 import HomeView from "./views/HomeView";
 import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
@@ -266,6 +269,7 @@ function App() {
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
+  const [idleDevGameEnabled, setIdleDevGameEnabled] = useState(false);
   const [showIdleGamePrompt, setShowIdleGamePrompt] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -278,6 +282,10 @@ function App() {
   const [adminHomeChangeSaving, setAdminHomeChangeSaving] = useState(false);
   const [adminHomeChangeStatus, setAdminHomeChangeStatus] = useState<"idle" | "saved" | "error">("idle");
   const [adminHomeChangeError, setAdminHomeChangeError] = useState<string | null>(null);
+  const [adminIdleDevGameEnabled, setAdminIdleDevGameEnabled] = useState(false);
+  const [adminIdleDevGameSaving, setAdminIdleDevGameSaving] = useState(false);
+  const [adminIdleDevGameStatus, setAdminIdleDevGameStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [adminIdleDevGameError, setAdminIdleDevGameError] = useState<string | null>(null);
   const [ocrPasswordInput, setOcrPasswordInput] = useState("");
   const [ocrAuthError, setOcrAuthError] = useState<string | null>(null);
   const [ocrCheckingSession, setOcrCheckingSession] = useState(isOcrRoute);
@@ -498,6 +506,22 @@ function App() {
   }, [supabaseReady]);
 
   useEffect(() => {
+    if (!supabaseReady) {
+      setIdleDevGameEnabled(false);
+      setShowIdleGamePrompt(false);
+      return;
+    }
+
+    void (async () => {
+      const setting = await getIdleDevGameSetting();
+      setIdleDevGameEnabled(setting.enabled);
+      if (!setting.enabled) {
+        setShowIdleGamePrompt(false);
+      }
+    })();
+  }, [supabaseReady]);
+
+  useEffect(() => {
     if (typeof document === "undefined") {
       return;
     }
@@ -664,6 +688,30 @@ function App() {
         );
       } finally {
         setAdminStatsLoading(false);
+      }
+    })();
+  }, [adminUnlocked, isAdminRoute]);
+
+  useEffect(() => {
+    if (!isAdminRoute || !adminUnlocked) {
+      return;
+    }
+
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!sessionToken) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        setAdminIdleDevGameError(null);
+        const setting = await adminGetIdleDevGameSetting(sessionToken);
+        setAdminIdleDevGameEnabled(setting.enabled);
+        setIdleDevGameEnabled(setting.enabled);
+      } catch (error) {
+        setAdminIdleDevGameError(
+          error instanceof Error ? error.message : "타자 키우기 운영 상태를 불러오지 못했습니다."
+        );
       }
     })();
   }, [adminUnlocked, isAdminRoute]);
@@ -1027,6 +1075,39 @@ function App() {
       );
     } finally {
       setAdminHomeChangeSaving(false);
+    }
+  };
+
+  const handleSaveIdleDevGameSetting = async () => {
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+
+    if (!sessionToken) {
+      setAdminIdleDevGameStatus("error");
+      setAdminIdleDevGameError("관리자 세션이 없습니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    try {
+      setAdminIdleDevGameSaving(true);
+      setAdminIdleDevGameStatus("idle");
+      setAdminIdleDevGameError(null);
+      const setting = await adminUpdateIdleDevGameSetting(
+        sessionToken,
+        adminIdleDevGameEnabled
+      );
+      setAdminIdleDevGameEnabled(setting.enabled);
+      setIdleDevGameEnabled(setting.enabled);
+      if (!setting.enabled) {
+        setShowIdleGamePrompt(false);
+      }
+      setAdminIdleDevGameStatus("saved");
+    } catch (error) {
+      setAdminIdleDevGameStatus("error");
+      setAdminIdleDevGameError(
+        error instanceof Error ? error.message : "타자 키우기 운영 상태를 저장하지 못했습니다."
+      );
+    } finally {
+      setAdminIdleDevGameSaving(false);
     }
   };
 
@@ -1500,7 +1581,7 @@ function App() {
     setShowIdleGamePrompt(false);
   };
 
-  const idleGamePromptModal = showIdleGamePrompt ? (
+  const idleGamePromptModal = idleDevGameEnabled && showIdleGamePrompt ? (
     <div className="idle-game-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="idle-game-prompt-title">
       <section className="idle-game-prompt-card">
         <span className="idle-game-prompt-kicker">New</span>
@@ -1569,6 +1650,10 @@ function App() {
               homeChangeSaving={adminHomeChangeSaving}
               homeChangeStatus={adminHomeChangeStatus}
               homeChangeError={adminHomeChangeError}
+              idleDevGameEnabled={adminIdleDevGameEnabled}
+              idleDevGameSaving={adminIdleDevGameSaving}
+              idleDevGameStatus={adminIdleDevGameStatus}
+              idleDevGameError={adminIdleDevGameError}
               onUsernameChange={(value) => {
                 setAdminUsernameInput(value);
                 if (adminPasswordError) {
@@ -1590,6 +1675,12 @@ function App() {
                 setAdminHomeChangeError(null);
               }}
               onSaveHomeChangeMessage={() => void handleSaveHomeChangeMessage()}
+              onIdleDevGameEnabledChange={(value) => {
+                setAdminIdleDevGameEnabled(value);
+                setAdminIdleDevGameStatus("idle");
+                setAdminIdleDevGameError(null);
+              }}
+              onSaveIdleDevGameSetting={() => void handleSaveIdleDevGameSetting()}
             />
           </Suspense>
           <Analytics />
@@ -1657,6 +1748,7 @@ function App() {
             onGoogleLogout={() => void handleGoogleLogout()}
             onSelectView={handleToolViewChange}
             supabaseReady={supabaseReady}
+            idleDevGameEnabled={idleDevGameEnabled}
             themeAction={themeToggle}
           />
           <AppChrome>
@@ -1694,6 +1786,7 @@ function App() {
           onGoogleLogout={() => void handleGoogleLogout()}
           onSelectView={handleToolViewChange}
           supabaseReady={supabaseReady}
+          idleDevGameEnabled={idleDevGameEnabled}
           themeAction={themeToggle}
         />
         {shouldShowAdFitBanner && <AdFitMobileTopBanner slotKey={adFitSlotKey} />}

@@ -1,4 +1,4 @@
-import { callRpc, getAnonId, sendJson, SUPABASE_ANON_KEY, SUPABASE_URL } from "./_supabase.js";
+import { callRpc, getAnonId, hasUserBearerToken, isIdleDevGameEnabled, sendJson, SUPABASE_ANON_KEY, SUPABASE_URL } from "./_supabase.js";
 
 export default async function handler(request, response) {
   if (!["GET", "POST"].includes(request.method)) {
@@ -12,6 +12,27 @@ export default async function handler(request, response) {
   }
 
   try {
+    if (!(await isIdleDevGameEnabled())) {
+      sendJson(response, 200, {
+        playerId: null,
+        player: null,
+        official: false,
+        enabled: false,
+        ready: true,
+      });
+      return;
+    }
+
+    if (!hasUserBearerToken(request)) {
+      sendJson(response, 200, {
+        playerId: null,
+        player: null,
+        official: false,
+        ready: true,
+      });
+      return;
+    }
+
     if (request.method === "GET") {
       const anonId = getAnonId(request, request.query || {});
       const player = await callRpc(request, "idle_dev_game_get_progress", {
@@ -56,6 +77,8 @@ export default async function handler(request, response) {
       playerId: player?.id || null,
       player: player || null,
       playerCounted: Boolean(player?.id),
+      official: true,
+      enabled: true,
       ready: true,
     });
   } catch (error) {

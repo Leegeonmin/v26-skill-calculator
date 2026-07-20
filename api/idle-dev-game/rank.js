@@ -1,6 +1,12 @@
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
+function hasUserBearerToken(request) {
+  const authHeader = request.headers.authorization || request.headers.Authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : null;
+  return Boolean(token && token !== SUPABASE_ANON_KEY);
+}
+
 function sendJson(response, status, payload) {
   response.setHeader("Cache-Control", "no-store");
   response.status(status).json(payload);
@@ -14,6 +20,11 @@ export default async function handler(request, response) {
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     sendJson(response, 200, { rank: null, ready: false });
+    return;
+  }
+
+  if (!hasUserBearerToken(request)) {
+    sendJson(response, 200, { rank: null, official: false, ready: true });
     return;
   }
 
@@ -32,6 +43,7 @@ export default async function handler(request, response) {
     query.searchParams.set("select", "id");
     query.searchParams.set("category", `eq.${category}`);
     query.searchParams.set("score", `${operator}.${score}`);
+    query.searchParams.set("user_id", "not.is.null");
 
     const rankResponse = await fetch(query, {
       headers: {

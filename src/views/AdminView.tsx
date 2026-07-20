@@ -13,6 +13,10 @@ type AdminViewProps = {
   homeChangeSaving: boolean;
   homeChangeStatus: "idle" | "saved" | "error";
   homeChangeError: string | null;
+  idleDevGameEnabled: boolean;
+  idleDevGameSaving: boolean;
+  idleDevGameStatus: "idle" | "saved" | "error";
+  idleDevGameError: string | null;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
@@ -20,6 +24,8 @@ type AdminViewProps = {
   onGoHome: () => void;
   onHomeChangeMessageChange: (value: string) => void;
   onSaveHomeChangeMessage: () => void;
+  onIdleDevGameEnabledChange: (value: boolean) => void;
+  onSaveIdleDevGameSetting: () => void;
 };
 
 const toolLabels: Record<string, string> = {
@@ -162,6 +168,10 @@ export default function AdminView({
   homeChangeSaving,
   homeChangeStatus,
   homeChangeError,
+  idleDevGameEnabled,
+  idleDevGameSaving,
+  idleDevGameStatus,
+  idleDevGameError,
   onUsernameChange,
   onPasswordChange,
   onUnlock,
@@ -169,6 +179,8 @@ export default function AdminView({
   onGoHome,
   onHomeChangeMessageChange,
   onSaveHomeChangeMessage,
+  onIdleDevGameEnabledChange,
+  onSaveIdleDevGameSetting,
 }: AdminViewProps) {
   if (checkingSession) {
     return (
@@ -289,6 +301,39 @@ export default function AdminView({
         </div>
         {homeChangeStatus === "saved" && <p className="notice-form-success">저장됐습니다.</p>}
         {homeChangeStatus === "error" && homeChangeError && <p className="modal-error">{homeChangeError}</p>}
+      </section>
+
+      <section className="admin-panel admin-setting-panel">
+        <div className="admin-section-head">
+          <div>
+            <p className="admin-eyebrow">Idle Game</p>
+            <h2>타자 키우기 운영</h2>
+          </div>
+          <p>끄면 헤더 링크와 첫 진입 모달이 숨겨지고 게임 API는 공식 집계를 받지 않습니다.</p>
+        </div>
+
+        <label className="admin-field admin-checkbox-field">
+          <input
+            type="checkbox"
+            checked={idleDevGameEnabled}
+            onChange={(event) => onIdleDevGameEnabledChange(event.target.checked)}
+          />
+          <span>타자 키우기 기능 활성화</span>
+        </label>
+
+        <div className="admin-setting-actions">
+          <span>{idleDevGameEnabled ? "현재 설정: 노출" : "현재 설정: 비노출"}</span>
+          <button
+            type="button"
+            className="primary-btn"
+            onClick={onSaveIdleDevGameSetting}
+            disabled={idleDevGameSaving}
+          >
+            {idleDevGameSaving ? "저장 중..." : "저장"}
+          </button>
+        </div>
+        {idleDevGameStatus === "saved" && <p className="notice-form-success">저장됐습니다.</p>}
+        {idleDevGameStatus === "error" && idleDevGameError && <p className="modal-error">{idleDevGameError}</p>}
       </section>
 
       <div className="admin-grid admin-metric-grid">
