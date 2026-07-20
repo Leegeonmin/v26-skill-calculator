@@ -167,7 +167,7 @@ export default function SiteHeader({
             <HeaderIcon name="guide" />
             <span>가이드</span>
           </a>
-          <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/">
+          <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
             <HeaderIcon name="chart" />
             <span>타자 키우기</span>
           </a>
@@ -250,7 +250,7 @@ export default function SiteHeader({
           랭킹
         </button>
         <a href="/skill-score-method">가이드</a>
-        <a href="/idle-dev-game/">타자 키우기</a>
+        <a href="/idle-dev-game/index.html">타자 키우기</a>
       </nav>
     </header>
   );
