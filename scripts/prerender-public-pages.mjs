@@ -34,6 +34,13 @@ const pages = [
         body: "총점뿐 아니라 상위 확률, 기대 시도 횟수, 등급 기준을 함께 보여줘 조합의 희귀도를 읽기 쉽게 합니다.",
       },
     ],
+    callout: {
+      eyebrow: "Beginner Guide",
+      title: "뉴비라면 여기부터",
+      body: "처음부터 완벽한 조합만 노리면 변경권을 너무 빨리 씁니다. 스킬 점수, 보직, 카드 타입별로 어느 정도에서 타협할지 정리합니다.",
+      href: "/beginner-guides",
+      label: "뉴비 가이드 보기",
+    },
   },
   {
     path: "/about",
@@ -197,6 +204,31 @@ const pages = [
     ],
   },
   {
+    path: "/beginner-guides",
+    title: "뉴비용 타협 기준 | CPBV LAB",
+    description: "변경권을 쓰기 전에 스킬 점수, 보직, 카드 타입별로 어느 정도에서 멈출지 보는 기준입니다.",
+    heading: "뉴비용 타협 기준",
+    intro: "처음부터 완벽한 조합만 노리기보다 보유 변경권과 목표 등급에 맞춰 타협선을 잡는 게시판입니다.",
+    sections: [
+      {
+        title: "이 게시판에서 다루는 것",
+        body: "처음부터 완벽한 조합만 노리면 변경권을 너무 빨리 쓸 수 있습니다. 이 게시판은 스킬 점수, 등급, 기대 횟수, 보직 차이를 같이 보면서 어느 정도에서 타협할지 정리하는 공간입니다.",
+      },
+      {
+        title: "먼저 올라갈 글",
+        body: "스킬 점수 몇 점이면 멈춰도 될까, 고스변권 몇 장 없을 때 목표 잡는 법, 타자는 어느 정도에서 타협하면 될까, 선발과 불펜을 같은 기준으로 보면 안 되는 이유, 임팩트 1옵작 후 일스변은 어디까지 노릴까 같은 글을 먼저 정리할 예정입니다.",
+      },
+      {
+        title: "정답표처럼 보지 않아도 됩니다",
+        body: "여기서 말하는 타협선은 무조건 따라야 하는 기준이 아닙니다. 보유 변경권 수, 현재 카드 상태, 목표 등급에 따라 멈추는 지점이 달라질 수 있습니다. 계산기와 시뮬레이터 결과를 같이 보고 본인 상황에 맞게 판단하는 쪽으로 정리할 예정입니다.",
+      },
+      {
+        title: "관련 도구",
+        body: "현재 조합의 점수는 메인 계산기에서 먼저 확인하고, 목표 등급까지의 난이도는 고스변 시뮬레이터에서 비교하면 됩니다. 라인업 전체를 볼 때는 OCR 결과를 저장 전에 한 번씩 고쳐서 같은 기준으로 다시 계산하는 편이 좋습니다.",
+      },
+    ],
+  },
+  {
     path: "/faq",
     title: "자주 묻는 질문 | CPBV LAB",
     description: "CPBV LAB의 스킬 계산기, 시뮬레이터, 이미지 인식 기능을 사용할 때 자주 확인하는 내용을 정리했습니다.",
@@ -300,6 +332,7 @@ function renderPageContent(page) {
     ["/skill-score-method", "스킬 점수 기준"],
     ["/simulator-guide", "시뮬레이터 안내"],
     ["/ocr-guide", "라인업 인식 안내"],
+    ["/beginner-guides", "뉴비 가이드"],
     ["/faq", "FAQ"],
     ["/privacy", "개인정보처리방침"],
     ["/terms", "이용약관"],
@@ -332,6 +365,20 @@ function renderPageContent(page) {
       }
     ),
     "</section>",
+    ...(page.callout
+      ? [
+          '<section class="home-beginner-entry" aria-labelledby="prerender-beginner-title">',
+          '<div class="home-beginner-entry-copy">',
+          `<span>${escapeHtml(page.callout.eyebrow)}</span>`,
+          `<h2 id="prerender-beginner-title">${escapeHtml(page.callout.title)}</h2>`,
+          `<p>${escapeHtml(page.callout.body)}</p>`,
+          "</div>",
+          `<a class="home-beginner-entry-link" href="${escapeHtml(page.callout.href)}">${escapeHtml(
+            page.callout.label
+          )}</a>`,
+          "</section>",
+        ]
+      : []),
     '<nav class="home-site-links" aria-label="사이트 정보">',
     ...links.map(([href, label]) => `<a href="${href}">${escapeHtml(label)}</a>`),
     "</nav>",

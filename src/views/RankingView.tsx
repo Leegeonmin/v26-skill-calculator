@@ -517,11 +517,10 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
     pitcher_starter: 0,
   });
   const userId = authSession?.user.id ?? null;
-  const fixedCompetitionCategory = currentSeason?.competition_category ?? null;
-  const effectiveParticipationCategory =
-    entry?.category ?? fixedCompetitionCategory ?? participationCategory;
-  const activeLeaderboardCategory = fixedCompetitionCategory ?? leaderboardCategory;
-  const isFixedCompetitionSeason = Boolean(fixedCompetitionCategory);
+  const seasonCompetitionCategory =
+    currentSeason?.competition_category ?? entry?.category ?? leaderboardCategory;
+  const effectiveParticipationCategory = entry?.category ?? seasonCompetitionCategory;
+  const activeLeaderboardCategory = seasonCompetitionCategory;
   const activeParticipationCategory = effectiveParticipationCategory;
   const showSettlementNotice = useMemo(() => isSettlementWindowKst(), []);
   const participationLabel = CATEGORY_LABELS[effectiveParticipationCategory];
@@ -989,20 +988,13 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
             <div className="ranking-season-meta-item">
               <span>진행 방식</span>
-              <strong>
-                {fixedCompetitionCategory
-                  ? `${CATEGORY_LABELS[fixedCompetitionCategory]} 고정 시즌`
-                  : "자유 선택 시즌"}
-              </strong>
+              <strong>{CATEGORY_LABELS[seasonCompetitionCategory]} 고정 시즌</strong>
             </div>
             <div className="ranking-season-meta-item">
               <span>참가 현황</span>
               <strong>
-                {fixedCompetitionCategory
-                  ? `${CATEGORY_LABELS[fixedCompetitionCategory]} ${
-                      participantCounts[fixedCompetitionCategory]
-                    }명`
-                  : `타자 ${participantCounts.hitter}명 / 투수 ${participantCounts.pitcher_starter}명`}
+                {CATEGORY_LABELS[seasonCompetitionCategory]}{" "}
+                {participantCounts[seasonCompetitionCategory]}명
               </strong>
             </div>
           </div>
@@ -1036,34 +1028,14 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
           </div>
 
-          {isFixedCompetitionSeason ? (
-            <div className="ranking-fixed-season-banner">
-              이번 시즌 경쟁 보직은 <strong>{CATEGORY_LABELS[activeParticipationCategory]}</strong>입니다.
-            </div>
-          ) : (
-            <div className="ranking-toggle-row">
-              {(["hitter", "pitcher_starter"] as RankingCategory[]).map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className={`ranking-toggle-btn ${
-                    activeParticipationCategory === category ? "active" : ""
-                  }`}
-                  onClick={() => setParticipationCategory(category)}
-                  disabled={Boolean(entry)}
-                >
-                  {CATEGORY_LABELS[category]}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="ranking-fixed-season-banner">
+            이번 시즌 경쟁 보직은 <strong>{CATEGORY_LABELS[activeParticipationCategory]}</strong>입니다.
+          </div>
 
           {!authSession && (
             <>
               <p className="ranking-support-copy">
-                {isFixedCompetitionSeason
-                  ? `Google 로그인 후 ${participationLabel} 시즌에 참여할 수 있습니다.`
-                  : "Google 로그인 후 타자 또는 투수 중 하나를 선택해서 참여할 수 있습니다."}
+                Google 로그인 후 {participationLabel} 시즌에 참여할 수 있습니다.
               </p>
 
               <button
@@ -1094,9 +1066,7 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
                 이번 시즌은 {participationLabel}로 참가합니다.
               </p>
               <p className="ranking-support-copy">
-                {isFixedCompetitionSeason
-                  ? "시즌 보직은 이번 주 동안 모든 참가자에게 동일하게 적용됩니다."
-                  : "선택한 종목은 이번 주 동안 유지되며, 매일 무료 1회 고급스킬변경권 기능을 사용할 수 있습니다."}
+                시즌 보직은 이번 주 동안 모든 참가자에게 동일하게 적용됩니다.
               </p>
 
               <button
@@ -1190,24 +1160,9 @@ export default function RankingView({ authSession, supabaseReady }: RankingViewP
             </div>
           </div>
 
-          {isFixedCompetitionSeason ? (
-            <div className="ranking-fixed-season-banner">
-              {CATEGORY_LABELS[activeLeaderboardCategory]} 리더보드만 표시됩니다.
-            </div>
-          ) : (
-            <div className="ranking-toggle-row">
-              {(["hitter", "pitcher_starter"] as RankingCategory[]).map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className={`ranking-toggle-btn ${leaderboardCategory === category ? "active" : ""}`}
-                  onClick={() => setLeaderboardCategory(category)}
-                >
-                  {CATEGORY_LABELS[category]}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="ranking-fixed-season-banner">
+            {CATEGORY_LABELS[activeLeaderboardCategory]} 리더보드만 표시됩니다.
+          </div>
 
           {myRankingRow && (
             <div className="ranking-my-card">

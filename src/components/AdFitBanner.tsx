@@ -22,6 +22,26 @@ export function AdFitMobileTopBanner({ slotKey }: { slotKey: string }) {
   );
 }
 
+export function AdFitHomeDesktopTopBanner({ slotKey }: { slotKey: string }) {
+  return (
+    <aside className="adfit-home-desktop-top-banner" aria-label="광고">
+      <ins
+        key={`${slotKey}-home-desktop-top`}
+        className="kakao_ad_area"
+        style={{ display: "none" }}
+        data-ad-unit="DAN-tQ8D0w7L2NT3x9C0"
+        data-ad-width="728"
+        data-ad-height="90"
+      />
+      {import.meta.env.DEV && (
+        <span className="adfit-dev-placeholder" aria-hidden="true">
+          Kakao AdFit 728 x 90
+        </span>
+      )}
+    </aside>
+  );
+}
+
 export default function AdFitBanner({ slotKey, showSide = true }: AdFitBannerProps) {
   useEffect(() => {
     if (typeof document === "undefined") {

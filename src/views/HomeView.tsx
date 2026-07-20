@@ -1,8 +1,9 @@
 import { IconGlyph } from "../components/AppChrome";
+import { AdFitHomeDesktopTopBanner } from "../components/AdFitBanner";
 import { useEffect, useState, type CSSProperties } from "react";
 import { getGameDataSet } from "../data/gameData";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
-import { getMobileHomeTopRankings } from "../lib/ranking";
+import { getCurrentSeason, getMobileHomeTopRankings } from "../lib/ranking";
 import type { ToolView } from "../types";
 import type { RankingCategory, RankingRow } from "../types/ranking";
 
@@ -244,28 +245,37 @@ export default function HomeView({
   useEffect(() => {
     let mounted = true;
 
-    const selectedCategory: RankingCategory = Math.random() < 0.5 ? "hitter" : "pitcher_starter";
-    getMobileHomeTopRankings(selectedCategory, 3)
-      .then((rankings) => {
+    async function loadMobileRankings() {
+      let selectedCategory: RankingCategory = "pitcher_starter";
+
+      try {
+        const season = await getCurrentSeason();
+        selectedCategory = season?.competition_category ?? selectedCategory;
+        const rankings = await getMobileHomeTopRankings(selectedCategory, 3);
+
         if (!mounted) {
           return;
         }
+
         setMobileRankingState({
           category: selectedCategory,
           rankings,
           status: "idle",
         });
-      })
-      .catch(() => {
+      } catch {
         if (!mounted) {
           return;
         }
+
         setMobileRankingState({
           category: selectedCategory,
           rankings: [],
           status: "error",
         });
-      });
+      }
+    }
+
+    void loadMobileRankings();
 
     return () => {
       mounted = false;
@@ -282,6 +292,7 @@ export default function HomeView({
       </div>
       <section className="home-dashboard" aria-label="주요 도구">
         <div className="home-primary-panel">
+          <AdFitHomeDesktopTopBanner slotKey="home" />
           <div className="home-primary-grid">
             {primaryWidgets.map((widget) => (
               <button
@@ -440,6 +451,26 @@ export default function HomeView({
           </div>
       </section>
 
+      <section className="home-beginner-entry" aria-labelledby="home-beginner-entry-title">
+        <div className="home-beginner-entry-copy">
+          <span>Beginner Guide</span>
+          <h2 id="home-beginner-entry-title">뉴비라면 여기부터</h2>
+          <p>
+            처음부터 완벽한 조합만 노리면 변경권을 너무 빨리 씁니다. 스킬 점수, 보직, 카드
+            타입별로 어느 정도에서 타협할지 정리합니다.
+          </p>
+        </div>
+        <a className="home-beginner-entry-link" href="/beginner-guides">
+          뉴비 가이드 보기
+          <svg viewBox="0 0 24 24" className="ui-icon" aria-hidden="true">
+            <path
+              d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
+              fill="currentColor"
+            />
+          </svg>
+        </a>
+      </section>
+
       <section className="home-content-guide" aria-labelledby="home-content-guide-title">
         <div className="home-content-guide-head">
           <span>How it works</span>
@@ -477,6 +508,7 @@ export default function HomeView({
         <a href="/skill-score-method">스킬 점수 기준</a>
         <a href="/simulator-guide">시뮬레이터 안내</a>
         <a href="/ocr-guide">라인업 인식 안내</a>
+        <a href="/beginner-guides">뉴비 가이드</a>
         <a href="/faq">FAQ</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/terms">이용약관</a>

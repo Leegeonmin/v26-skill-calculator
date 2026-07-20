@@ -8435,12 +8435,45 @@ input {
 
 .adfit-mobile-top-banner {
   display: none;
+  opacity: 1;
+  filter: none;
+  backdrop-filter: none;
 }
 
 .adfit-mobile-top-banner .kakao_ad_area {
   width: 320px;
   max-width: 100%;
   min-height: 50px;
+  opacity: 1;
+  filter: none;
+}
+
+.adfit-home-desktop-top-banner {
+  display: none;
+}
+
+.adfit-home-desktop-top-banner .kakao_ad_area {
+  width: 728px;
+  max-width: 100%;
+  min-height: 90px;
+}
+
+.adfit-dev-placeholder {
+  display: grid;
+  place-items: center;
+  width: 728px;
+  max-width: 100%;
+  min-height: 90px;
+  border: 1px dashed rgba(47, 128, 237, 0.55);
+  border-radius: 8px;
+  background: rgba(47, 128, 237, 0.08);
+  color: #2563eb;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.adfit-home-desktop-top-banner:has(.kakao_ad_area > *) .adfit-dev-placeholder {
+  display: none;
 }
 
 .adfit-side-rail {
@@ -8472,13 +8505,45 @@ input {
   }
 }
 
+@media (min-width: 941px) {
+  .app-body:has(.home-stage) {
+    padding-top: 12px;
+  }
+
+  .adfit-home-desktop-top-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 90px;
+    overflow: hidden;
+    margin: 0 auto 14px;
+    border: 1px solid rgba(217, 222, 216, 0.72);
+    border-radius: 14px;
+    background:
+      linear-gradient(90deg, rgba(251, 251, 248, 0.82), rgba(255, 255, 255, 0.95), rgba(251, 251, 248, 0.82)),
+      rgba(251, 251, 248, 0.72);
+    box-shadow: 0 12px 28px rgba(41, 48, 43, 0.05);
+  }
+}
+
 @media (max-width: 760px) {
   .adfit-mobile-top-banner {
     display: flex;
     justify-content: center;
     width: 100%;
     min-height: 50px;
-    margin: 18px auto 16px;
+    margin: 14px auto 0;
+    position: relative;
+    z-index: 10;
+  }
+}
+
+@media (max-width: 760px) {
+  .adfit-mobile-top-banner + .app-body {
+    margin-top: 0;
+    padding-top: 0;
   }
 }
 
@@ -11639,6 +11704,72 @@ input {
   justify-content: flex-start;
 }
 
+.home-beginner-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  width: min(1120px, 100%);
+  margin: 22px auto 0;
+  padding: 22px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.76)),
+    var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.home-beginner-entry-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.home-beginner-entry-copy span {
+  color: var(--accent-strong);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-beginner-entry-copy h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+  letter-spacing: 0;
+}
+
+.home-beginner-entry-copy p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.75;
+}
+
+.home-beginner-entry-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.92rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.24);
+}
+
+.home-beginner-entry-link:hover {
+  transform: translateY(-1px);
+}
+
 .home-content-guide {
   display: grid;
   gap: 20px;
@@ -11756,6 +11887,14 @@ input {
   border-color: rgba(148, 163, 184, 0.22);
 }
 
+.app-bg[data-theme="dark"] .home-beginner-entry {
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.72)),
+    var(--panel);
+  border-color: rgba(96, 165, 250, 0.22);
+}
+
 .app-bg[data-theme="dark"] .home-content-card {
   background: rgba(15, 23, 42, 0.56);
 }
@@ -11768,6 +11907,16 @@ input {
   .home-content-grid,
   .home-example-panel {
     grid-template-columns: 1fr;
+  }
+
+  .home-beginner-entry {
+    grid-template-columns: 1fr;
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .home-beginner-entry-link {
+    justify-self: start;
   }
 
   .home-content-guide {
@@ -12072,6 +12221,16 @@ input {
 
 .app-bg[data-theme="dark"] .home-primary-panel {
   background: transparent;
+}
+
+@media (min-width: 941px) {
+  .home-dashboard {
+    padding-top: 0;
+  }
+
+  .home-primary-panel {
+    padding-top: 0;
+  }
 }
 
 .home-primary-grid {

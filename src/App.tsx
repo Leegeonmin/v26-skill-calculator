@@ -123,6 +123,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/calculator-guide": "skillScoreMethod",
   "/simulator-guide": "simulatorGuide",
   "/ocr-guide": "ocrGuide",
+  "/beginner-guides": "beginnerGuides",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
@@ -433,6 +434,7 @@ function App() {
       ? ADFIT_INFO_PAGE_KEYS.has(infoPageKey)
       : toolView === "home" ||
         toolView === "skillCompareBeta" ||
+        toolView === "lineupSkillOcr" ||
         toolView === "calculator" ||
         toolView === "simulator" ||
         toolView === "impactChange" ||
@@ -1654,8 +1656,8 @@ function App() {
           supabaseReady={supabaseReady}
           themeAction={themeToggle}
         />
+        {shouldShowAdFitBanner && <AdFitMobileTopBanner slotKey={adFitSlotKey} />}
         <AppChrome>
-          {shouldShowAdFitBanner && <AdFitMobileTopBanner slotKey={adFitSlotKey} />}
           {authError && <p className="auth-error">{authError}</p>}
 
           <Suspense fallback={<ViewFallback />}>
