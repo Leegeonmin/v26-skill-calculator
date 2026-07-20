@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KBO 타자 키우기 | 컴프야V26 오마주 야구 웹게임</title>
+  <meta name="description" content="신인 라이브 타자부터 전설적인 골든글러브 카드까지! 고스변 스킬 조합과 훈련을 통해 선수를 성장시키고 메이저리그(MLB)행에 성공해보세요.">
+  <meta name="keywords" content="야구게임, 타자 키우기, 컴프야V26, 고스변, 시뮬레이터, 방치형 게임, 클리커 게임, KBO, 야구 선수 육성">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:site_name" content="KBO 타자 키우기">
+  <meta property="og:title" content="KBO 타자 키우기 | 컴프야V26 오마주 야구 웹게임">
+  <meta property="og:description" content="신인 라이브 타자부터 전설적인 골든글러브 카드까지! KBO 리그를 지배하고 메이저리그(MLB)행에 성공해보세요.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23f5f7fb'/%3E%3Cpath d='M18 14c8 9 8 27 0 36M46 14c-8 9-8 27 0 36' fill='none' stroke='%23e53935' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <aside class="adfit-mobile-top-banner" aria-label="광고">
+    <ins
+      class="kakao_ad_area"
+      style="display:none"
+      data-ad-unit="DAN-mzOAh4ii66DEoLwq"
+      data-ad-width="320"
+      data-ad-height="50"
+    ></ins>
+  </aside>
+
+  <aside class="adfit-side-rail adfit-side-rail-left" aria-label="광고">
+    <ins
+      class="kakao_ad_area"
+      style="display:none"
+      data-ad-unit="DAN-HCzcBVooHN73xd5Q"
+      data-ad-width="160"
+      data-ad-height="600"
+    ></ins>
+  </aside>
+
+  <aside class="adfit-side-rail adfit-side-rail-right" aria-label="광고">
+    <ins
+      class="kakao_ad_area"
+      style="display:none"
+      data-ad-unit="DAN-QB9RMdZh1o49GHe6"
+      data-ad-width="160"
+      data-ad-height="600"
+    ></ins>
+  </aside>
+
+  <!-- 앱 컨테이너 -->
+  <div id="app-container" class="glass">
+    
+    <!-- 1. 헤더 영역 -->
+    <header class="main-header glass-panel">
+      <div class="logo-area">
+        <span class="badge neon-blue">CPBV LAB</span>
+        <h1>타자 키우기 <span class="version">베타</span></h1>
+      </div>
+      <div class="header-stats">
+        <p class="ticker-text">현재까지 <span id="global-exit-count" class="neon-text">0</span>명의 선수가 <strong class="neon-text">MLB행</strong>에 성공했습니다!</p>
+        <a href="https://cpbv-lab.com" class="header-home-btn" title="cpbv-lab.com으로 이동">홈</a>
+        <button id="btn-reset-progress" class="header-reset-btn" title="진행 상태 초기화">RESET</button>
+      </div>
+    </header>
+
+    <!-- 2. 전체 스코어보드 (상단 요약) -->
+    <section class="scoreboard-section glass-panel">
+      <div class="score-metric">
+        <span class="label">누적 훈련량</span>
+        <h2 id="total-tp" class="neon-text-blue">0</h2>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-metric">
+        <span class="label">초당 자동 훈련량</span>
+        <span id="current-lps" class="value">0 <span class="unit">훈련량/초</span></span>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-metric">
+        <span class="label">스윙당 훈련량</span>
+        <span id="current-lpc" class="value">1 <span class="unit">훈련량</span></span>
+      </div>
+      <div class="score-divider"></div>
+      <div class="score-metric">
+        <span class="label">총 훈련 레벨</span>
+        <span id="training-level-summary" class="value">0 <span class="unit">/ 36</span></span>
+      </div>
+    </section>
+
+    <!-- 3. 메인 콘텐츠 그리드 (3단 구조) -->
+    <div class="main-grid">
+      
+      <!-- [좌측 단] 선수 정보 및 6대 스탯 강화 / 재분배 -->
+      <aside class="left-panel glass-panel">
+        <h3 class="panel-title">선수 카드 프로필</h3>
+        
+        <!-- 카드 그래픽 -->
+        <div id="player-card" class="card-live">
+          <div class="card-glow"></div>
+          <div class="card-inner">
+            <div class="card-header">
+              <span id="card-tier-badge" class="tier-badge badge-live">LIVE</span>
+              <span class="position-badge">DH</span>
+            </div>
+            <div class="card-player-img">
+              <svg viewBox="0 0 100 100" class="player-svg">
+                <circle cx="50" cy="35" r="20" fill="var(--card-accent)" opacity="0.3" stroke="var(--card-accent)" stroke-width="2"/>
+                <path d="M25,80 C25,55 75,55 75,80" fill="var(--card-accent)" opacity="0.3" stroke="var(--card-accent)" stroke-width="2"/>
+                <line x1="50" y1="55" x2="50" y2="90" stroke="var(--card-accent)" stroke-width="2" stroke-dasharray="2 2"/>
+                <!-- 야구 배트 실루엣 -->
+                <rect x="70" y="20" width="6" height="50" rx="3" transform="rotate(30 70 20)" fill="var(--card-accent)" opacity="0.6" />
+              </svg>
+            </div>
+            <div class="card-footer">
+              <div class="player-name-wrap">
+                <span id="player-name" class="player-name" title="클릭하여 이름 변경">김타자</span>
+                <span class="edit-icon">✏️</span>
+              </div>
+              <span id="player-league" class="player-league">루키 리그</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6대 스탯 훈련 대시보드 -->
+        <div class="stats-upgrade-container">
+          <div class="stats-header-bar">
+            <h4 class="sub-title">훈련</h4>
+            <span id="training-level-sub" class="badge neon-blue">Lv.0</span>
+          </div>
+
+          <!-- 6대 능력치 리스트 -->
+          <div class="stats-grid-6">
+            <div class="stat-row" id="row-power">
+              <span class="stat-label-6">파워 (Power)</span>
+              <span class="stat-val-6" id="val-power">0</span>
+            </div>
+            <div class="stat-row" id="row-contact">
+              <span class="stat-label-6">정확 (Contact)</span>
+              <span class="stat-val-6" id="val-contact">0</span>
+            </div>
+            <div class="stat-row" id="row-eye">
+              <span class="stat-label-6">선구 (Eye)</span>
+              <span class="stat-val-6" id="val-eye">0</span>
+            </div>
+            <div class="stat-row" id="row-patience">
+              <span class="stat-label-6">인내 (Patience)</span>
+              <span class="stat-val-6" id="val-patience">0</span>
+            </div>
+            <div class="stat-row" id="row-speed">
+              <span class="stat-label-6">주루 (Speed)</span>
+              <span class="stat-val-6" id="val-speed">0</span>
+            </div>
+            <div class="stat-row" id="row-defense">
+              <span class="stat-label-6">수비 (Defense)</span>
+              <span class="stat-val-6" id="val-defense">0</span>
+            </div>
+          </div>
+
+          <div class="stat-effect-guide">
+            <div><strong>정확</strong><span>안타/홈런 확률 상승</span></div>
+            <div><strong>파워</strong><span>스윙 훈련량과 홈런 보상 상승</span></div>
+            <div><strong>선구</strong><span>자동 훈련 효율과 찬스볼 개선</span></div>
+          </div>
+
+          <!-- 훈련 레벨업 실행 버튼 -->
+          <button class="btn-upgrade-main neon-glow-blue" id="btn-do-training">
+            <span>훈련하기 (무작위 분배)</span>
+            <span class="cost-tag" id="cost-training-text">훈련량 10</span>
+          </button>
+
+          <!-- 훈련 재분배 (훈재분) 컨트롤러 -->
+          <div class="redistribute-controller glass">
+            <h5 class="redist-title">훈련 재분배 (훈재분)</h5>
+            <p class="redist-explanation">주능력치를 선택하세요. 선택한 능력치에는 가장 작은 훈련 묶음이 배정됩니다.</p>
+            
+            <div class="redist-checklist" id="redist-checkboxes-container">
+              <label class="redist-checkbox"><input type="checkbox" name="redist-stat" value="power"> 파워</label>
+              <label class="redist-checkbox"><input type="checkbox" name="redist-stat" value="contact"> 정확</label>
+              <label class="redist-checkbox"><input type="checkbox" name="redist-stat" value="eye"> 선구</label>
+              <label class="redist-checkbox"><input type="checkbox" name="redist-stat" value="patience"> 인내</label>
+              <label class="redist-checkbox"><input type="checkbox" name="redist-stat" value="speed" checked> 주루</label>
+              <label class="redist-checkbox"><input type="checkbox" name="redist-stat" value="defense"> 수비</label>
+            </div>
+
+            <button class="glass-btn btn-redistribute-run" id="btn-run-redistribute">
+              <span>훈련 재분배 실행</span>
+              <span class="cost-tag">훈련량 2,000</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- [중앙 단] 스트라이크 존 & 타격 클릭커 -->
+      <main class="center-panel glass-panel">
+        <!-- 9분할 스트라이크 존 -->
+        <div class="strike-zone-wrapper">
+          <div class="strike-zone-grid" id="strike-zone">
+            <div class="zone-cell cell-1" data-cell="1"></div>
+            <div class="zone-cell cell-2" data-cell="2"></div>
+            <div class="zone-cell cell-3" data-cell="3"></div>
+            <div class="zone-cell cell-4" data-cell="4"></div>
+            <div class="zone-cell cell-5" data-cell="5"></div>
+            <div class="zone-cell cell-6" data-cell="6"></div>
+            <div class="zone-cell cell-7" data-cell="7"></div>
+            <div class="zone-cell cell-8" data-cell="8"></div>
+            <div class="zone-cell cell-9" data-cell="9"></div>
+            
+            <!-- 날아오는 야구공 / 실투 찬스볼 -->
+            <div id="baseball-target" class="baseball-target hidden"></div>
+            
+            <!-- 타격 결과 텍스트 이펙트 -->
+            <div id="hit-effect-text" class="hit-effect-text hidden">안타!</div>
+          </div>
+        </div>
+
+        <!-- 스윙 버튼 및 부스터 -->
+        <div class="action-area">
+          <button id="btn-swing" class="btn-swing-main neon-glow-blue">스윙! <span class="sub-key">(아무 키나 눌러 스윙)</span></button>
+          
+          <div class="boost-container">
+            <button id="btn-boost" class="btn-boost">
+              <span class="boost-icon">AI</span>
+              <span class="boost-copy">
+                <span class="boost-title">타격 코칭 가동</span>
+                <span class="boost-subtitle">10초간 훈련 효율 2배</span>
+              </span>
+              <span class="boost-cooldown-bar" id="boost-cooldown-bar"></span>
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- [우측 단] 상점 / 고스변 스킬 / 승급 탭 메뉴 -->
+      <section class="right-panel glass-panel">
+        <!-- 탭 메뉴 헤더 -->
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="tab-shop">장비 & 훈련</button>
+          <button class="tab-btn" data-tab="tab-skills">고스변 (스킬)</button>
+          <button class="tab-btn" data-tab="tab-exit">카드 승급</button>
+        </div>
+
+        <!-- 탭 1: 장비 & 훈련 상점 -->
+        <div class="tab-content active" id="tab-shop">
+          <div class="shop-list">
+            
+            <div class="shop-section">
+              <h5>🏏 타격 장비 (스윙당 훈련량 증가)</h5>
+              <div class="shop-items-container" id="active-upgrades-list">
+                <!-- JS에서 동적 로드 -->
+              </div>
+            </div>
+
+            <div class="shop-section">
+              <h5>🏫 훈련 지원 & 코치 (초당 자동 훈련량 증가)</h5>
+              <div class="shop-items-container" id="passive-upgrades-list">
+                <!-- JS에서 동적 로드 -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 탭 2: 고스변 (고급 스킬 변경) -->
+        <div class="tab-content" id="tab-skills">
+          <div class="skills-container">
+            <div class="skills-explanation">
+              <p>훈련량을 소모해 선수의 특수 스킬 3가지를 재부여합니다. <br>V26 고스변 기준으로 첫 슬롯은 <strong>메이저 스킬 확정</strong>입니다.</p>
+            </div>
+
+            <label class="skill-lock-option" id="impact-lock-option">
+              <input type="checkbox" id="lock-first-skill">
+              <span>임팩트 카드 1옵 스킬 잠금</span>
+            </label>
+
+            <!-- 스킬 슬롯 3개 -->
+            <div class="skill-slots">
+              <div class="skill-slot" id="skill-slot-1">
+                <span class="skill-rank rank-none">-</span>
+                <span class="skill-name">스킬 없음</span>
+                <span class="skill-desc">고스변을 진행해 스킬을 장착하세요.</span>
+              </div>
+              <div class="skill-slot" id="skill-slot-2">
+                <span class="skill-rank rank-none">-</span>
+                <span class="skill-name">스킬 없음</span>
+                <span class="skill-desc">고스변을 진행해 스킬을 장착하세요.</span>
+              </div>
+              <div class="skill-slot" id="skill-slot-3">
+                <span class="skill-rank rank-none">-</span>
+                <span class="skill-name">스킬 없음</span>
+                <span class="skill-desc">고스변을 진행해 스킬을 장착하세요.</span>
+              </div>
+            </div>
+
+            <!-- 고스변 버튼 -->
+            <button id="btn-roll-skills" class="btn-roll-skills neon-glow-blue">
+              <span>고급 스킬 변경 (고스변)</span>
+              <span class="roll-cost-text">훈련량 <span id="skill-roll-cost">1,000</span></span>
+            </button>
+
+            <!-- 현재 적용 버프 요약 -->
+            <div class="skill-buffs-summary glass">
+              <h6>현재 적용 중인 스킬 효과:</h6>
+              <ul id="skill-buffs-list">
+                <li>스킬이 없습니다.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 탭 3: 카드 승급 및 MLB Exit -->
+        <div class="tab-content" id="tab-exit">
+          <div class="exit-container">
+            <div class="exit-card-preview">
+              <h5>다음 승급 등급</h5>
+              <div id="next-tier-preview" class="badge neon-blue">IMPACT</div>
+            </div>
+
+            <div class="exit-requirements">
+              <h6>승급 요구사항:</h6>
+              <ul class="req-list">
+                <li>필요 훈련량: <span id="req-tp">100,000</span> / <span id="req-tp-current">0</span></li>
+                <li>총 훈련 레벨: <span id="req-stats-sum">Lv.15</span> / <span id="req-stats-sum-current">Lv.3</span></li>
+              </ul>
+            </div>
+
+            <!-- 승급 혜택 안내 -->
+            <div class="exit-benefits glass">
+              <h6>승급 혜택:</h6>
+              <ul>
+                <li>영구 시너지 버프 획득: <strong class="neon-text">초당 자동 훈련량 +100%</strong> (중첩 가능)</li>
+                <li>새로운 카드 스킨 잠금해제 및 테두리 효과 화려함 증가</li>
+                <li><span class="warning-text">* 주의: 승급 시 스탯 성장치와 일반 상점 장비는 리셋됩니다.</span></li>
+              </ul>
+            </div>
+
+            <button id="btn-exit-promote" class="btn-exit-promote disabled" disabled>등급 승급하기</button>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- 4. 하단 전광판 콘솔 (실시간 로그) -->
+    <footer class="bottom-console glass-panel">
+      <div class="console-header">
+        <span class="console-title">🏟️ LIVE STADIUM BOARD</span>
+        <span class="console-dot-indicator"></span>
+      </div>
+      <div class="console-logs" id="console-logs">
+        <div class="log-line text-muted">선수 훈련장이 활성화되었습니다. 훈련을 시작하세요!</div>
+      </div>
+    </footer>
+
+    <aside class="adfit-banner" aria-label="광고">
+      <ins
+        class="kakao_ad_area"
+        style="display:none"
+        data-ad-unit="DAN-liZUYElBnSJmrdve"
+        data-ad-width="320"
+        data-ad-height="50"
+      ></ins>
+    </aside>
+
+  </div>
+
+  <!-- 5. 엔딩 / MLB Exit 성공 모달 -->
+  <div id="exit-modal" class="modal-overlay hidden">
+    <div class="modal-content glass neon-border-gold">
+      <h2 class="neon-text-gold">⚾ CONGRATULATIONS! ⚾</h2>
+      <p class="modal-subtitle">당신의 선수가 메이저리그(MLB)의 전설로 거듭났습니다!</p>
+      
+      <div class="exit-stat-summary">
+        <div class="card-replica" id="modal-card">
+          <span class="badge-gold">GOLDEN GLOVE</span>
+          <h3 id="modal-player-name">김타자</h3>
+          <p>종결 3골드 스킬 획득 완료</p>
+        </div>
+        <div class="exit-statistics">
+          <p>🏅 획득 스톡옵션 (시너지): <span id="modal-synergy-count" class="neon-text">0</span>주</p>
+          <p>📈 영구 자동 생산 속도: <span id="modal-synergy-boost" class="neon-text">+0%</span></p>
+        </div>
+      </div>
+
+      <p class="exit-outro">이제 새로운 신인 선수를 발굴하여 더 빠르게 리그를 정복할 차례입니다. 다시 시작하시겠습니까?</p>
+      
+      <div class="modal-actions">
+        <button id="btn-reset-game" class="btn-reset-game neon-glow-gold">다시 신인부터 키우기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 기존유지 vs 신규적용 결과 선택 대화창 모달 (고스변 & 훈재분 공용) -->
+  <div id="selection-modal" class="modal-overlay hidden">
+    <div class="modal-content glass selection-modal-content">
+      <h3 id="selection-modal-title">결과 선택</h3>
+      <p class="modal-subtitle" id="selection-modal-subtitle">기존 능력치를 유지하거나 새로운 결과 값을 적용하세요.</p>
+      
+      <div class="comparison-container">
+        <!-- 기존 상태 -->
+        <div class="comparison-box" id="comparison-before">
+          <h4>기존 상태</h4>
+          <div class="comparison-values-list" id="before-values-list">
+            <!-- JS 동적 로드 -->
+          </div>
+        </div>
+        
+        <div class="comparison-arrow">➔</div>
+        
+        <!-- 신규 결과 -->
+        <div class="comparison-box" id="comparison-after">
+          <h4>신규 결과</h4>
+          <div class="comparison-values-list" id="after-values-list">
+            <!-- JS 동적 로드 -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-actions-comparison">
+        <button id="btn-keep-before" class="glass-btn keep-btn">기존 유지 (취소)</button>
+        <button id="btn-apply-after" class="btn-apply-comparison neon-glow-blue">신규 적용 (적용)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 하단 푸터 (법적 문서 - SEO 및 구글 애드센스 승인용) -->
+  <footer class="legal-footer">
+    <div class="legal-links">
+      <a href="#" id="link-about">서비스 소개</a>
+      <span class="divider">|</span>
+      <a href="#" id="link-terms">이용약관</a>
+      <span class="divider">|</span>
+      <a href="#" id="link-privacy" class="highlight">개인정보처리방침</a>
+      <span class="divider">|</span>
+      <a href="#" id="link-contact">문의하기</a>
+    </div>
+    <p class="copyright">© 2026 CPBV LAB Hitter Tycoon. 본 게임은 컴투스프로야구V26의 공식 게임이 아닌 팬 메이드 창작물입니다.</p>
+  </footer>
+
+  <!-- 8. 법적 문서 모달 (공용) -->
+  <div id="legal-modal" class="modal-overlay hidden">
+    <div class="modal-content glass">
+      <h3 id="legal-title">문서 제목</h3>
+      <div id="legal-body" class="legal-body-content">
+        <!-- 텍스트 내용 동적 입력 -->
+      </div>
+      <div class="modal-actions">
+        <button id="btn-close-legal" class="glass-btn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script async src="https://t1.kakaocdn.net/kas/static/ba.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

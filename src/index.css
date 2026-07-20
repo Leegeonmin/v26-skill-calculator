@@ -12062,6 +12062,19 @@ input {
   color: var(--accent-strong);
 }
 
+.site-nav-link-game {
+  padding: 7px 10px;
+  border-radius: 999px !important;
+  background: var(--accent-soft-bg) !important;
+  color: var(--accent-soft-text) !important;
+  box-shadow: inset 0 0 0 1px var(--accent-soft-border);
+}
+
+.site-nav-link-game:hover {
+  background: var(--accent-bg) !important;
+  color: #fff !important;
+}
+
 .site-nav-icon {
   width: 18px;
   height: 18px;
@@ -13081,4 +13094,79 @@ input {
     padding: 14px 16px;
     border-radius: 16px;
   }
+}
+
+.idle-game-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.idle-game-prompt-card {
+  width: min(440px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(251, 251, 248, 0.96);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  padding: 24px;
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .idle-game-prompt-card {
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.idle-game-prompt-kicker {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.idle-game-prompt-card h2 {
+  margin: 14px 0 8px;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.idle-game-prompt-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.idle-game-prompt-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.idle-game-prompt-play {
+  text-decoration: none;
+}
+
+.idle-game-prompt-skip {
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.idle-game-prompt-skip:hover {
+  color: var(--accent-strong);
 }

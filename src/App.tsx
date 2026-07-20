@@ -114,6 +114,8 @@ const ADMIN_SESSION_KEY = "v26-admin-session";
 const OCR_PATH = "/tyrant";
 const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
+const IDLE_DEV_GAME_URL = "/idle-dev-game/";
+const IDLE_DEV_GAME_PROMPT_KEY = "v26-idle-dev-game-prompt-dismissed";
 const ADSENSE_CLIENT = "ca-pub-6461439689226359";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
@@ -264,6 +266,13 @@ function App() {
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
+  const [showIdleGamePrompt, setShowIdleGamePrompt] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return window.localStorage.getItem(IDLE_DEV_GAME_PROMPT_KEY) !== "1";
+  });
 
   const [adminHomeChangeDraft, setAdminHomeChangeDraft] = useState("");
   const [adminHomeChangeSaving, setAdminHomeChangeSaving] = useState(false);
@@ -1484,6 +1493,36 @@ function App() {
     window.location.href = `${window.location.origin}/?view=home`;
   };
 
+  const dismissIdleGamePrompt = (neverShowAgain = false) => {
+    if (neverShowAgain) {
+      window.localStorage.setItem(IDLE_DEV_GAME_PROMPT_KEY, "1");
+    }
+    setShowIdleGamePrompt(false);
+  };
+
+  const idleGamePromptModal = showIdleGamePrompt ? (
+    <div className="idle-game-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="idle-game-prompt-title">
+      <section className="idle-game-prompt-card">
+        <span className="idle-game-prompt-kicker">New</span>
+        <h2 id="idle-game-prompt-title">타자 키우기 베타</h2>
+        <p>
+          스윙으로 훈련량을 모으고, 카드 승급과 고스변까지 이어지는 CPBV LAB 미니 육성 게임입니다.
+        </p>
+        <div className="idle-game-prompt-actions">
+          <a className="primary-btn idle-game-prompt-play" href={IDLE_DEV_GAME_URL}>
+            플레이하기
+          </a>
+          <button type="button" className="ghost-btn" onClick={() => dismissIdleGamePrompt(false)}>
+            닫기
+          </button>
+        </div>
+        <button type="button" className="idle-game-prompt-skip" onClick={() => dismissIdleGamePrompt(true)}>
+          더 보지 않기
+        </button>
+      </section>
+    </div>
+  ) : null;
+
   const themeToggle = (
     <button
       type="button"
@@ -1637,6 +1676,7 @@ function App() {
             </nav>
             <span>made by 우주</span>
           </footer>
+          {idleGamePromptModal}
           <Analytics />
         </div>
       </div>
@@ -1818,6 +1858,7 @@ function App() {
         )}
 
         {shouldShowAdFitBanner && <AdFitBanner slotKey={adFitSlotKey} />}
+        {idleGamePromptModal}
         <Analytics />
       </div>
     </div>
