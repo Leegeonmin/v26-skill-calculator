@@ -1,4 +1,9 @@
-import type { AdminOcrBreakdown, AdminToolBreakdown, AdminUsageSummary } from "../lib/admin";
+import type {
+  AdminIdleGameRankingEntry,
+  AdminOcrBreakdown,
+  AdminToolBreakdown,
+  AdminUsageSummary,
+} from "../lib/admin";
 
 type AdminViewProps = {
   unlocked: boolean;
@@ -17,6 +22,10 @@ type AdminViewProps = {
   idleDevGameSaving: boolean;
   idleDevGameStatus: "idle" | "saved" | "error";
   idleDevGameError: string | null;
+  idleGameRankings: AdminIdleGameRankingEntry[];
+  idleGameRankingsLoading: boolean;
+  idleGameRankingsError: string | null;
+  idleGameRankingBusyId: string | null;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
@@ -26,6 +35,10 @@ type AdminViewProps = {
   onSaveHomeChangeMessage: () => void;
   onIdleDevGameEnabledChange: (value: boolean) => void;
   onSaveIdleDevGameSetting: () => void;
+  onUpdateIdleGameRanking: (
+    entry: AdminIdleGameRankingEntry,
+    moderationStatus: AdminIdleGameRankingEntry["moderation_status"]
+  ) => void;
 };
 
 const toolLabels: Record<string, string> = {
@@ -58,6 +71,17 @@ function formatDateTime(value: string | null | undefined) {
 
 function getToolLabel(tool: string) {
   return toolLabels[tool] ?? tool;
+}
+
+function getIdleRankingStatusLabel(status: AdminIdleGameRankingEntry["moderation_status"]) {
+  if (status === "hidden") return "닉네임 숨김";
+  if (status === "excluded") return "랭킹 제외";
+  return "노출";
+}
+
+function formatSeconds(value: number | null | undefined) {
+  if (value == null) return "-";
+  return `${Math.round(value).toLocaleString("ko-KR")}초`;
 }
 
 function renderOcrRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
@@ -155,6 +179,77 @@ function renderInquiryRows(stats: AdminUsageSummary | null, statsLoading: boolea
   ));
 }
 
+function renderIdleRankingRows({
+  rankings,
+  loading,
+  busyId,
+  onUpdate,
+}: {
+  rankings: AdminIdleGameRankingEntry[];
+  loading: boolean;
+  busyId: string | null;
+  onUpdate: AdminViewProps["onUpdateIdleGameRanking"];
+}) {
+  if (loading) {
+    return (
+      <tr>
+        <td colSpan={8}>타자 키우기 공식 랭킹을 불러오는 중입니다.</td>
+      </tr>
+    );
+  }
+
+  if (rankings.length === 0) {
+    return (
+      <tr>
+        <td colSpan={8}>아직 공식 MLB 달성 랭킹 기록이 없습니다.</td>
+      </tr>
+    );
+  }
+
+  return rankings.map((entry) => {
+    const busy = busyId === entry.entry_id;
+    return (
+      <tr key={entry.entry_id} className={entry.moderation_status !== "visible" ? "admin-muted-row" : undefined}>
+        <td>{entry.rank ?? "-"}</td>
+        <td>{entry.display_name}</td>
+        <td>{entry.email ?? "-"}</td>
+        <td>{formatSeconds(entry.score)}</td>
+        <td>{formatDateTime(entry.achieved_at)}</td>
+        <td>{getIdleRankingStatusLabel(entry.moderation_status)}</td>
+        <td className="admin-message-cell">{entry.moderation_note ?? "-"}</td>
+        <td>
+          <div className="admin-row-actions">
+            <button
+              type="button"
+              className="ghost-btn"
+              disabled={busy || entry.moderation_status === "visible"}
+              onClick={() => onUpdate(entry, "visible")}
+            >
+              복구
+            </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              disabled={busy || entry.moderation_status === "hidden"}
+              onClick={() => onUpdate(entry, "hidden")}
+            >
+              이름 숨김
+            </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              disabled={busy || entry.moderation_status === "excluded"}
+              onClick={() => onUpdate(entry, "excluded")}
+            >
+              제외
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  });
+}
+
 export default function AdminView({
   unlocked,
   checkingSession,
@@ -172,6 +267,10 @@ export default function AdminView({
   idleDevGameSaving,
   idleDevGameStatus,
   idleDevGameError,
+  idleGameRankings,
+  idleGameRankingsLoading,
+  idleGameRankingsError,
+  idleGameRankingBusyId,
   onUsernameChange,
   onPasswordChange,
   onUnlock,
@@ -181,6 +280,7 @@ export default function AdminView({
   onSaveHomeChangeMessage,
   onIdleDevGameEnabledChange,
   onSaveIdleDevGameSetting,
+  onUpdateIdleGameRanking,
 }: AdminViewProps) {
   if (checkingSession) {
     return (
@@ -334,6 +434,42 @@ export default function AdminView({
         </div>
         {idleDevGameStatus === "saved" && <p className="notice-form-success">저장됐습니다.</p>}
         {idleDevGameStatus === "error" && idleDevGameError && <p className="modal-error">{idleDevGameError}</p>}
+      </section>
+
+      <section className="admin-panel admin-table-panel">
+        <div className="admin-section-head">
+          <div>
+            <p className="admin-eyebrow">Idle Ranking</p>
+            <h2>타자 키우기 공식 랭킹 관리</h2>
+          </div>
+          <p>MLB 달성시간 기준 공식 랭킹입니다. 문제 기록은 제외하고, 부적절한 이름은 숨길 수 있습니다.</p>
+        </div>
+
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>순위</th>
+                <th>이름</th>
+                <th>이메일</th>
+                <th>달성시간</th>
+                <th>달성일</th>
+                <th>상태</th>
+                <th>메모</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {renderIdleRankingRows({
+                rankings: idleGameRankings,
+                loading: idleGameRankingsLoading,
+                busyId: idleGameRankingBusyId,
+                onUpdate: onUpdateIdleGameRanking,
+              })}
+            </tbody>
+          </table>
+        </div>
+        {idleGameRankingsError && <p className="modal-error">{idleGameRankingsError}</p>}
       </section>
 
       <div className="admin-grid admin-metric-grid">

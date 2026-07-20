@@ -44,6 +44,7 @@ export default async function handler(request, response) {
     query.searchParams.set("category", `eq.${category}`);
     query.searchParams.set("score", `${operator}.${score}`);
     query.searchParams.set("user_id", "not.is.null");
+    query.searchParams.set("moderation_status", "eq.visible");
 
     const rankResponse = await fetch(query, {
       headers: {

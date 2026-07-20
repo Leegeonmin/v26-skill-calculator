@@ -12,9 +12,12 @@ import {
 } from "./lib/auth";
 import {
   adminGetToolUsageSummary,
+  adminGetIdleGameRankings,
   adminLogin,
   adminLogout,
+  adminUpdateIdleGameRankingEntry,
   adminValidateSession,
+  type AdminIdleGameRankingEntry,
   type AdminUsageSummary,
 } from "./lib/admin";
 import {
@@ -268,6 +271,10 @@ function App() {
   const [adminStats, setAdminStats] = useState<AdminUsageSummary | null>(null);
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
   const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
+  const [adminIdleRankings, setAdminIdleRankings] = useState<AdminIdleGameRankingEntry[]>([]);
+  const [adminIdleRankingsLoading, setAdminIdleRankingsLoading] = useState(false);
+  const [adminIdleRankingsError, setAdminIdleRankingsError] = useState<string | null>(null);
+  const [adminIdleRankingBusyId, setAdminIdleRankingBusyId] = useState<string | null>(null);
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
   const [idleDevGameEnabled, setIdleDevGameEnabled] = useState(false);
   const [showIdleGamePrompt, setShowIdleGamePrompt] = useState(() => {
@@ -485,6 +492,20 @@ function App() {
       }
     : null;
 
+  const loadAdminIdleGameRankings = async (sessionToken: string) => {
+    try {
+      setAdminIdleRankingsLoading(true);
+      setAdminIdleRankingsError(null);
+      setAdminIdleRankings(await adminGetIdleGameRankings(sessionToken));
+    } catch (error) {
+      setAdminIdleRankingsError(
+        error instanceof Error ? error.message : "타자 키우기 랭킹을 불러오지 못했습니다."
+      );
+    } finally {
+      setAdminIdleRankingsLoading(false);
+    }
+  };
+
   useEffect(() => {
     window.localStorage.setItem("v26-theme", theme);
   }, [theme]);
@@ -690,6 +711,19 @@ function App() {
         setAdminStatsLoading(false);
       }
     })();
+  }, [adminUnlocked, isAdminRoute]);
+
+  useEffect(() => {
+    if (!isAdminRoute || !adminUnlocked) {
+      return;
+    }
+
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!sessionToken) {
+      return;
+    }
+
+    void loadAdminIdleGameRankings(sessionToken);
   }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
@@ -1108,6 +1142,42 @@ function App() {
       );
     } finally {
       setAdminIdleDevGameSaving(false);
+    }
+  };
+
+  const handleUpdateIdleGameRanking = async (
+    entry: AdminIdleGameRankingEntry,
+    moderationStatus: AdminIdleGameRankingEntry["moderation_status"]
+  ) => {
+    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+
+    if (!sessionToken) {
+      setAdminIdleRankingsError("관리자 세션이 없습니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    try {
+      setAdminIdleRankingBusyId(entry.entry_id);
+      setAdminIdleRankingsError(null);
+      await adminUpdateIdleGameRankingEntry({
+        sessionToken,
+        entryId: entry.entry_id,
+        moderationStatus,
+        displayName: moderationStatus === "hidden" ? "익명타자" : entry.display_name,
+        note:
+          moderationStatus === "visible"
+            ? null
+            : moderationStatus === "hidden"
+              ? "관리자 닉네임 숨김"
+              : "관리자 랭킹 제외",
+      });
+      await loadAdminIdleGameRankings(sessionToken);
+    } catch (error) {
+      setAdminIdleRankingsError(
+        error instanceof Error ? error.message : "타자 키우기 랭킹 상태를 저장하지 못했습니다."
+      );
+    } finally {
+      setAdminIdleRankingBusyId(null);
     }
   };
 
@@ -1654,6 +1724,10 @@ function App() {
               idleDevGameSaving={adminIdleDevGameSaving}
               idleDevGameStatus={adminIdleDevGameStatus}
               idleDevGameError={adminIdleDevGameError}
+              idleGameRankings={adminIdleRankings}
+              idleGameRankingsLoading={adminIdleRankingsLoading}
+              idleGameRankingsError={adminIdleRankingsError}
+              idleGameRankingBusyId={adminIdleRankingBusyId}
               onUsernameChange={(value) => {
                 setAdminUsernameInput(value);
                 if (adminPasswordError) {
@@ -1681,6 +1755,9 @@ function App() {
                 setAdminIdleDevGameError(null);
               }}
               onSaveIdleDevGameSetting={() => void handleSaveIdleDevGameSetting()}
+              onUpdateIdleGameRanking={(entry, moderationStatus) =>
+                void handleUpdateIdleGameRanking(entry, moderationStatus)
+              }
             />
           </Suspense>
           <Analytics />

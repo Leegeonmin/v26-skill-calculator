@@ -63,6 +63,20 @@ export type AdminNoticeInquiry = {
   created_at: string;
 };
 
+export type AdminIdleGameRankingEntry = {
+  entry_id: string;
+  rank: number | null;
+  email: string | null;
+  display_name: string;
+  score: number;
+  score_label: string | null;
+  achieved_at: string;
+  moderation_status: "visible" | "hidden" | "excluded";
+  moderation_note: string | null;
+  player_id: string;
+  user_id: string;
+};
+
 function requireSupabase() {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -145,4 +159,41 @@ export async function adminGetToolUsageSummary(
 
   const summary = Array.isArray(data) ? data[0] : data;
   return (summary as AdminUsageSummary | null) ?? null;
+}
+
+export async function adminGetIdleGameRankings(
+  sessionToken: string
+): Promise<AdminIdleGameRankingEntry[]> {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("admin_get_idle_dev_game_rankings", {
+    p_session_token: sessionToken,
+    p_limit: 100,
+  });
+
+  if (error) {
+    throw adminError(error, "타자 키우기 랭킹을 불러오지 못했습니다.");
+  }
+
+  return (Array.isArray(data) ? data : []) as AdminIdleGameRankingEntry[];
+}
+
+export async function adminUpdateIdleGameRankingEntry(input: {
+  sessionToken: string;
+  entryId: string;
+  moderationStatus: AdminIdleGameRankingEntry["moderation_status"];
+  displayName?: string | null;
+  note?: string | null;
+}): Promise<void> {
+  const supabase = requireSupabase();
+  const { error } = await supabase.rpc("admin_update_idle_dev_game_ranking_entry", {
+    p_session_token: input.sessionToken,
+    p_entry_id: input.entryId,
+    p_moderation_status: input.moderationStatus,
+    p_display_name: input.displayName ?? null,
+    p_note: input.note ?? null,
+  });
+
+  if (error) {
+    throw adminError(error, "타자 키우기 랭킹 상태를 저장하지 못했습니다.");
+  }
 }

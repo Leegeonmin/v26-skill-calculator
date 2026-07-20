@@ -284,6 +284,28 @@ body {
   background: rgba(0, 210, 255, 0.1);
 }
 
+.official-ranking-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border-color: rgba(255, 215, 0, 0.28);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 210, 255, 0.06));
+}
+
+.official-ranking-notice strong {
+  flex: 0 0 auto;
+  color: var(--neon-gold);
+  font-weight: 900;
+}
+
+.official-ranking-notice span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 /* 2. 전체 스코어보드 (대시보드 상단) */
 .scoreboard-section {
   display: flex;
@@ -358,6 +380,12 @@ body {
 }
 
 @media (max-width: 760px) {
+  .official-ranking-notice {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   body {
     align-items: stretch;
     padding: 12px;

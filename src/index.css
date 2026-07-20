@@ -2951,6 +2951,23 @@ select {
   text-decoration: none;
 }
 
+.admin-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-row-actions .ghost-btn {
+  min-height: 32px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+}
+
+.admin-muted-row {
+  opacity: 0.62;
+}
+
 .admin-message-cell {
   min-width: 260px;
   max-width: 460px;
