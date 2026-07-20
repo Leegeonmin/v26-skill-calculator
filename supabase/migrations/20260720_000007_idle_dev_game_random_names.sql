@@ -3,7 +3,7 @@ returns text
 language sql
 volatile
 as $$
-  select concat(U&'\D64D\D0C0\C790', (1000 + floor(random() * 9000))::integer);
+  select concat(U&'\D0C0\C790', (1000 + floor(random() * 9000))::integer);
 $$;
 
 update public.idle_dev_game_players
