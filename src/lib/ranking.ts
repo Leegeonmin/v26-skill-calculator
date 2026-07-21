@@ -62,10 +62,52 @@ function normalizeErrorMessage(error: unknown): string {
   return String(error);
 }
 
+function getSessionCache<T>(key: string): T | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const cached = window.sessionStorage.getItem(key);
+    if (!cached) return null;
+    const parsed = JSON.parse(cached) as { expiresAt?: number; value?: T };
+    if (!parsed.expiresAt || parsed.expiresAt <= Date.now()) {
+      window.sessionStorage.removeItem(key);
+      return null;
+    }
+    return parsed.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function setSessionCache<T>(key: string, value: T, ttlMs: number) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(
+      key,
+      JSON.stringify({ value, expiresAt: Date.now() + ttlMs })
+    );
+  } catch {
+    // Cache failures must not block ranking pages.
+  }
+}
+
 export async function getCurrentSeason(): Promise<Season | null> {
+  const cacheKey = "cpbv_current_season_cache";
+  const cached = getSessionCache<Season | null>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = requireSupabase();
   const response = await supabase.rpc("current_active_season");
-  return unwrapSingle(response);
+  const season = unwrapSingle(response);
+  setSessionCache(cacheKey, season, 60_000);
+  return season;
 }
 
 export async function getRankingHomeSnapshot(
@@ -110,6 +152,12 @@ export async function getMobileHomeTopRankings(
   category: RankingCategory,
   limit = 3
 ): Promise<RankingRow[]> {
+  const cacheKey = `cpbv_mobile_home_top_rankings_${category}_${limit}`;
+  const cached = getSessionCache<RankingRow[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const supabase = requireSupabase();
   const { data, error } = await supabase.rpc("get_mobile_home_top_rankings", {
     p_category: category,
@@ -117,7 +165,9 @@ export async function getMobileHomeTopRankings(
   });
 
   if (!error) {
-    return (Array.isArray(data) ? data : []) as RankingRow[];
+    const rankings = (Array.isArray(data) ? data : []) as RankingRow[];
+    setSessionCache(cacheKey, rankings, 60_000);
+    return rankings;
   }
 
   const message = normalizeErrorMessage(error).toLowerCase();
@@ -127,6 +177,7 @@ export async function getMobileHomeTopRankings(
 
   const season = await getCurrentSeason();
   if (!season) {
+    setSessionCache(cacheKey, [], 30_000);
     return [];
   }
 
@@ -142,7 +193,9 @@ export async function getMobileHomeTopRankings(
     throw rankingsError;
   }
 
-  return (rankings ?? []) as RankingRow[];
+  const fallbackRankings = (rankings ?? []) as RankingRow[];
+  setSessionCache(cacheKey, fallbackRankings, 60_000);
+  return fallbackRankings;
 }
 
 export async function ensureWeeklyActiveSeason(): Promise<Season> {

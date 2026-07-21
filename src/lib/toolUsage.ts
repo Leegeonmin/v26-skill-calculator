@@ -26,6 +26,7 @@ const queuedEvents: QueuedToolUsageEvent[] = [];
 let flushScheduled = false;
 let flushInFlight = false;
 
+const TOOL_USAGE_LOGGING_ENABLED = false;
 const MANUAL_ROLL_SAMPLE_RATE = 50;
 const sampledEventCounts = new Map<string, number>();
 
@@ -164,6 +165,10 @@ function getSampledToolUsageEvent(input: ToolUsageEventInput): ToolUsageEventInp
 }
 
 export async function logToolUsageEvent(input: ToolUsageEventInput): Promise<void> {
+  if (!TOOL_USAGE_LOGGING_ENABLED) {
+    return;
+  }
+
   const sampledInput = getSampledToolUsageEvent(input);
 
   if (!sampledInput) {

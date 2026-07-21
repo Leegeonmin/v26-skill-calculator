@@ -12,22 +12,22 @@ export default async function handler(request, response) {
   }
 
   try {
+    if (!hasUserBearerToken(request)) {
+      sendJson(response, 200, {
+        playerId: null,
+        player: null,
+        official: false,
+        ready: true,
+      });
+      return;
+    }
+
     if (!(await isIdleDevGameEnabled())) {
       sendJson(response, 200, {
         playerId: null,
         player: null,
         official: false,
         enabled: false,
-        ready: true,
-      });
-      return;
-    }
-
-    if (!hasUserBearerToken(request)) {
-      sendJson(response, 200, {
-        playerId: null,
-        player: null,
-        official: false,
         ready: true,
       });
       return;

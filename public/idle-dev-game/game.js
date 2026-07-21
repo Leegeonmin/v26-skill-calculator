@@ -1208,6 +1208,8 @@ function getSupabaseAccessTokenFromStorage() {
 
 async function postIdleGameApi(path, payload) {
   const token = getSupabaseAccessTokenFromStorage();
+  if (!token) return null;
+
   const headers = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
