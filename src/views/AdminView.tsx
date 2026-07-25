@@ -43,6 +43,13 @@ type AdminViewProps = {
 
 const toolLabels: Record<string, string> = {
   tool_view: "화면 진입",
+  view_calculator: "스킬 점수 계산기",
+  view_simulator: "고스변 시뮬",
+  view_impact_change: "임팩트 변경 시뮬",
+  view_ranking: "고스변 랭킹챌린지",
+  view_skill_compare: "고스변 점수 비교",
+  view_lineup_skill_ocr: "라인업 스킬 인식",
+  view_training_redistribution: "훈재분 확률",
   advanced_manual_roll: "고스변 수동",
   advanced_auto_roll: "고스변 자동",
   impact_auto_roll: "임팩트 자동",
@@ -71,6 +78,14 @@ function formatDateTime(value: string | null | undefined) {
 
 function getToolLabel(tool: string) {
   return toolLabels[tool] ?? tool;
+}
+
+function formatPercent(value: number, total: number) {
+  if (total <= 0) {
+    return "-";
+  }
+
+  return `${((value / total) * 100).toFixed(1)}%`;
 }
 
 function getIdleRankingStatusLabel(status: AdminIdleGameRankingEntry["moderation_status"]) {
@@ -118,26 +133,30 @@ function renderOcrRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
 }
 
 function renderBreakdownRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
+  const viewRows = stats?.tool_breakdown?.filter((item) => item.tool.startsWith("view_")) ?? [];
+  const totalViewEvents = viewRows.reduce((sum, item) => sum + item.event_count, 0);
+
   if (statsLoading) {
     return (
       <tr>
-        <td colSpan={4}>통계를 불러오는 중입니다.</td>
+        <td colSpan={5}>통계를 불러오는 중입니다.</td>
       </tr>
     );
   }
 
-  if (!stats?.tool_breakdown?.length) {
+  if (!viewRows.length) {
     return (
       <tr>
-        <td colSpan={4}>아직 표시할 사용 기록이 없습니다.</td>
+        <td colSpan={5}>아직 도구 화면 진입 기록이 없습니다.</td>
       </tr>
     );
   }
 
-  return stats.tool_breakdown.map((item: AdminToolBreakdown) => (
+  return viewRows.map((item: AdminToolBreakdown) => (
     <tr key={item.tool}>
       <td>{getToolLabel(item.tool)}</td>
       <td>{formatNumber(item.event_count)}</td>
+      <td>{formatPercent(item.event_count, totalViewEvents)}</td>
       <td>{formatNumber(item.unique_sessions)}</td>
       <td>{formatDateTime(item.last_seen_at)}</td>
     </tr>
@@ -368,7 +387,7 @@ export default function AdminView({
         </div>
       </div>
 
-      <section className="admin-panel admin-setting-panel">
+      <section className="admin-panel admin-setting-panel admin-home-setting-panel">
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Home</p>
@@ -403,7 +422,7 @@ export default function AdminView({
         {homeChangeStatus === "error" && homeChangeError && <p className="modal-error">{homeChangeError}</p>}
       </section>
 
-      <section className="admin-panel admin-setting-panel">
+      <section className="admin-panel admin-setting-panel admin-hidden-section">
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Idle Game</p>
@@ -436,7 +455,7 @@ export default function AdminView({
         {idleDevGameStatus === "error" && idleDevGameError && <p className="modal-error">{idleDevGameError}</p>}
       </section>
 
-      <section className="admin-panel admin-table-panel">
+      <section className="admin-panel admin-table-panel admin-hidden-section">
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Idle Ranking</p>
@@ -472,7 +491,7 @@ export default function AdminView({
         {idleGameRankingsError && <p className="modal-error">{idleGameRankingsError}</p>}
       </section>
 
-      <div className="admin-grid admin-metric-grid">
+      <div className="admin-grid admin-metric-grid admin-core-metrics">
         <section className="admin-panel">
           <h2>오늘 사용량</h2>
           <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.today_events)}</p>
@@ -524,7 +543,7 @@ export default function AdminView({
         </section>
       </div>
 
-      <section className="admin-panel admin-table-panel">
+      <section className="admin-panel admin-table-panel admin-ocr-panel">
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Image Scan Cost</p>
@@ -595,23 +614,24 @@ export default function AdminView({
         </div>
       </section>
 
-      <section className="admin-panel admin-table-panel">
+      <section className="admin-panel admin-table-panel admin-tool-ratio-panel">
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Usage</p>
-            <h2>오늘 기능별 사용량</h2>
+            <h2>오늘 도구별 화면 진입 비율</h2>
           </div>
-          <p>한국시간 오늘 이벤트 수와 고유 세션 기준으로 어떤 기능이 주로 쓰이는지 확인합니다.</p>
+          <p>한국시간 오늘 0시 이후 각 도구 화면에 들어간 횟수를 기준으로 비율을 계산합니다.</p>
         </div>
 
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>기능</th>
-                <th>이벤트</th>
+                <th>도구</th>
+                <th>진입</th>
+                <th>비율</th>
                 <th>세션</th>
-                <th>최근 사용</th>
+                <th>최근 진입</th>
               </tr>
             </thead>
             <tbody>{renderBreakdownRows(stats, statsLoading)}</tbody>
@@ -619,7 +639,7 @@ export default function AdminView({
         </div>
       </section>
 
-      <section className="admin-panel admin-table-panel">
+      <section className="admin-panel admin-table-panel admin-inquiry-panel">
         <div className="admin-section-head">
           <div>
             <p className="admin-eyebrow">Inbox</p>

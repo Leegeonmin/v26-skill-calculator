@@ -2755,6 +2755,30 @@ select {
   gap: 22px;
 }
 
+.admin-hidden-section {
+  display: none !important;
+}
+
+.admin-core-metrics {
+  order: 1;
+}
+
+.admin-tool-ratio-panel {
+  order: 2;
+}
+
+.admin-ocr-panel {
+  order: 3;
+}
+
+.admin-inquiry-panel {
+  order: 4;
+}
+
+.admin-home-setting-panel {
+  order: 5;
+}
+
 .admin-auth-card,
 .admin-panel {
   padding: 28px;
@@ -2810,6 +2834,14 @@ select {
 .admin-metric-grid .admin-panel {
   min-height: 178px;
   grid-template-rows: auto 1fr auto;
+}
+
+.admin-metric-grid .admin-panel:nth-child(n + 3) {
+  display: none;
+}
+
+.admin-ocr-panel .admin-grid-compact .admin-subpanel:nth-child(n + 3) {
+  display: none;
 }
 
 .admin-panel {

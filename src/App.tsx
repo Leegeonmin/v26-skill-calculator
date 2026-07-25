@@ -177,6 +177,16 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
   })
 );
 
+const TOOL_VIEW_USAGE_NAMES: Partial<Record<ToolView, string>> = {
+  calculator: "view_calculator",
+  simulator: "view_simulator",
+  impactChange: "view_impact_change",
+  ranking: "view_ranking",
+  skillCompareBeta: "view_skill_compare",
+  lineupSkillOcr: "view_lineup_skill_ocr",
+  trainingRedistribution: "view_training_redistribution",
+};
+
 function App() {
   const isAdminRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
@@ -796,6 +806,28 @@ function App() {
 
     window.history.pushState({}, "", url.toString());
   }, [infoPageKey, isAdminRoute, isOcrRoute, toolView]);
+
+  useEffect(() => {
+    if (isAdminRoute || isOcrRoute || infoPageKey) {
+      return;
+    }
+
+    const viewUsageTool = TOOL_VIEW_USAGE_NAMES[toolView];
+
+    if (!viewUsageTool) {
+      return;
+    }
+
+    void logToolUsageEvent({
+      tool: viewUsageTool,
+      mode: toolView,
+      rollCount: 1,
+      metadata: {
+        session_id: toolUsageSessionId,
+        view: toolView,
+      },
+    }).catch(() => {});
+  }, [infoPageKey, isAdminRoute, isOcrRoute, toolUsageSessionId, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();

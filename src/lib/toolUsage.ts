@@ -136,10 +136,6 @@ function withSampleMetadata(input: ToolUsageEventInput, sampleWeight: number) {
 }
 
 function getSampledToolUsageEvent(input: ToolUsageEventInput): ToolUsageEventInput | null {
-  if (input.tool === "tool_view") {
-    return null;
-  }
-
   if (input.tool !== "advanced_manual_roll") {
     return input;
   }
@@ -165,7 +161,9 @@ function getSampledToolUsageEvent(input: ToolUsageEventInput): ToolUsageEventInp
 }
 
 export async function logToolUsageEvent(input: ToolUsageEventInput): Promise<void> {
-  if (!TOOL_USAGE_LOGGING_ENABLED) {
+  const isToolViewEvent = input.tool.startsWith("view_");
+
+  if (!TOOL_USAGE_LOGGING_ENABLED && !isToolViewEvent) {
     return;
   }
 
