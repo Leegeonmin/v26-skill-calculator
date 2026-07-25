@@ -142,6 +142,9 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/terms": "terms",
   "/contact": "contact",
 };
+const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
+  "/training-redistribution": "trainingRedistribution",
+};
 const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
   "about",
   "skillScoreMethod",
@@ -201,7 +204,13 @@ function App() {
       return DEFAULT_VIEW;
     }
 
-    const requestedView = new URL(window.location.href).searchParams.get("view");
+    const url = new URL(window.location.href);
+    const pathView = TOOL_VIEW_PATHS[url.pathname.replace(/\/+$/, "") || "/"];
+    if (pathView) {
+      return pathView;
+    }
+
+    const requestedView = url.searchParams.get("view");
     const validViews: ToolView[] = [
       "home",
       "calculator",
@@ -762,7 +771,9 @@ function App() {
     }
 
     const handlePopState = () => {
-      const requestedView = new URL(window.location.href).searchParams.get("view");
+      const url = new URL(window.location.href);
+      const pathView = TOOL_VIEW_PATHS[url.pathname.replace(/\/+$/, "") || "/"];
+      const requestedView = url.searchParams.get("view");
       const validViews: ToolView[] = [
         "home",
         "calculator",
@@ -776,9 +787,10 @@ function App() {
       ];
       applyingPopStateRef.current = true;
       setToolView(
-        requestedView && validViews.includes(requestedView as ToolView)
+        pathView ??
+          (requestedView && validViews.includes(requestedView as ToolView)
           ? (requestedView as ToolView)
-          : DEFAULT_VIEW
+          : DEFAULT_VIEW)
       );
     };
 
@@ -792,6 +804,12 @@ function App() {
     }
 
     const url = new URL(window.location.href);
+    const pathView = TOOL_VIEW_PATHS[url.pathname.replace(/\/+$/, "") || "/"];
+    if (pathView === toolView) {
+      applyingPopStateRef.current = false;
+      return;
+    }
+
     if (url.searchParams.get("view") === toolView) {
       applyingPopStateRef.current = false;
       return;

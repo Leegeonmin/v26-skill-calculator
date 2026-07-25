@@ -66,6 +66,33 @@ const pages = [
     ],
   },
   {
+    path: "/training-redistribution",
+    title: "훈련 재분배 확률 계산기 | CPBV LAB",
+    description:
+      "카드 타입과 타자/투수 기준을 선택해 파정선 또는 변구 합계가 상위 몇 퍼센트인지와 기대 횟수를 계산합니다.",
+    heading: "훈련 재분배 확률 계산기",
+    intro:
+      "훈련 재분배 결과에서 원하는 핵심 능력치 합계가 얼마나 보기 어려운지 계산합니다.",
+    sections: [
+      {
+        title: "무엇을 계산하나요",
+        body: "타자는 파워, 정확, 선구 합계를 보고 투수는 변화, 구위 합계를 봅니다. 입력한 합계 이상이 나올 확률과 기대 횟수를 함께 확인합니다.",
+      },
+      {
+        title: "카드 타입별 훈련 횟수",
+        body: "임팩트, 국가대표, 시그니처, 골든글러브, 올스타/라이브는 가능한 훈련 횟수가 달라 같은 합계라도 확률이 달라집니다.",
+      },
+      {
+        title: "입력 흐름",
+        body: "카드 타입을 고르고 타자 또는 투수를 선택한 뒤 결과 능력치 값을 입력하면 상위 확률과 기대 횟수가 계산됩니다.",
+      },
+      {
+        title: "계산 기준",
+        body: "훈련 1회당 총 3포인트가 6개 능력치에 동일 확률로 분배된다고 보고, 낮게 가져갈 능력치는 목표 능력치가 아닌 쪽으로 선택한다고 가정합니다.",
+      },
+    ],
+  },
+  {
     path: "/skill-score-method",
     title: "V26 스킬 점수 계산 기준 | CPBV LAB",
     description:
@@ -329,6 +356,7 @@ function escapeHtml(value) {
 function renderPageContent(page) {
   const links = [
     ["/about", "소개"],
+    ["/training-redistribution", "훈재분 확률"],
     ["/skill-score-method", "스킬 점수 기준"],
     ["/simulator-guide", "시뮬레이터 안내"],
     ["/ocr-guide", "라인업 인식 안내"],
