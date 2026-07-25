@@ -9143,6 +9143,25 @@ input {
   color: var(--accent-contrast);
 }
 
+.app-bg[data-theme="dark"] .public-ocr-auth .primary-btn,
+.app-bg[data-theme="dark"] .public-ocr-auth .primary-btn span,
+.app-bg[data-theme="dark"] .public-ocr-auth .primary-btn .ui-icon {
+  color: #0f172a;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-auth .primary-btn {
+  background: #dbeafe;
+  border-color: #60a5fa;
+}
+
+.app-bg[data-theme="dark"] .calculator-page .toggle-btn.active,
+.app-bg[data-theme="dark"] .simulator-page .toggle-btn.active,
+.app-bg[data-theme="dark"] .impact-page .toggle-btn.active {
+  border-color: #60a5fa;
+  background: #dbeafe;
+  color: #0f172a;
+}
+
 .app-bg[data-theme="dark"] .page-toolbar h1,
 .app-bg[data-theme="dark"] .panel-head h2,
 .app-bg[data-theme="dark"] .admin-header h1,

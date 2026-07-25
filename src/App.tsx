@@ -1953,9 +1953,15 @@ function App() {
           </Suspense>
         </AppChrome>
 
-        {(activeService === "toolbox" || toolView === "skillCompareBeta") && (
+        {(activeService === "toolbox" ||
+          toolView === "skillCompareBeta" ||
+          toolView === "lineupSkillOcr") && (
           <ToolSeoPanel
-            toolView={toolView === "skillCompareBeta" ? "skillCompareBeta" : toolboxToolView}
+            toolView={
+              toolView === "skillCompareBeta" || toolView === "lineupSkillOcr"
+                ? toolView
+                : toolboxToolView
+            }
           />
         )}
 
