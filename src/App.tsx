@@ -1953,7 +1953,11 @@ function App() {
           </Suspense>
         </AppChrome>
 
-        {activeService === "toolbox" && <ToolSeoPanel toolView={toolboxToolView} />}
+        {(activeService === "toolbox" || toolView === "skillCompareBeta") && (
+          <ToolSeoPanel
+            toolView={toolView === "skillCompareBeta" ? "skillCompareBeta" : toolboxToolView}
+          />
+        )}
 
         {shouldShowAdFitBanner && <AdFitBanner slotKey={adFitSlotKey} />}
         {idleGamePromptModal}
