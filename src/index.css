@@ -8607,6 +8607,7 @@ input {
 .app-bg[data-theme="dark"] .ranking-card,
 .app-bg[data-theme="dark"] .ranking-season-card,
 .app-bg[data-theme="dark"] .ranking-entry-card,
+.app-bg[data-theme="dark"] .seo-section-item,
 .app-bg[data-theme="dark"] .seo-faq-item,
 .app-bg[data-theme="dark"] .mobile-live-summary,
 .app-bg[data-theme="dark"] .mobile-calc-builder,
@@ -9148,11 +9149,19 @@ input {
 .app-bg[data-theme="dark"] .admin-auth-card h1,
 .app-bg[data-theme="dark"] .admin-panel h2,
 .app-bg[data-theme="dark"] .seo-copy h2,
+.app-bg[data-theme="dark"] .seo-section-item h3,
 .app-bg[data-theme="dark"] .seo-faq h3,
 .app-bg[data-theme="dark"] .seo-faq-item h4,
 .app-bg[data-theme="dark"] .ranking-title,
 .app-bg[data-theme="dark"] .result-hero-score {
   color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .seo-copy p,
+.app-bg[data-theme="dark"] .seo-section-item p,
+.app-bg[data-theme="dark"] .seo-section-item li,
+.app-bg[data-theme="dark"] .seo-faq-item p {
+  color: #cbd5e1;
 }
 
 .app-bg[data-theme="dark"] .admin-auth-card,
@@ -9213,17 +9222,40 @@ input {
   gap: 12px;
 }
 
+.seo-section-list {
+  display: grid;
+  gap: 14px;
+}
+
+.seo-section-item {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid rgba(216, 224, 238, 0.92);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
 .seo-copy h2,
+.seo-section-item h3,
 .seo-faq h3,
 .seo-faq-item h4 {
   margin: 0;
 }
 
 .seo-copy p,
+.seo-section-item p,
+.seo-section-item li,
 .seo-faq-item p {
   margin: 0;
   color: #41506a;
   line-height: 1.7;
+}
+
+.seo-section-item ol,
+.seo-section-item ul {
+  margin: 0;
+  padding-left: 20px;
 }
 
 .seo-faq-list {
