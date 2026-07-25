@@ -8555,6 +8555,15 @@ input {
       rgba(251, 251, 248, 0.72);
     box-shadow: 0 12px 28px rgba(41, 48, 43, 0.05);
   }
+
+  .adfit-desktop-top-banner-tool {
+    width: min(100% - 32px, 980px);
+    margin: 18px auto 0;
+  }
+
+  .adfit-desktop-top-banner-tool + .app-body {
+    padding-top: 12px;
+  }
 }
 
 @media (max-width: 760px) {

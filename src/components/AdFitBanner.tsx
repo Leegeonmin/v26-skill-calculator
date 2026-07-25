@@ -22,9 +22,15 @@ export function AdFitMobileTopBanner({ slotKey }: { slotKey: string }) {
   );
 }
 
-export function AdFitHomeDesktopTopBanner({ slotKey }: { slotKey: string }) {
+export function AdFitHomeDesktopTopBanner({
+  slotKey,
+  variant = "home",
+}: {
+  slotKey: string;
+  variant?: "home" | "tool";
+}) {
   return (
-    <aside className="adfit-home-desktop-top-banner" aria-label="광고">
+    <aside className={`adfit-home-desktop-top-banner adfit-desktop-top-banner-${variant}`} aria-label="광고">
       <ins
         key={`${slotKey}-home-desktop-top`}
         className="kakao_ad_area"

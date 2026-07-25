@@ -50,7 +50,10 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
-import AdFitBanner, { AdFitMobileTopBanner } from "./components/AdFitBanner";
+import AdFitBanner, {
+  AdFitHomeDesktopTopBanner,
+  AdFitMobileTopBanner,
+} from "./components/AdFitBanner";
 import SiteHeader from "./components/SiteHeader";
 import ToolSeoPanel from "./components/ToolSeoPanel";
 import type {
@@ -441,6 +444,8 @@ function App() {
         toolView === "simulator" ||
         toolView === "impactChange" ||
         toolView === "ranking");
+  const shouldShowDesktopTopAdFitBanner =
+    shouldShowAdFitBanner && !infoPageKey && toolView !== "home";
   const adFitSlotKey = infoPageKey ? `info-${infoPageKey}` : `tool-${toolView}`;
   const authDisplayName = getDisplayNameFromSession(authSession);
   const publicOcrSession: SkillOcrSession | null = authSession
@@ -1829,6 +1834,9 @@ function App() {
           themeAction={themeToggle}
         />
         {shouldShowAdFitBanner && <AdFitMobileTopBanner slotKey={adFitSlotKey} />}
+        {shouldShowDesktopTopAdFitBanner && (
+          <AdFitHomeDesktopTopBanner slotKey={adFitSlotKey} variant="tool" />
+        )}
         <AppChrome>
           {authError && <p className="auth-error">{authError}</p>}
 
