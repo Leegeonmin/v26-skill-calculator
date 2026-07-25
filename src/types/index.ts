@@ -11,7 +11,8 @@ export type ToolView =
   | "ranking"
   | "notice"
   | "skillCompareBeta"
-  | "lineupSkillOcr";
+  | "lineupSkillOcr"
+  | "trainingRedistribution";
 export type HitterPositionGroup = "fielder" | "catcher";
 
 export type CardType = "impact" | "signature" | "goldenGlove" | "national";

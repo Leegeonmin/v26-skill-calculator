@@ -100,6 +100,7 @@ const RankingView = lazy(() => import("./views/RankingView"));
 const AdminView = lazy(() => import("./views/AdminView"));
 const SkillOcrView = lazy(() => import("./views/SkillOcrView"));
 const PublicSkillOcrView = lazy(() => import("./views/PublicSkillOcrView"));
+const TrainingRedistributionView = lazy(() => import("./views/TrainingRedistributionView"));
 const ToolboxStage = lazy(() => import("./views/ToolboxStage"));
 
 function ViewFallback() {
@@ -200,6 +201,7 @@ function App() {
       "notice",
       "skillCompareBeta",
       "lineupSkillOcr",
+      "trainingRedistribution",
     ];
 
     return requestedView && validViews.includes(requestedView as ToolView)
@@ -414,7 +416,8 @@ function App() {
     toolView === "home" ||
     toolView === "notice" ||
     toolView === "skillCompareBeta" ||
-    toolView === "lineupSkillOcr"
+    toolView === "lineupSkillOcr" ||
+    toolView === "trainingRedistribution"
       ? "home"
       : toolView === "ranking"
         ? "ranking"
@@ -424,7 +427,8 @@ function App() {
     toolView === "ranking" ||
     toolView === "notice" ||
     toolView === "skillCompareBeta" ||
-    toolView === "lineupSkillOcr"
+    toolView === "lineupSkillOcr" ||
+    toolView === "trainingRedistribution"
       ? "calculator"
       : toolView;
   const shouldLoadAdsense =
@@ -440,6 +444,7 @@ function App() {
       : toolView === "home" ||
         toolView === "skillCompareBeta" ||
         toolView === "lineupSkillOcr" ||
+        toolView === "trainingRedistribution" ||
         toolView === "calculator" ||
         toolView === "simulator" ||
         toolView === "impactChange" ||
@@ -757,6 +762,7 @@ function App() {
         "notice",
         "skillCompareBeta",
         "lineupSkillOcr",
+        "trainingRedistribution",
       ];
       applyingPopStateRef.current = true;
       setToolView(
@@ -1033,7 +1039,8 @@ function App() {
       nextToolView === "home" ||
       nextToolView === "ranking" ||
       nextToolView === "notice" ||
-      nextToolView === "skillCompareBeta"
+      nextToolView === "skillCompareBeta" ||
+      nextToolView === "trainingRedistribution"
     ) {
       setToolView(nextToolView);
       return;
@@ -1884,6 +1891,11 @@ function App() {
               onDeleteSnapshot={(uploadId) => void handleDeletePublicOcrSnapshot(uploadId)}
               onGoHome={() => setToolView("home")}
             />
+          ) : toolView === "trainingRedistribution" ? (
+            <TrainingRedistributionView
+              themeAction={themeToggle}
+              onGoHome={() => setToolView("home")}
+            />
           ) : toolView === "ranking" ? (
             <div className="main-stage tool-page ranking-page">
               <div className="page-toolbar tool-page-hero ranking-page-hero">
@@ -1963,10 +1975,13 @@ function App() {
 
         {(activeService === "toolbox" ||
           toolView === "skillCompareBeta" ||
-          toolView === "lineupSkillOcr") && (
+          toolView === "lineupSkillOcr" ||
+          toolView === "trainingRedistribution") && (
           <ToolSeoPanel
             toolView={
-              toolView === "skillCompareBeta" || toolView === "lineupSkillOcr"
+              toolView === "skillCompareBeta" ||
+              toolView === "lineupSkillOcr" ||
+              toolView === "trainingRedistribution"
                 ? toolView
                 : toolboxToolView
             }

@@ -185,10 +185,11 @@ export default function SiteHeader({
             <HeaderIcon name="ranking" />
             <span>랭킹</span>
           </button>
-          <a className="site-nav-link" href="/skill-score-method">
+          <button type="button" className="site-nav-link" onClick={() => onSelectView("trainingRedistribution")}>
             <HeaderIcon name="guide" />
-            <span>가이드</span>
-          </a>
+            <span>훈재분 확률</span>
+            <em className="site-nav-new-badge">NEW</em>
+          </button>
           {idleDevGameEnabled && (
             <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
               <HeaderIcon name="bat" />
@@ -274,7 +275,10 @@ export default function SiteHeader({
         <button type="button" className={currentView === "ranking" ? "is-active" : undefined} onClick={() => onSelectView("ranking")}>
           랭킹
         </button>
-        <a href="/skill-score-method">가이드</a>
+        <button type="button" className={currentView === "trainingRedistribution" ? "is-active" : undefined} onClick={() => onSelectView("trainingRedistribution")}>
+          훈재분 확률
+          <em className="site-mobile-nav-new">NEW</em>
+        </button>
       </nav>
     </header>
   );

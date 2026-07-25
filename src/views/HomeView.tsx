@@ -57,6 +57,13 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
         description: "Google 로그인 후 주 1회씩 타자/투수 라인업 스킬 점수를 인식합니다.",
         meta: "LINEUP SKILL",
       },
+      {
+        view: "trainingRedistribution",
+        icon: "sparkles",
+        title: "훈련 재분배 확률",
+        description: "파정선/변구 합계의 상위 확률과 기대 횟수를 계산합니다.",
+        meta: "TRAINING ODDS",
+      },
     ],
   },
   {
