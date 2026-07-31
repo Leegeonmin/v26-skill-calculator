@@ -136,12 +136,6 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/simulator-guide": "simulatorGuide",
   "/ocr-guide": "ocrGuide",
   "/beginner-guides": "beginnerGuides",
-  "/guides/skill-reroll-stop": "skillRerollStopGuide",
-  "/guides/hitter-skill-guide": "hitterSkillGuide",
-  "/guides/pitcher-skill-guide": "pitcherSkillGuide",
-  "/guides/impact-skill-guide": "impactSkillGuide",
-  "/guides/training-redistribution-guide": "trainingRedistributionGuide",
-  "/guides/lineup-ocr-checklist": "lineupOcrChecklist",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
@@ -155,12 +149,6 @@ const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
   "skillScoreMethod",
   "simulatorGuide",
   "ocrGuide",
-  "skillRerollStopGuide",
-  "hitterSkillGuide",
-  "pitcherSkillGuide",
-  "impactSkillGuide",
-  "trainingRedistributionGuide",
-  "lineupOcrChecklist",
   "faq",
 ]);
 type ServiceView = "home" | "toolbox" | "ranking";
@@ -1883,12 +1871,6 @@ function App() {
               <a href="/skill-score-method">스킬 점수 기준</a>
               <a href="/simulator-guide">시뮬레이터 안내</a>
               <a href="/ocr-guide">라인업 인식 안내</a>
-              <a href="/guides/skill-reroll-stop">고스변 목표</a>
-              <a href="/guides/hitter-skill-guide">타자 스킬</a>
-              <a href="/guides/pitcher-skill-guide">투수 스킬</a>
-              <a href="/guides/impact-skill-guide">임팩트 스킬</a>
-              <a href="/guides/training-redistribution-guide">훈재분 확률</a>
-              <a href="/guides/lineup-ocr-checklist">인식 체크리스트</a>
               <a href="/faq">FAQ</a>
               <a href="/privacy">개인정보처리방침</a>
               <a href="/terms">이용약관</a>

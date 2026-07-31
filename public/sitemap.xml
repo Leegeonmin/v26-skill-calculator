@@ -36,36 +36,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.cpbv-lab.com/guides/skill-reroll-stop</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.cpbv-lab.com/guides/hitter-skill-guide</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.cpbv-lab.com/guides/pitcher-skill-guide</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.cpbv-lab.com/guides/impact-skill-guide</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.cpbv-lab.com/guides/training-redistribution-guide</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.cpbv-lab.com/guides/lineup-ocr-checklist</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
     <loc>https://www.cpbv-lab.com/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
