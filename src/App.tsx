@@ -137,6 +137,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/ocr-guide": "ocrGuide",
   "/beginner-guides": "beginnerGuides",
   "/beginner-guides/skill-score-stop": "beginnerSkillScoreStop",
+  "/beginner-guides/skill-reroll-stop": "beginnerSkillRerollStop",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
@@ -151,6 +152,7 @@ const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
   "simulatorGuide",
   "ocrGuide",
   "beginnerSkillScoreStop",
+  "beginnerSkillRerollStop",
   "faq",
 ]);
 type ServiceView = "home" | "toolbox" | "ranking";
