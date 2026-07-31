@@ -829,6 +829,16 @@ function App() {
       return;
     }
 
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [infoPageKey, isAdminRoute, isOcrRoute, toolView]);
+
+  useEffect(() => {
+    if (isAdminRoute || isOcrRoute || infoPageKey) {
+      return;
+    }
+
     const viewUsageTool = TOOL_VIEW_USAGE_NAMES[toolView];
 
     if (!viewUsageTool) {
