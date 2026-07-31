@@ -1956,6 +1956,7 @@ function App() {
             <TrainingRedistributionView
               themeAction={themeToggle}
               onGoHome={() => setToolView("home")}
+              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "ranking" ? (
             <div className="main-stage tool-page ranking-page">
