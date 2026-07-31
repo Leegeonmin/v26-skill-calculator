@@ -1901,6 +1901,7 @@ function App() {
               onSelectView={handleToolViewChange}
               homeChangeMessage={homeChangeMessage}
               currentUserId={authSession?.user.id ?? null}
+              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "notice" ? (
             <NoticeView themeAction={themeToggle} onGoHome={() => setToolView("home")} />
