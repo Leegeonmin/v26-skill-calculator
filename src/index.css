@@ -8502,14 +8502,14 @@ input {
   min-height: 50px;
 }
 
-.adfit-mobile-top-banner {
+.adfit-mobile-inline-banner {
   display: none;
   opacity: 1;
   filter: none;
   backdrop-filter: none;
 }
 
-.adfit-mobile-top-banner .kakao_ad_area {
+.adfit-mobile-inline-banner .kakao_ad_area {
   width: 320px;
   max-width: 100%;
   min-height: 50px;
@@ -8607,21 +8607,14 @@ input {
 }
 
 @media (max-width: 760px) {
-  .adfit-mobile-top-banner {
+  .adfit-mobile-inline-banner {
     display: flex;
     justify-content: center;
     width: 100%;
     min-height: 50px;
-    margin: 14px auto 0;
+    margin: -2px auto 12px;
     position: relative;
     z-index: 10;
-  }
-}
-
-@media (max-width: 760px) {
-  .adfit-mobile-top-banner + .app-body {
-    margin-top: 0;
-    padding-top: 0;
   }
 }
 

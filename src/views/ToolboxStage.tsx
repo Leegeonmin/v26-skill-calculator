@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
 import ImpactSimulatorView from "./ImpactSimulatorView";
@@ -80,6 +81,7 @@ type ToolboxStageProps = {
   onAutoRoll: () => void;
   onImpactRoll: () => void;
   resetImpactChangeSession: () => void;
+  adFitSlotKey?: string;
 };
 
 function getModeLabel(mode: CalculatorMode): string {
@@ -147,6 +149,7 @@ export default function ToolboxStage({
   onAutoRoll,
   onImpactRoll,
   resetImpactChangeSession,
+  adFitSlotKey,
 }: ToolboxStageProps) {
   const [simulatorSetupState, setSimulatorSetupState] = useState({
     toolView,
@@ -494,6 +497,7 @@ export default function ToolboxStage({
                   setLevel2={setLevel2}
                   setLevel3={setLevel3}
                   getSkillScoreLabel={getSkillScoreLabel}
+                  adSlotKey={adFitSlotKey}
                 />
               )}
             </>
@@ -501,7 +505,12 @@ export default function ToolboxStage({
             <>
               {toolView === "simulator" ? (
                 <div className="simulator-content-shell">
-                  {!simulatorSetupComplete ? simulatorSetupCard : null}
+                  {!simulatorSetupComplete ? (
+                    <>
+                      {simulatorSetupCard}
+                      {adFitSlotKey && <AdFitMobileInlineBanner slotKey={adFitSlotKey} />}
+                    </>
+                  ) : null}
                 </div>
               ) : toolView === "impactChange" ? (
                 <div className="simulator-content-shell">{impactControlCard}</div>
@@ -546,6 +555,7 @@ export default function ToolboxStage({
                       onRollOnce={onRollOnce}
                       onAutoRoll={onAutoRoll}
                       getSkillScoreLabel={getSkillScoreLabel}
+                      adSlotKey={adFitSlotKey}
                     />
                   </div>
                 ) : null
@@ -571,6 +581,7 @@ export default function ToolboxStage({
                   resetImpactChangeSession={resetImpactChangeSession}
                   onImpactRoll={onImpactRoll}
                   getSkillScoreLabel={getSkillScoreLabel}
+                  adSlotKey={adFitSlotKey}
                 />
               )}
             </>

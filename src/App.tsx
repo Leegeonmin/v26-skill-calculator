@@ -52,7 +52,6 @@ import {
 import AppChrome from "./components/AppChrome";
 import AdFitBanner, {
   AdFitHomeDesktopTopBanner,
-  AdFitMobileTopBanner,
 } from "./components/AdFitBanner";
 import SiteHeader from "./components/SiteHeader";
 import ToolSeoPanel from "./components/ToolSeoPanel";
@@ -1890,7 +1889,6 @@ function App() {
           idleDevGameEnabled={idleDevGameEnabled}
           themeAction={themeToggle}
         />
-        {shouldShowAdFitBanner && <AdFitMobileTopBanner slotKey={adFitSlotKey} />}
         {shouldShowDesktopTopAdFitBanner && (
           <AdFitHomeDesktopTopBanner slotKey={adFitSlotKey} variant="tool" />
         )}
@@ -1911,6 +1909,7 @@ function App() {
               themeAction={themeToggle}
               toolUsageSessionId={toolUsageSessionId}
               onGoHome={() => setToolView("home")}
+              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "lineupSkillOcr" ? (
             <PublicSkillOcrView
@@ -1940,6 +1939,7 @@ function App() {
               onSelectSnapshot={handleOpenPublicOcrSnapshot}
               onDeleteSnapshot={(uploadId) => void handleDeletePublicOcrSnapshot(uploadId)}
               onGoHome={() => setToolView("home")}
+              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "trainingRedistribution" ? (
             <TrainingRedistributionView
@@ -2018,6 +2018,7 @@ function App() {
               onAutoRoll={handleAutoRollToTarget}
               onImpactRoll={handleImpactChangeRoll}
               resetImpactChangeSession={resetImpactChangeSession}
+              adFitSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           )}
           </Suspense>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import SkillSelect from "../components/SkillSelect";
 import SimulatorSkillCard from "../components/SimulatorSkillCard";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
@@ -52,6 +53,7 @@ interface AdvancedSimulatorViewProps {
   onRollOnce: () => void;
   onAutoRoll: () => void;
   getSkillScoreLabel: (score: number | undefined) => string;
+  adSlotKey?: string;
 }
 
 export default function AdvancedSimulatorView({
@@ -84,6 +86,7 @@ export default function AdvancedSimulatorView({
   onRollOnce,
   onAutoRoll,
   getSkillScoreLabel,
+  adSlotKey,
 }: AdvancedSimulatorViewProps) {
   const [isRolling, setIsRolling] = useState(false);
   const [rollingPreview, setRollingPreview] = useState<RollingPreviewCard[]>([]);
@@ -263,6 +266,8 @@ export default function AdvancedSimulatorView({
           </div>
         </div>
       </div>
+
+      {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
 
       <div className="simulation-current-score-card">
         <div className="simulation-current-score-main">

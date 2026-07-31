@@ -7,11 +7,11 @@ type AdFitBannerProps = {
   showSide?: boolean;
 };
 
-export function AdFitMobileTopBanner({ slotKey }: { slotKey: string }) {
+export function AdFitMobileInlineBanner({ slotKey }: { slotKey: string }) {
   return (
-    <aside className="adfit-mobile-top-banner" aria-label="광고">
+    <aside className="adfit-mobile-inline-banner" aria-label="광고">
       <ins
-        key={`${slotKey}-mobile-top`}
+        key={`${slotKey}-mobile-inline`}
         className="kakao_ad_area"
         style={{ display: "none" }}
         data-ad-unit="DAN-mzOAh4ii66DEoLwq"

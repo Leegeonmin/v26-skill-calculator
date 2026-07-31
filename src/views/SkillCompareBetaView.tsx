@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import { recognizeSkillChangeImage } from "../lib/skillOcr";
@@ -21,6 +22,7 @@ type SkillCompareBetaViewProps = {
   onGoHome: () => void;
   themeAction?: React.ReactNode;
   toolUsageSessionId: string | null;
+  adSlotKey?: string;
 };
 
 type ComparedSkill = SkillChangeSkill & {
@@ -269,6 +271,7 @@ export default function SkillCompareBetaView({
   onGoHome,
   themeAction,
   toolUsageSessionId,
+  adSlotKey,
 }: SkillCompareBetaViewProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -495,6 +498,8 @@ export default function SkillCompareBetaView({
           수동 입력
         </button>
       </section>
+
+      {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
 
       {compareInputMode === "auto" ? (
       <section className="skill-compare-upload-panel">
