@@ -139,6 +139,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/beginner-guides/skill-score-stop": "beginnerSkillScoreStop",
   "/beginner-guides/skill-reroll-stop": "beginnerSkillRerollStop",
   "/beginner-guides/hitter-skill-guide": "beginnerHitterSkillGuide",
+  "/beginner-guides/pitcher-skill-guide": "beginnerPitcherSkillGuide",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
@@ -155,6 +156,7 @@ const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
   "beginnerSkillScoreStop",
   "beginnerSkillRerollStop",
   "beginnerHitterSkillGuide",
+  "beginnerPitcherSkillGuide",
   "faq",
 ]);
 type ServiceView = "home" | "toolbox" | "ranking";

@@ -51,6 +51,11 @@
     <priority>0.75</priority>
   </url>
   <url>
+    <loc>https://www.cpbv-lab.com/beginner-guides/pitcher-skill-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
     <loc>https://www.cpbv-lab.com/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
