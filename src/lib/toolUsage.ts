@@ -161,9 +161,7 @@ function getSampledToolUsageEvent(input: ToolUsageEventInput): ToolUsageEventInp
 }
 
 export async function logToolUsageEvent(input: ToolUsageEventInput): Promise<void> {
-  const isToolViewEvent = input.tool.startsWith("view_");
-
-  if (!TOOL_USAGE_LOGGING_ENABLED && !isToolViewEvent) {
+  if (!TOOL_USAGE_LOGGING_ENABLED) {
     return;
   }
 
