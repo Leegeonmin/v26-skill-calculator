@@ -6,14 +6,27 @@ const appPath = "src/App.tsx";
 const prerenderPath = "scripts/prerender-public-pages.mjs";
 const sitemapPath = "public/sitemap.xml";
 const dryRun = process.argv.includes("--dry-run");
+const ignoreSchedule = process.argv.includes("--ignore-schedule");
 
 const queue = JSON.parse(fs.readFileSync(queuePath, "utf8"));
 let info = fs.readFileSync(infoPath, "utf8");
 
-const next = queue.find((article) => !info.includes(`path: "${article.path}"`));
+const unpublished = queue.filter((article) => !info.includes(`path: "${article.path}"`));
+const now = new Date();
+const next = unpublished.find(
+  (article) => ignoreSchedule || !article.publishAfter || new Date(article.publishAfter) <= now
+);
 
 if (!next) {
-  console.log("No unpublished beginner guide found.");
+  const upcoming = unpublished
+    .filter((article) => article.publishAfter)
+    .sort((a, b) => new Date(a.publishAfter) - new Date(b.publishAfter))[0];
+
+  if (upcoming) {
+    console.log(`No beginner guide is ready yet. Next: ${upcoming.path} at ${upcoming.publishAfter}`);
+  } else {
+    console.log("No unpublished beginner guide found.");
+  }
   process.exit(0);
 }
 
@@ -30,6 +43,30 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function formatBoardDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(date)
+    .reduce((acc, part) => {
+      acc[part.type] = part.value;
+      return acc;
+    }, {});
+
+  return `${parts.year}.${parts.month}.${parts.day} ${parts.hour}:${parts.minute}`;
 }
 
 function buildInfoPageEntry(article) {
@@ -98,9 +135,20 @@ const linkedListItem = `            <li>
 
 if (info.includes(plainListItem)) {
   info = info.replace(plainListItem, linkedListItem);
-} else if (!info.includes(`href="${next.path}"`)) {
+} else if (info.includes("<ul>") && !info.includes(`href="${next.path}"`)) {
   info = info.replace("          </ul>", `${linkedListItem}\n          </ul>`);
 }
+
+const boardNeedle = `    status: "예정",
+    publishedAt: "${formatBoardDate(next.publishAfter)}",
+    title: "${next.title}",
+    summary:`;
+const boardReplacement = `    status: "공개",
+    publishedAt: "${formatBoardDate(next.publishAfter)}",
+    title: "${next.title}",
+    href: "${next.path}",
+    summary:`;
+info = info.replace(boardNeedle, boardReplacement);
 
 info = ensureIncludes(info, `  ${next.key}: {`, (source) =>
   source.replace("  faq: {", `${buildInfoPageEntry(next)}  faq: {`)
@@ -124,7 +172,7 @@ if (!dryRun) {
 let prerender = fs.readFileSync(prerenderPath, "utf8");
 const prerenderLink = `["${next.path}", "${next.title}"]`;
 
-if (!prerender.includes(prerenderLink)) {
+if (!prerender.includes(prerenderLink) && prerender.includes("links: [")) {
   const linksMatch = prerender.match(/links: \[([\s\S]*?)\],\n      \},/);
   if (!linksMatch) {
     throw new Error("Could not find beginner guide links in prerender script");
@@ -136,6 +184,8 @@ if (!prerender.includes(prerenderLink)) {
     : `links: [${prerenderLink}],\n      },`;
   prerender = prerender.replace(linksMatch[0], nextLinks);
 }
+
+prerender = prerender.replace(boardNeedle, boardReplacement);
 
 prerender = ensureIncludes(prerender, `    path: "${next.path}",`, (source) =>
   source.replace('  {\n    path: "/faq",', `${buildPrerenderEntry(next)}  {\n    path: "/faq",`)

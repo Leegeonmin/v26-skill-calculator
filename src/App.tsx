@@ -126,6 +126,7 @@ const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
 const IDLE_DEV_GAME_URL = "/idle-dev-game/index.html";
 const IDLE_DEV_GAME_PROMPT_KEY = "v26-idle-dev-game-prompt-dismissed";
+const AD_REVIEW_MODE = true;
 const ADSENSE_CLIENT = "ca-pub-6461439689226359";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
@@ -459,12 +460,9 @@ function App() {
     toolView === "trainingRedistribution"
       ? "calculator"
       : toolView;
-  const shouldLoadAdsense =
-    !isAdminRoute &&
-    !isOcrRoute &&
-    typeof window !== "undefined" &&
-    window.location.pathname.replace(/\/+$/, "") === "/skill-score-method";
+  const shouldLoadAdsense = false;
   const shouldShowAdFitBanner =
+    !AD_REVIEW_MODE &&
     !isAdminRoute &&
     !isOcrRoute &&
     (infoPageKey

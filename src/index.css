@@ -10153,6 +10153,83 @@ input {
   text-decoration: underline;
 }
 
+@media (max-width: 640px) {
+  .beginner-board-row {
+    grid-template-columns: 54px 1fr;
+  }
+
+  .beginner-board-row time {
+    justify-self: end;
+  }
+
+  .beginner-board-row > a,
+  .beginner-board-row > strong,
+  .beginner-board-row p {
+    grid-column: 1 / -1;
+  }
+}
+
+.beginner-board {
+  display: grid;
+  gap: 10px;
+}
+
+.beginner-board-row {
+  display: grid;
+  grid-template-columns: 58px 128px minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid rgba(216, 224, 238, 0.82);
+}
+
+.beginner-board-row:first-child {
+  border-top: 0;
+}
+
+.beginner-board-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  border-radius: 999px;
+  background: rgba(13, 171, 153, 0.12);
+  color: #087f73;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.beginner-board-row time {
+  color: #66758f;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.beginner-board-row > a,
+.beginner-board-row > strong {
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 950;
+  line-height: 1.55;
+}
+
+.beginner-board-row p {
+  grid-column: 3;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.beginner-board-row-scheduled .beginner-board-status {
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+.beginner-board-row-scheduled > strong {
+  color: #64748b;
+}
+
 .info-guide-figure {
   width: min(100%, 520px);
   margin: 4px 0 0;
@@ -10187,6 +10264,21 @@ input {
 .app-bg[data-theme="dark"] .info-page-section p,
 .app-bg[data-theme="dark"] .info-page-section li {
   color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .beginner-board-row {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.app-bg[data-theme="dark"] .beginner-board-row time,
+.app-bg[data-theme="dark"] .beginner-board-row p,
+.app-bg[data-theme="dark"] .beginner-board-row-scheduled > strong {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .beginner-board-row > a,
+.app-bg[data-theme="dark"] .beginner-board-row > strong {
+  color: #eef2ff;
 }
 
 .app-bg[data-theme="dark"] .info-guide-image {
