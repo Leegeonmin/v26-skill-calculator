@@ -1,5 +1,4 @@
 import { IconGlyph } from "../components/AppChrome";
-import { AdFitHomeDesktopTopBanner, AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import { useEffect, useState, type CSSProperties } from "react";
 import { getGameDataSet } from "../data/gameData";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
@@ -11,7 +10,6 @@ type HomeViewProps = {
   onSelectView: (view: Exclude<ToolView, "home">) => void;
   homeChangeMessage: string;
   currentUserId?: string | null;
-  adSlotKey?: string;
 };
 
 type HomeWidget = {
@@ -247,7 +245,6 @@ export default function HomeView({
   onSelectView,
   homeChangeMessage,
   currentUserId,
-  adSlotKey,
 }: HomeViewProps) {
   void homeChangeMessage;
   const [mobileRankingState, setMobileRankingState] = useState<{
@@ -316,7 +313,6 @@ export default function HomeView({
       </div>
       <section className="home-dashboard" aria-label="주요 도구">
         <div className="home-primary-panel">
-          <AdFitHomeDesktopTopBanner slotKey="home" />
           <div className="home-primary-grid">
             {primaryWidgets.map((widget) => (
               <button
@@ -474,8 +470,6 @@ export default function HomeView({
           </button>
           </div>
       </section>
-
-      {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
 
       <section className="home-beginner-entry" aria-labelledby="home-beginner-entry-title">
         <div className="home-beginner-entry-copy">

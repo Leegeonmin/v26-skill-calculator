@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import SkillSelect from "../components/SkillSelect";
 import SimulatorSkillCard from "../components/SimulatorSkillCard";
 import type { SkillLevel, SkillMeta } from "../types";
@@ -43,7 +42,6 @@ interface ImpactSimulatorViewProps {
   resetImpactChangeSession: () => void;
   onImpactRoll: () => void;
   getSkillScoreLabel: (score: number | undefined) => string;
-  adSlotKey?: string;
 }
 
 export default function ImpactSimulatorView({
@@ -66,7 +64,6 @@ export default function ImpactSimulatorView({
   resetImpactChangeSession,
   onImpactRoll,
   getSkillScoreLabel,
-  adSlotKey,
 }: ImpactSimulatorViewProps) {
   const [isRolling, setIsRolling] = useState(false);
   const [rollingPreview, setRollingPreview] = useState<RollingPreviewCard[]>([]);
@@ -195,7 +192,6 @@ export default function ImpactSimulatorView({
           </div>
         </div>
 
-        {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
 
         <div className="simulation-current-score-card">
           <div className="simulation-current-score-main">

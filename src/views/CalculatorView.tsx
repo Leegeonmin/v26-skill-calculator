@@ -1,5 +1,4 @@
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import SkillSelect from "../components/SkillSelect";
 import type { GameDataSet } from "../data/gameData";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
@@ -49,7 +48,6 @@ interface CalculatorViewProps {
   setLevel2: (level: SkillLevel) => void;
   setLevel3: (level: SkillLevel) => void;
   getSkillScoreLabel: (score: number | undefined) => string;
-  adSlotKey?: string;
 }
 
 function getMobileDefaultLevel(cardType: CardType, selectedCount: number): SkillLevel {
@@ -84,7 +82,6 @@ export default function CalculatorView({
   setLevel2,
   setLevel3,
   getSkillScoreLabel,
-  adSlotKey,
 }: CalculatorViewProps) {
   const currentSkills = useMemo(
     () =>
@@ -243,8 +240,6 @@ export default function CalculatorView({
 
   return (
     <>
-      {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
-
       <div className="mobile-live-summary">
         <div className="mobile-live-summary-head">
           <strong>현재 결과</strong>

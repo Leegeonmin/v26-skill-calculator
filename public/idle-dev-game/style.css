@@ -160,54 +160,6 @@ body {
   padding: 16px;
 }
 
-.adfit-banner {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  min-height: 50px;
-  margin: 4px 0 0;
-}
-
-.adfit-banner .kakao_ad_area,
-.adfit-mobile-top-banner .kakao_ad_area {
-  width: 320px;
-  max-width: 100%;
-  min-height: 50px;
-}
-
-.adfit-mobile-top-banner {
-  display: none;
-}
-
-.adfit-side-rail {
-  display: none;
-}
-
-.adfit-side-rail .kakao_ad_area {
-  width: 160px;
-  min-height: 600px;
-}
-
-@media (min-width: 1560px) {
-  .adfit-side-rail {
-    position: fixed;
-    top: 86px;
-    z-index: 12;
-    display: block;
-    width: 160px;
-    min-height: 600px;
-    pointer-events: auto;
-  }
-
-  .adfit-side-rail-left {
-    left: max(22px, calc((100vw - 1200px) / 2 - 268px));
-  }
-
-  .adfit-side-rail-right {
-    right: max(22px, calc((100vw - 1200px) / 2 - 268px));
-  }
-}
-
 /* 1. 헤더 영역 */
 .main-header {
   display: flex;
@@ -389,14 +341,6 @@ body {
   body {
     align-items: stretch;
     padding: 12px;
-  }
-
-  .adfit-mobile-top-banner {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    min-height: 50px;
-    margin: 0 auto 12px;
   }
 
   #app-container {

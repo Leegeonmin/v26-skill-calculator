@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import { getSkillOcrPlayerOdds } from "../lib/skillOcrOdds";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
 import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
@@ -43,7 +42,6 @@ type PublicSkillOcrViewProps = {
   onSelectSnapshot: (upload: SkillOcrSavedUpload) => void;
   onDeleteSnapshot: (uploadId: string) => void;
   onGoHome: () => void;
-  adSlotKey?: string;
 };
 
 const CARD_TYPE_OPTIONS: Array<{ value: CardType; label: string }> = [
@@ -225,7 +223,6 @@ export default function PublicSkillOcrView({
   onSelectSnapshot,
   onDeleteSnapshot,
   onGoHome,
-  adSlotKey,
 }: PublicSkillOcrViewProps) {
   const pitcherInputRef = useRef<HTMLInputElement | null>(null);
   const hitterInputRef = useRef<HTMLInputElement | null>(null);
@@ -252,7 +249,6 @@ export default function PublicSkillOcrView({
             </button>
           </div>
         </section>
-        {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
       </main>
     );
   }
@@ -366,8 +362,6 @@ export default function PublicSkillOcrView({
           <em>{pitcherQuota?.used ? "이번 주 사용 완료" : "1회 가능"}</em>
         </span>
       </section>
-
-      {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
 
       {uploadsLoading && <p className="skill-compare-status">사용 기록을 불러오는 중입니다.</p>}
       {uploadsError && <p className="modal-error">{uploadsError}</p>}

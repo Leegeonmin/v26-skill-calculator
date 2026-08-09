@@ -50,9 +50,6 @@ import {
   pickValidSkill,
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
-import AdFitBanner, {
-  AdFitHomeDesktopTopBanner,
-} from "./components/AdFitBanner";
 import SiteHeader from "./components/SiteHeader";
 import ToolSeoPanel from "./components/ToolSeoPanel";
 import type {
@@ -126,8 +123,6 @@ const OCR_SESSION_KEY = "v26-skill-ocr-session";
 const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
 const IDLE_DEV_GAME_URL = "/idle-dev-game/index.html";
 const IDLE_DEV_GAME_PROMPT_KEY = "v26-idle-dev-game-prompt-dismissed";
-const AD_REVIEW_MODE = true;
-const ADSENSE_CLIENT = "ca-pub-6461439689226359";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "skillScoreMethod",
@@ -153,21 +148,6 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
 const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
   "/training-redistribution": "trainingRedistribution",
 };
-const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
-  "about",
-  "skillScoreMethod",
-  "simulatorGuide",
-  "ocrGuide",
-  "beginnerSkillScoreStop",
-  "beginnerSkillRerollStop",
-  "beginnerHitterSkillGuide",
-  "beginnerPitcherSkillGuide",
-  "beginnerImpactSkillGuide",
-  "beginnerTwoSkillKeep",
-  "beginnerGoldenGloveTarget",
-  "beginnerLineupWeakPoint",
-  "faq",
-]);
 type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
 
@@ -466,24 +446,6 @@ function App() {
     toolView === "trainingRedistribution"
       ? "calculator"
       : toolView;
-  const shouldLoadAdsense = false;
-  const shouldShowAdFitBanner =
-    !AD_REVIEW_MODE &&
-    !isAdminRoute &&
-    !isOcrRoute &&
-    (infoPageKey
-      ? ADFIT_INFO_PAGE_KEYS.has(infoPageKey)
-      : toolView === "home" ||
-        toolView === "skillCompareBeta" ||
-        toolView === "lineupSkillOcr" ||
-        toolView === "trainingRedistribution" ||
-        toolView === "calculator" ||
-        toolView === "simulator" ||
-        toolView === "impactChange" ||
-        toolView === "ranking");
-  const shouldShowDesktopTopAdFitBanner =
-    shouldShowAdFitBanner && !infoPageKey && toolView !== "home";
-  const adFitSlotKey = infoPageKey ? `info-${infoPageKey}` : `tool-${toolView}`;
   const authDisplayName = getDisplayNameFromSession(authSession);
   const publicOcrSession: SkillOcrSession | null = authSession
     ? {
@@ -545,30 +507,6 @@ function App() {
       }
     })();
   }, [supabaseReady]);
-
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const existingScript = document.querySelector<HTMLScriptElement>("script[data-v26-adsense]");
-
-    if (!shouldLoadAdsense) {
-      existingScript?.remove();
-      return;
-    }
-
-    if (existingScript) {
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.crossOrigin = "anonymous";
-    script.dataset.v26Adsense = "true";
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
-    document.head.appendChild(script);
-  }, [shouldLoadAdsense]);
 
   useEffect(() => {
     if (!isAdminRoute) {
@@ -1878,7 +1816,6 @@ function App() {
           <AppChrome>
             <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
           </AppChrome>
-          {shouldShowAdFitBanner && <AdFitBanner slotKey={adFitSlotKey} />}
           <footer className="app-footer">
             <nav className="footer-links" aria-label="사이트 정보">
               <a href="/about">소개</a>
@@ -1913,9 +1850,6 @@ function App() {
           idleDevGameEnabled={idleDevGameEnabled}
           themeAction={themeToggle}
         />
-        {shouldShowDesktopTopAdFitBanner && (
-          <AdFitHomeDesktopTopBanner slotKey={adFitSlotKey} variant="tool" />
-        )}
         <AppChrome>
           {authError && <p className="auth-error">{authError}</p>}
 
@@ -1925,7 +1859,6 @@ function App() {
               onSelectView={handleToolViewChange}
               homeChangeMessage={homeChangeMessage}
               currentUserId={authSession?.user.id ?? null}
-              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "notice" ? (
             <NoticeView themeAction={themeToggle} onGoHome={() => setToolView("home")} />
@@ -1934,7 +1867,6 @@ function App() {
               themeAction={themeToggle}
               toolUsageSessionId={toolUsageSessionId}
               onGoHome={() => setToolView("home")}
-              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "lineupSkillOcr" ? (
             <PublicSkillOcrView
@@ -1964,13 +1896,11 @@ function App() {
               onSelectSnapshot={handleOpenPublicOcrSnapshot}
               onDeleteSnapshot={(uploadId) => void handleDeletePublicOcrSnapshot(uploadId)}
               onGoHome={() => setToolView("home")}
-              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "trainingRedistribution" ? (
             <TrainingRedistributionView
               themeAction={themeToggle}
               onGoHome={() => setToolView("home")}
-              adSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           ) : toolView === "ranking" ? (
             <div className="main-stage tool-page ranking-page">
@@ -2044,7 +1974,6 @@ function App() {
               onAutoRoll={handleAutoRollToTarget}
               onImpactRoll={handleImpactChangeRoll}
               resetImpactChangeSession={resetImpactChangeSession}
-              adFitSlotKey={shouldShowAdFitBanner ? adFitSlotKey : undefined}
             />
           )}
           </Suspense>
@@ -2065,7 +1994,6 @@ function App() {
           />
         )}
 
-        {shouldShowAdFitBanner && <AdFitBanner slotKey={adFitSlotKey} />}
         {idleGamePromptModal}
         <Analytics />
       </div>

@@ -1,5 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { AdFitMobileInlineBanner } from "../components/AdFitBanner";
 import {
   calculateTrainingRedistributionOdds,
   TRAINING_CARD_RULES,
@@ -11,7 +10,6 @@ import {
 type TrainingRedistributionViewProps = {
   themeAction: ReactNode;
   onGoHome: () => void;
-  adSlotKey?: string;
 };
 
 const CARD_TYPE_OPTIONS: TrainingCardType[] = [
@@ -78,7 +76,6 @@ function normalizeScoreValue(value: string) {
 export default function TrainingRedistributionView({
   themeAction,
   onGoHome,
-  adSlotKey,
 }: TrainingRedistributionViewProps) {
   const [cardType, setCardType] = useState<TrainingCardType>("signature");
   const [playerType, setPlayerType] = useState<TrainingPlayerType>("hitter");
@@ -284,7 +281,6 @@ export default function TrainingRedistributionView({
           </section>
         </div>
 
-        {adSlotKey && <AdFitMobileInlineBanner slotKey={adSlotKey} />}
 
         <aside className="training-result-panel">
           <div className="training-result-card">
