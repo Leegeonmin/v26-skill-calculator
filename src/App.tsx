@@ -143,6 +143,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/beginner-guides/pitcher-skill-guide": "beginnerPitcherSkillGuide",
   "/beginner-guides/impact-skill-guide": "beginnerImpactSkillGuide",
   "/beginner-guides/two-skill-keep": "beginnerTwoSkillKeep",
+  "/beginner-guides/golden-glove-target": "beginnerGoldenGloveTarget",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
@@ -162,6 +163,7 @@ const ADFIT_INFO_PAGE_KEYS = new Set<InfoPageKey>([
   "beginnerPitcherSkillGuide",
   "beginnerImpactSkillGuide",
   "beginnerTwoSkillKeep",
+  "beginnerGoldenGloveTarget",
   "faq",
 ]);
 type ServiceView = "home" | "toolbox" | "ranking";
