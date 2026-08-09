@@ -140,6 +140,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/beginner-guides/two-skill-keep": "beginnerTwoSkillKeep",
   "/beginner-guides/golden-glove-target": "beginnerGoldenGloveTarget",
   "/beginner-guides/lineup-weak-point": "beginnerLineupWeakPoint",
+  "/beginner-guides/conditional-skills": "beginnerConditionalSkills",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
