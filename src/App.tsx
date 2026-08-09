@@ -141,6 +141,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/beginner-guides/golden-glove-target": "beginnerGoldenGloveTarget",
   "/beginner-guides/lineup-weak-point": "beginnerLineupWeakPoint",
   "/beginner-guides/conditional-skills": "beginnerConditionalSkills",
+  "/beginner-guides/before-reroll-checklist": "beginnerBeforeRerollChecklist",
   "/faq": "faq",
   "/privacy": "privacy",
   "/terms": "terms",
