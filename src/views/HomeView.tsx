@@ -444,7 +444,7 @@ export default function HomeView({
 
       <section className="home-usage-flow" aria-labelledby="home-usage-flow-title">
         <div className="home-section-title-row">
-          <h2 id="home-usage-flow-title">오늘 많이 쓰는 흐름</h2>
+          <h2 id="home-usage-flow-title">사용 순위 TOP</h2>
         </div>
         <div className="home-usage-flow-list">
           {HOME_USAGE_STEPS.map((step, index) => (
