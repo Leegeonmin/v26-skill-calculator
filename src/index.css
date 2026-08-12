@@ -7793,20 +7793,6 @@ input {
   line-height: 1.55;
 }
 
-.result-ad-candidate {
-  display: grid;
-  place-items: center;
-  min-height: 56px;
-  padding: 10px;
-  border: 1px dashed rgba(238, 116, 34, 0.82);
-  border-radius: 16px;
-  background: rgba(255, 247, 237, 0.74);
-  color: #c45a12;
-  font-size: 0.84rem;
-  font-weight: 900;
-  text-align: center;
-}
-
 .result-action-list {
   display: grid;
   gap: 8px;
@@ -8778,12 +8764,6 @@ input {
   border-color: rgba(148, 163, 184, 0.18);
 }
 
-.app-bg[data-theme="dark"] .calculator-page .result-ad-candidate {
-  background: rgba(154, 75, 18, 0.14);
-  border-color: rgba(251, 146, 60, 0.54);
-  color: #fdba74;
-}
-
 .app-bg[data-theme="dark"] .calculator-page .result-related-tools span {
   background: rgba(96, 165, 250, 0.12);
   border-color: rgba(96, 165, 250, 0.22);
@@ -8793,12 +8773,6 @@ input {
 .app-bg[data-theme="dark"] .home-usage-flow-card {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(148, 163, 184, 0.22);
-}
-
-.app-bg[data-theme="dark"] .home-ad-candidate {
-  background: rgba(154, 75, 18, 0.14);
-  border-color: rgba(251, 146, 60, 0.54);
-  color: #fdba74;
 }
 
 .app-bg[data-theme="dark"] .calculator-page .result-hero-card {
@@ -12798,22 +12772,6 @@ input {
   background: rgba(47, 128, 237, 0.14);
 }
 
-.home-ad-candidate {
-  display: grid;
-  place-items: center;
-  width: min(1120px, 100%);
-  min-height: 64px;
-  margin: 4px auto 0;
-  padding: 12px;
-  border: 1px dashed rgba(238, 116, 34, 0.82);
-  border-radius: 18px;
-  background: rgba(255, 247, 237, 0.72);
-  color: #c45a12;
-  font-size: 0.9rem;
-  font-weight: 950;
-  text-align: center;
-}
-
 .home-mobile-rank-dashboard {
   display: grid;
   gap: 12px;
@@ -13309,13 +13267,6 @@ input {
   .home-usage-flow-card button {
     min-height: 32px;
     font-size: 0.78rem;
-  }
-
-  .home-ad-candidate {
-    min-height: 54px;
-    margin-top: 12px;
-    border-radius: 16px;
-    font-size: 0.82rem;
   }
 
   .home-mobile-rank-dashboard {

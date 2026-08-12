@@ -715,10 +715,6 @@ export default function ToolboxStage({
                 <p>{resultInterpretation.body}</p>
               </section>
 
-              <div className="result-ad-candidate" aria-hidden="true">
-                Mediavine 자동 광고 후보
-              </div>
-
               <section className="result-context-card">
                 <span className="result-context-kicker">다음에 확인할 것</span>
                 <div className="result-action-list">
@@ -741,10 +737,6 @@ export default function ToolboxStage({
                   <li>총점만 보고 상위 확률과 기대 횟수를 보지 않음</li>
                 </ul>
               </section>
-
-              <div className="result-ad-candidate" aria-hidden="true">
-                Mediavine 자동 광고 후보
-              </div>
 
               <section className="result-context-card">
                 <span className="result-context-kicker">관련 도구</span>

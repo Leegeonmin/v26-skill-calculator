@@ -462,10 +462,6 @@ export default function HomeView({
         </div>
       </section>
 
-      <div className="home-ad-candidate" aria-hidden="true">
-        Mediavine 자동 광고 후보
-      </div>
-
       <section className="home-all-tools" aria-labelledby="home-all-tools-title">
         <div className="home-section-title-row">
           <h2 id="home-all-tools-title">전체 도구</h2>
@@ -520,10 +516,6 @@ export default function HomeView({
           </button>
           </div>
       </section>
-
-      <div className="home-ad-candidate home-ad-candidate-secondary" aria-hidden="true">
-        Mediavine 자동 광고 후보
-      </div>
 
       <section className="home-beginner-entry" aria-labelledby="home-beginner-entry-title">
         <div className="home-beginner-entry-copy">
