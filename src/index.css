@@ -12931,29 +12931,34 @@ input {
 .home-mobile-rank-skills {
   grid-column: 2 / 4;
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 6px;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .home-mobile-rank-skills > span {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
   min-width: 0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(47, 128, 237, 0.07);
 }
 
 .home-mobile-rank-skills > span:not(:last-child)::after {
-  content: "/";
-  margin-left: 6px;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 800;
+  content: none;
 }
 
 .home-mobile-rank-skills strong {
-  display: inline;
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   font-size: 0.84rem;
   font-weight: 950;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -13429,23 +13434,25 @@ input {
   .home-mobile-rank-skills {
     grid-column: 2 / 4;
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 6px;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .home-mobile-rank-skills > span {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
     min-width: 0;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(47, 128, 237, 0.07);
   }
 
   .home-mobile-rank-skills > span:not(:last-child)::after {
-    content: "/";
-    margin-left: 6px;
-    color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 800;
+    content: none;
   }
 
   .app-bg[data-theme="dark"] .home-mobile-rank-skills > span {
@@ -13453,9 +13460,12 @@ input {
   }
 
   .home-mobile-rank-skills strong {
-    display: inline;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
     font-size: 0.84rem;
     font-weight: 950;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
