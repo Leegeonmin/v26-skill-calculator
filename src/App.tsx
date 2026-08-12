@@ -52,6 +52,7 @@ import {
 import AppChrome from "./components/AppChrome";
 import SiteHeader from "./components/SiteHeader";
 import ToolSeoPanel from "./components/ToolSeoPanel";
+import MediavineScript from "./components/MediavineScript";
 import type {
   CalculatorMode,
   CardType,
@@ -448,6 +449,7 @@ function App() {
     toolView === "trainingRedistribution"
       ? "calculator"
       : toolView;
+  const shouldLoadMediavine = !isAdminRoute && !isOcrRoute;
   const authDisplayName = getDisplayNameFromSession(authSession);
   const publicOcrSession: SkillOcrSession | null = authSession
     ? {
@@ -1832,6 +1834,7 @@ function App() {
             <span>made by 우주</span>
           </footer>
           {idleGamePromptModal}
+          <MediavineScript enabled={shouldLoadMediavine} />
           <Analytics />
         </div>
       </div>
@@ -1997,6 +2000,7 @@ function App() {
         )}
 
         {idleGamePromptModal}
+        <MediavineScript enabled={shouldLoadMediavine} />
         <Analytics />
       </div>
     </div>

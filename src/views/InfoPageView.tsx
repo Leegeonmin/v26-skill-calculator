@@ -1551,7 +1551,7 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
         body: (
           <p>
             이 사이트는 로그인과 데이터 저장에 Supabase를, 익명 방문 통계 확인에 Vercel Analytics를
-            사용합니다. Google AdSense가 적용되면 광고 제공과 부정 사용 방지를 위해 쿠키 또는 유사
+            사용합니다. Mediavine 광고가 적용되면 광고 제공과 부정 사용 방지를 위해 쿠키 또는 유사
             기술이 사용될 수 있습니다.
           </p>
         ),
@@ -1560,9 +1560,9 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
         title: "광고와 쿠키",
         body: (
           <p>
-            Google AdSense가 적용되는 경우 Google과 파트너는 광고 제공, 광고 성과 측정, 부정 사용
-            방지를 위해 쿠키 또는 유사 기술을 사용할 수 있습니다. 사용자는 브라우저 설정이나 Google
-            광고 설정을 통해 맞춤 광고 사용 방식을 조정할 수 있습니다.
+            Mediavine과 광고 파트너는 광고 제공, 광고 성과 측정, 부정 사용 방지를 위해 쿠키 또는
+            유사 기술을 사용할 수 있습니다. 사용자는 브라우저 설정을 통해 쿠키 사용 방식을 조정할 수
+            있습니다.
           </p>
         ),
       },

@@ -175,6 +175,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.08.12",
+    title: "타자 스위치히터 스킬 추가",
+    body: "타자 스킬 점수표에 스위치히터(양타), 스위치히터(좌타), 스위치히터(우타)를 추가하고 계산기, 시뮬레이터, 랭킹, 이미지 인식에서 같은 기준으로 사용할 수 있게 했습니다.",
+  },
+  {
     date: "2026.07.18",
     title: "임팩트 스킬 점수 계산 방식 개선",
     body: "임팩트 카드 계산기에서 1번 스킬과 레벨을 직접 바꿀 수 있게 하고, 1옵 포함 점수와 1옵 제외 점수를 함께 확인할 수 있도록 개선했습니다.",

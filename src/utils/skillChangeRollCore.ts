@@ -34,6 +34,7 @@ const FAMILY_ALIAS_RULES: Array<[RegExp, string]> = [
   [/^우타킬러/, "우타킬러"],
   [/^좌타킬러/, "좌타킬러"],
   [/^국대에이스/, "국대에이스"],
+  [/^스위치히터/, "스위치히터"],
 ];
 
 export function normalizeSkillBaseName(name: string): string {

@@ -47,6 +47,24 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
+    id: "hitter_switch_hitter_switch",
+    name: "스위치히터(양타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_switch_hitter_left",
+    name: "스위치히터(좌타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_switch_hitter_right",
+    name: "스위치히터(우타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
     id: "hitter_closer",
     name: "해결사",
     grade: "nationalOnly",

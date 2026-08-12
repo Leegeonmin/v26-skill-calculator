@@ -31,6 +31,24 @@ export const SKILL_SCORES: SkillScoreTable = {
     7: 28.48,
     8: 32.37,
   },
+  hitter_switch_hitter_switch: {
+    5: 21.9,
+    6: 25.65,
+    7: 30.2,
+    8: 35.3,
+  },
+  hitter_switch_hitter_left: {
+    5: 9.94,
+    6: 10.82,
+    7: 14.42,
+    8: 16.18,
+  },
+  hitter_switch_hitter_right: {
+    5: 7.91,
+    6: 8.39,
+    7: 11.18,
+    8: 12.13,
+  },
   hitter_closer: {
     5: 17.76,
     6: 21.98,
