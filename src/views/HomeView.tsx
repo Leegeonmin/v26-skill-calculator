@@ -144,6 +144,27 @@ const HOME_EXAMPLE_STEPS = [
   "이미지 인식 결과는 저장 전에 카드 타입과 포지션이 맞는지 한 번 더 봅니다.",
 ];
 
+const HOME_USAGE_STEPS = [
+  {
+    title: "점수 먼저 확인",
+    body: "카드 타입과 스킬 3개를 넣어 현재 조합의 등급과 상위 확률을 봅니다.",
+    action: "스킬 점수 계산기",
+    view: "calculator" as const,
+  },
+  {
+    title: "바꿀지 말지 판단",
+    body: "목표 등급까지 몇 번 정도 더 걸릴지 고스변 시뮬로 감을 잡습니다.",
+    action: "고스변 시뮬",
+    view: "simulator" as const,
+  },
+  {
+    title: "여러 선수는 이미지로 정리",
+    body: "라인업 화면을 올려 선수별 스킬 점수와 검수 결과를 한 번에 확인합니다.",
+    action: "라인업 스킬 인식",
+    view: "lineupSkillOcr" as const,
+  },
+];
+
 const RANKING_CATEGORY_LABELS: Record<RankingCategory, string> = {
   hitter: "타자",
   pitcher_starter: "투수",
@@ -421,6 +442,30 @@ export default function HomeView({
         </section>
       </div>
 
+      <section className="home-usage-flow" aria-labelledby="home-usage-flow-title">
+        <div className="home-section-title-row">
+          <h2 id="home-usage-flow-title">오늘 많이 쓰는 흐름</h2>
+        </div>
+        <div className="home-usage-flow-list">
+          {HOME_USAGE_STEPS.map((step, index) => (
+            <article key={step.title} className="home-usage-flow-card">
+              <span className="home-usage-flow-number">{index + 1}</span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+              <button type="button" onClick={() => onSelectView(step.view)}>
+                {step.action}
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <div className="home-ad-candidate" aria-hidden="true">
+        Mediavine 자동 광고 후보
+      </div>
+
       <section className="home-all-tools" aria-labelledby="home-all-tools-title">
         <div className="home-section-title-row">
           <h2 id="home-all-tools-title">전체 도구</h2>
@@ -475,6 +520,10 @@ export default function HomeView({
           </button>
           </div>
       </section>
+
+      <div className="home-ad-candidate home-ad-candidate-secondary" aria-hidden="true">
+        Mediavine 자동 광고 후보
+      </div>
 
       <section className="home-beginner-entry" aria-labelledby="home-beginner-entry-title">
         <div className="home-beginner-entry-copy">
