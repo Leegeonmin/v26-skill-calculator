@@ -149,8 +149,37 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/contact": "contact",
 };
 const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
+  "/calculator": "calculator",
+  "/simulator": "simulator",
+  "/impact-change": "impactChange",
+  "/ranking": "ranking",
+  "/notice": "notice",
+  "/skill-compare": "skillCompareBeta",
+  "/lineup-skill-ocr": "lineupSkillOcr",
   "/training-redistribution": "trainingRedistribution",
 };
+const TOOL_VIEW_URLS: Partial<Record<ToolView, string>> = {
+  home: "/",
+  calculator: "/calculator",
+  simulator: "/simulator",
+  impactChange: "/impact-change",
+  ranking: "/ranking",
+  notice: "/notice",
+  skillCompareBeta: "/skill-compare",
+  lineupSkillOcr: "/lineup-skill-ocr",
+  trainingRedistribution: "/training-redistribution",
+};
+const VALID_TOOL_VIEWS: ToolView[] = [
+  "home",
+  "calculator",
+  "simulator",
+  "impactChange",
+  "ranking",
+  "notice",
+  "skillCompareBeta",
+  "lineupSkillOcr",
+  "trainingRedistribution",
+];
 type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
 
@@ -210,19 +239,7 @@ function App() {
     }
 
     const requestedView = url.searchParams.get("view");
-    const validViews: ToolView[] = [
-      "home",
-      "calculator",
-      "simulator",
-      "impactChange",
-      "ranking",
-      "notice",
-      "skillCompareBeta",
-      "lineupSkillOcr",
-      "trainingRedistribution",
-    ];
-
-    return requestedView && validViews.includes(requestedView as ToolView)
+    return requestedView && VALID_TOOL_VIEWS.includes(requestedView as ToolView)
       ? (requestedView as ToolView)
       : DEFAULT_VIEW;
   });
@@ -729,21 +746,10 @@ function App() {
       const url = new URL(window.location.href);
       const pathView = TOOL_VIEW_PATHS[url.pathname.replace(/\/+$/, "") || "/"];
       const requestedView = url.searchParams.get("view");
-      const validViews: ToolView[] = [
-        "home",
-        "calculator",
-        "simulator",
-        "impactChange",
-        "ranking",
-        "notice",
-        "skillCompareBeta",
-        "lineupSkillOcr",
-        "trainingRedistribution",
-      ];
       applyingPopStateRef.current = true;
       setToolView(
         pathView ??
-          (requestedView && validViews.includes(requestedView as ToolView)
+          (requestedView && VALID_TOOL_VIEWS.includes(requestedView as ToolView)
           ? (requestedView as ToolView)
           : DEFAULT_VIEW)
       );
@@ -759,18 +765,16 @@ function App() {
     }
 
     const url = new URL(window.location.href);
-    const pathView = TOOL_VIEW_PATHS[url.pathname.replace(/\/+$/, "") || "/"];
-    if (pathView === toolView) {
+    const currentPath = url.pathname.replace(/\/+$/, "") || "/";
+    const pathView = TOOL_VIEW_PATHS[currentPath];
+    const toolPath = TOOL_VIEW_URLS[toolView] ?? "/";
+    if (pathView === toolView || currentPath === toolPath) {
       applyingPopStateRef.current = false;
       return;
     }
 
-    if (url.searchParams.get("view") === toolView) {
-      applyingPopStateRef.current = false;
-      return;
-    }
-
-    url.searchParams.set("view", toolView);
+    url.pathname = toolPath;
+    url.search = "";
     if (applyingPopStateRef.current) {
       window.history.replaceState({}, "", url.toString());
       applyingPopStateRef.current = false;
@@ -1050,6 +1054,13 @@ function App() {
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
+    const nextPath = TOOL_VIEW_URLS[nextToolView] ?? "/";
+    const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (currentPath !== nextPath) {
+      window.location.href = `${window.location.origin}${nextPath}`;
+      return;
+    }
+
     if (
       nextToolView === "home" ||
       nextToolView === "ranking" ||
@@ -1630,7 +1641,7 @@ function App() {
   };
 
   const handleGoHome = () => {
-    window.location.href = `${window.location.origin}/?view=home`;
+    window.location.href = `${window.location.origin}/`;
   };
 
   const dismissIdleGamePrompt = (neverShowAgain = false) => {
@@ -1866,12 +1877,12 @@ function App() {
               currentUserId={authSession?.user.id ?? null}
             />
           ) : toolView === "notice" ? (
-            <NoticeView themeAction={themeToggle} onGoHome={() => setToolView("home")} />
+            <NoticeView themeAction={themeToggle} onGoHome={handleGoHome} />
           ) : toolView === "skillCompareBeta" ? (
             <SkillCompareBetaView
               themeAction={themeToggle}
               toolUsageSessionId={toolUsageSessionId}
-              onGoHome={() => setToolView("home")}
+              onGoHome={handleGoHome}
             />
           ) : toolView === "lineupSkillOcr" ? (
             <PublicSkillOcrView
@@ -1900,12 +1911,12 @@ function App() {
               onSaveDraft={() => void handleOcrSaveDraft()}
               onSelectSnapshot={handleOpenPublicOcrSnapshot}
               onDeleteSnapshot={(uploadId) => void handleDeletePublicOcrSnapshot(uploadId)}
-              onGoHome={() => setToolView("home")}
+              onGoHome={handleGoHome}
             />
           ) : toolView === "trainingRedistribution" ? (
             <TrainingRedistributionView
               themeAction={themeToggle}
-              onGoHome={() => setToolView("home")}
+              onGoHome={handleGoHome}
             />
           ) : toolView === "ranking" ? (
             <div className="main-stage tool-page ranking-page">
@@ -1917,7 +1928,7 @@ function App() {
                 </div>
                 <div className="page-toolbar-actions">
                   {themeToggle}
-                  <button type="button" className="ghost-btn page-home-btn" onClick={() => setToolView("home")}>
+                  <button type="button" className="ghost-btn page-home-btn" onClick={handleGoHome}>
                     홈으로
                   </button>
                 </div>
@@ -1973,7 +1984,7 @@ function App() {
               onHitterPositionGroupChange={handleHitterPositionGroupChange}
               onCardTypeChange={handleCardTypeChange}
               onReset={handleReset}
-              onGoHome={() => setToolView("home")}
+              onGoHome={handleGoHome}
               themeAction={themeToggle}
               onRollOnce={handleAdvancedSkillChangeRoll}
               onAutoRoll={handleAutoRollToTarget}

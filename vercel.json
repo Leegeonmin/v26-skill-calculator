@@ -65,6 +65,38 @@
   ],
   "rewrites": [
     {
+      "source": "/calculator",
+      "destination": "/"
+    },
+    {
+      "source": "/simulator",
+      "destination": "/"
+    },
+    {
+      "source": "/impact-change",
+      "destination": "/"
+    },
+    {
+      "source": "/ranking",
+      "destination": "/"
+    },
+    {
+      "source": "/notice",
+      "destination": "/"
+    },
+    {
+      "source": "/skill-compare",
+      "destination": "/"
+    },
+    {
+      "source": "/lineup-skill-ocr",
+      "destination": "/"
+    },
+    {
+      "source": "/training-redistribution",
+      "destination": "/"
+    },
+    {
       "source": "/admin",
       "destination": "/"
     },
