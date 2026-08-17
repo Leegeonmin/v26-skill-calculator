@@ -21,6 +21,46 @@
       "permanent": true
     },
     {
+      "source": "/calculator",
+      "destination": "/calculator/",
+      "permanent": true
+    },
+    {
+      "source": "/simulator",
+      "destination": "/simulator/",
+      "permanent": true
+    },
+    {
+      "source": "/impact-change",
+      "destination": "/impact-change/",
+      "permanent": true
+    },
+    {
+      "source": "/ranking",
+      "destination": "/ranking/",
+      "permanent": true
+    },
+    {
+      "source": "/notice",
+      "destination": "/notice/",
+      "permanent": true
+    },
+    {
+      "source": "/skill-compare",
+      "destination": "/skill-compare/",
+      "permanent": true
+    },
+    {
+      "source": "/lineup-skill-ocr",
+      "destination": "/lineup-skill-ocr/",
+      "permanent": true
+    },
+    {
+      "source": "/training-redistribution",
+      "destination": "/training-redistribution/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
@@ -64,38 +104,6 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/calculator",
-      "destination": "/"
-    },
-    {
-      "source": "/simulator",
-      "destination": "/"
-    },
-    {
-      "source": "/impact-change",
-      "destination": "/"
-    },
-    {
-      "source": "/ranking",
-      "destination": "/"
-    },
-    {
-      "source": "/notice",
-      "destination": "/"
-    },
-    {
-      "source": "/skill-compare",
-      "destination": "/"
-    },
-    {
-      "source": "/lineup-skill-ocr",
-      "destination": "/"
-    },
-    {
-      "source": "/training-redistribution",
-      "destination": "/"
-    },
     {
       "source": "/admin",
       "destination": "/"

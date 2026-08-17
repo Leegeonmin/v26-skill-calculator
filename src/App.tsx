@@ -160,14 +160,14 @@ const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
 };
 const TOOL_VIEW_URLS: Partial<Record<ToolView, string>> = {
   home: "/",
-  calculator: "/calculator",
-  simulator: "/simulator",
-  impactChange: "/impact-change",
-  ranking: "/ranking",
-  notice: "/notice",
-  skillCompareBeta: "/skill-compare",
-  lineupSkillOcr: "/lineup-skill-ocr",
-  trainingRedistribution: "/training-redistribution",
+  calculator: "/calculator/",
+  simulator: "/simulator/",
+  impactChange: "/impact-change/",
+  ranking: "/ranking/",
+  notice: "/notice/",
+  skillCompareBeta: "/skill-compare/",
+  lineupSkillOcr: "/lineup-skill-ocr/",
+  trainingRedistribution: "/training-redistribution/",
 };
 const VALID_TOOL_VIEWS: ToolView[] = [
   "home",

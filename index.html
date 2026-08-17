@@ -25,6 +25,25 @@
 
       gtag('config', 'G-NR4MC70ZV9');
     </script>
+    <script>
+      (function () {
+        var viewPaths = {
+          calculator: "/calculator/",
+          simulator: "/simulator/",
+          impactChange: "/impact-change/",
+          ranking: "/ranking/",
+          notice: "/notice/",
+          skillCompareBeta: "/skill-compare/",
+          lineupSkillOcr: "/lineup-skill-ocr/",
+          trainingRedistribution: "/training-redistribution/"
+        };
+        var params = new URLSearchParams(window.location.search);
+        var viewPath = viewPaths[params.get("view")];
+        if (window.location.pathname === "/" && viewPath) {
+          window.location.replace(viewPath);
+        }
+      })();
+    </script>
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ko_KR" />
