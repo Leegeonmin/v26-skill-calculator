@@ -10692,6 +10692,18 @@ input {
     grid-template-columns: 1fr;
   }
 
+  .calculator-layout > .calculator-shell {
+    display: contents;
+  }
+
+  .calculator-layout > .panel-result {
+    order: 20;
+  }
+
+  .calculator-layout > .calculator-shell > .tool-ad-content {
+    order: 30;
+  }
+
   .calculator-config-card {
     padding: 14px;
     border-radius: 18px;
