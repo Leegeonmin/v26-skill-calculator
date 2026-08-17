@@ -629,25 +629,24 @@ export default function ToolSeoPanel({ toolView }: { toolView: ToolView }) {
   const content = getToolSeoContent(toolView);
 
   return (
-    <section className="panel panel-main panel-wide seo-panel seo-panel-deferred" aria-labelledby="seo-guide-title">
-      <div className="seo-copy">
+    <section
+      className="info-page-card tool-ad-content seo-panel seo-panel-deferred"
+      aria-labelledby="seo-guide-title"
+    >
+      <article className="info-page-section seo-copy">
         <h2 id="seo-guide-title">{content.title}</h2>
         {content.intro}
-      </div>
+      </article>
 
-      {content.sections.length > 0 && (
-        <div className="seo-section-list">
-          {content.sections.map((section) => (
-            <article key={section.title} className="seo-section-item">
-              <h3>{section.title}</h3>
-              {section.body}
-            </article>
-          ))}
-        </div>
-      )}
+      {content.sections.map((section) => (
+        <article key={section.title} className="info-page-section seo-section-item">
+          <h2>{section.title}</h2>
+          {section.body}
+        </article>
+      ))}
 
-      <div className="seo-faq">
-        <h3>자주 묻는 질문</h3>
+      <article className="info-page-section seo-faq">
+        <h2>자주 묻는 질문</h2>
         <div className="seo-faq-list">
           {content.faq.map((item) => (
             <article key={item.question} className="seo-faq-item">
@@ -656,7 +655,7 @@ export default function ToolSeoPanel({ toolView }: { toolView: ToolView }) {
             </article>
           ))}
         </div>
-      </div>
+      </article>
 
       <script
         type="application/ld+json"

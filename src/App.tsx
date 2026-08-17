@@ -1993,22 +1993,22 @@ function App() {
             />
           )}
           </Suspense>
-        </AppChrome>
 
-        {(activeService === "toolbox" ||
-          toolView === "skillCompareBeta" ||
-          toolView === "lineupSkillOcr" ||
-          toolView === "trainingRedistribution") && (
-          <ToolSeoPanel
-            toolView={
-              toolView === "skillCompareBeta" ||
-              toolView === "lineupSkillOcr" ||
-              toolView === "trainingRedistribution"
-                ? toolView
-                : toolboxToolView
-            }
-          />
-        )}
+          {(activeService === "toolbox" ||
+            toolView === "skillCompareBeta" ||
+            toolView === "lineupSkillOcr" ||
+            toolView === "trainingRedistribution") && (
+            <ToolSeoPanel
+              toolView={
+                toolView === "skillCompareBeta" ||
+                toolView === "lineupSkillOcr" ||
+                toolView === "trainingRedistribution"
+                  ? toolView
+                  : toolboxToolView
+              }
+            />
+          )}
+        </AppChrome>
 
         {idleGamePromptModal}
         <MediavineScript enabled={shouldLoadMediavine} />
