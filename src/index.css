@@ -9296,6 +9296,10 @@ input {
   margin: 0;
 }
 
+.calculator-page .calculator-shell > .tool-ad-content.seo-panel-deferred {
+  margin-top: 48px;
+}
+
 .seo-copy,
 .seo-faq {
   display: grid;
