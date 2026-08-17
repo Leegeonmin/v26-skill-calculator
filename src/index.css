@@ -9289,6 +9289,11 @@ input {
   margin: clamp(180px, 24vh, 320px) auto 0;
 }
 
+.tool-ad-content.seo-panel-deferred {
+  width: 100%;
+  margin: 0;
+}
+
 .seo-copy,
 .seo-faq {
   display: grid;

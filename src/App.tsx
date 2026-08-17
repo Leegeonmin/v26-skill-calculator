@@ -180,7 +180,6 @@ const VALID_TOOL_VIEWS: ToolView[] = [
   "lineupSkillOcr",
   "trainingRedistribution",
 ];
-type ServiceView = "home" | "toolbox" | "ranking";
 type ThemePreference = "light" | "dark";
 
 const TARGET_GRADE_OPTIONS: Array<{ value: ResultGrade; label: string }> = [
@@ -447,16 +446,6 @@ function App() {
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
   const judgeGrade = judgeResult?.grade ?? "-";
   const supabaseReady = isSupabaseConfigured();
-  const activeService: ServiceView =
-    toolView === "home" ||
-    toolView === "notice" ||
-    toolView === "skillCompareBeta" ||
-    toolView === "lineupSkillOcr" ||
-    toolView === "trainingRedistribution"
-      ? "home"
-      : toolView === "ranking"
-        ? "ranking"
-        : "toolbox";
   const toolboxToolView: Exclude<ToolView, "home" | "ranking" | "notice"> =
     toolView === "home" ||
     toolView === "ranking" ||
@@ -1990,12 +1979,12 @@ function App() {
               onAutoRoll={handleAutoRollToTarget}
               onImpactRoll={handleImpactChangeRoll}
               resetImpactChangeSession={resetImpactChangeSession}
+              guideContent={<ToolSeoPanel toolView={toolboxToolView} />}
             />
           )}
           </Suspense>
 
-          {(activeService === "toolbox" ||
-            toolView === "skillCompareBeta" ||
+          {(toolView === "skillCompareBeta" ||
             toolView === "lineupSkillOcr" ||
             toolView === "trainingRedistribution") && (
             <ToolSeoPanel

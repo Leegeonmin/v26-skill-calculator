@@ -80,6 +80,7 @@ type ToolboxStageProps = {
   onAutoRoll: () => void;
   onImpactRoll: () => void;
   resetImpactChangeSession: () => void;
+  guideContent?: ReactNode;
 };
 
 function getModeLabel(mode: CalculatorMode): string {
@@ -197,6 +198,7 @@ export default function ToolboxStage({
   onAutoRoll,
   onImpactRoll,
   resetImpactChangeSession,
+  guideContent,
 }: ToolboxStageProps) {
   const [simulatorSetupState, setSimulatorSetupState] = useState({
     toolView,
@@ -633,6 +635,8 @@ export default function ToolboxStage({
               )}
             </>
           )}
+
+          {guideContent}
         </section>
 
         <aside className="panel panel-result" style={{ borderColor: resultGradeColor }}>
