@@ -7206,6 +7206,8 @@ input {
 
 .calculator-page .skill-grid {
   gap: 16px;
+  padding-bottom: 22px;
+  margin-bottom: 2px;
 }
 
 .calculator-page .skill-col {
