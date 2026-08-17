@@ -629,38 +629,37 @@ export default function ToolSeoPanel({ toolView }: { toolView: ToolView }) {
   const content = getToolSeoContent(toolView);
 
   return (
-    <section
-      className="info-page-card tool-ad-content seo-panel seo-panel-deferred"
-      aria-labelledby="seo-guide-title"
-    >
-      <article className="info-page-section seo-copy">
-        <h2 id="seo-guide-title">{content.title}</h2>
-        {content.intro}
-      </article>
-
-      {content.sections.map((section) => (
-        <article key={section.title} className="info-page-section seo-section-item">
-          <h2>{section.title}</h2>
-          {section.body}
+    <main className="info-page tool-ad-content seo-panel seo-panel-deferred" aria-labelledby="seo-guide-title">
+      <section className="info-page-card">
+        <article className="info-page-section seo-copy">
+          <h2 id="seo-guide-title">{content.title}</h2>
+          {content.intro}
         </article>
-      ))}
 
-      <article className="info-page-section seo-faq">
-        <h2>자주 묻는 질문</h2>
-        <div className="seo-faq-list">
-          {content.faq.map((item) => (
-            <article key={item.question} className="seo-faq-item">
-              <h4>{item.question}</h4>
-              <p>{item.answer}</p>
-            </article>
-          ))}
-        </div>
-      </article>
+        {content.sections.map((section) => (
+          <article key={section.title} className="info-page-section seo-section-item">
+            <h2>{section.title}</h2>
+            {section.body}
+          </article>
+        ))}
+
+        <article className="info-page-section seo-faq">
+          <h2>자주 묻는 질문</h2>
+          <div className="seo-faq-list">
+            {content.faq.map((item) => (
+              <article key={item.question} className="seo-faq-item">
+                <h4>{item.question}</h4>
+                <p>{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </article>
+      </section>
 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: getToolSeoStructuredData(toolView) }}
       />
-    </section>
+    </main>
   );
 }

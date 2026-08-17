@@ -636,7 +636,6 @@ export default function ToolboxStage({
             </>
           )}
 
-          {guideContent}
         </section>
 
         <aside className="panel panel-result" style={{ borderColor: resultGradeColor }}>
@@ -774,6 +773,8 @@ export default function ToolboxStage({
           )}
         </aside>
       </main>
+
+      {guideContent}
     </div>
   );
 }

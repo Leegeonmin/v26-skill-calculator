@@ -9293,11 +9293,7 @@ input {
 
 .tool-ad-content.seo-panel-deferred {
   width: 100%;
-  margin: 0;
-}
-
-.calculator-page .calculator-shell > .tool-ad-content.seo-panel-deferred {
-  margin-top: 48px;
+  margin: 28px auto 0;
 }
 
 .seo-copy,
@@ -10690,18 +10686,6 @@ input {
   .calculator-layout,
   .simulator-layout {
     grid-template-columns: 1fr;
-  }
-
-  .calculator-layout > .calculator-shell {
-    display: contents;
-  }
-
-  .calculator-layout > .panel-result {
-    order: 20;
-  }
-
-  .calculator-layout > .calculator-shell > .tool-ad-content {
-    order: 30;
   }
 
   .calculator-config-card {
