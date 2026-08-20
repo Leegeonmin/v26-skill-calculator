@@ -5,6 +5,7 @@ import type {
   CardType,
   HitterBattingSide,
   HitterPositionGroup,
+  PitcherStaminaRange,
   SkillLevel,
   SkillMeta,
   StarterHand,
@@ -13,6 +14,10 @@ import type { GameDataSet } from "../data/gameData";
 import { SKILL_GRADE_COLORS } from "../data/uiColors";
 import { getDefaultLevels } from "../lib/toolboxHelpers";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
+import {
+  isPitcherStaminaSkillEligible,
+  PITCHER_STAMINA_RANGE_OPTIONS,
+} from "../utils/pitcherSkillFilters";
 
 interface MajorSkillMarbleCalculatorViewProps {
   mode: CalculatorMode;
@@ -21,6 +26,7 @@ interface MajorSkillMarbleCalculatorViewProps {
   hitterPositionGroup: HitterPositionGroup;
   hitterBattingSide: HitterBattingSide;
   starterHand: StarterHand;
+  pitcherStaminaRange: PitcherStaminaRange;
   gameData: GameDataSet;
   filteredSkills: SkillMeta[];
   selectedSkillMeta: {
@@ -43,6 +49,7 @@ interface MajorSkillMarbleCalculatorViewProps {
   onModeChange: (nextMode: CalculatorMode) => void;
   onHitterBattingSideChange: (nextSide: HitterBattingSide) => void;
   onStarterHandChange: (nextHand: StarterHand) => void;
+  onPitcherStaminaRangeChange: (nextRange: PitcherStaminaRange) => void;
   onCardTypeChange: (nextCardType: CardType) => void;
 }
 
@@ -70,12 +77,16 @@ function getSkillsForPlayerSide(
   skills: SkillMeta[],
   mode: CalculatorMode,
   battingSide: HitterBattingSide,
-  starterHand: StarterHand
+  starterHand: StarterHand,
+  staminaRange: PitcherStaminaRange
 ) {
   const nonCatcherLeadSkills = skills.filter((skill) => !isCatcherLead(skill));
 
   if (mode !== "hitter") {
     return nonCatcherLeadSkills.filter((skill) => {
+      if (!isPitcherStaminaSkillEligible(skill, mode, staminaRange)) {
+        return false;
+      }
       if (skill.name.includes("(좌투)")) {
         return starterHand === "left";
       }
@@ -194,6 +205,7 @@ export default function MajorSkillMarbleCalculatorView({
   cardTypeOptions,
   hitterBattingSide,
   starterHand,
+  pitcherStaminaRange,
   gameData,
   filteredSkills,
   selectedSkillMeta,
@@ -212,12 +224,13 @@ export default function MajorSkillMarbleCalculatorView({
   onModeChange,
   onHitterBattingSideChange,
   onStarterHandChange,
+  onPitcherStaminaRangeChange,
   onCardTypeChange,
 }: MajorSkillMarbleCalculatorViewProps) {
   const [changeSlot, setChangeSlot] = useState<ChangeSlot>(1);
   const skillPool = useMemo(
-    () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand),
-    [filteredSkills, hitterBattingSide, mode, starterHand]
+    () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
+    [filteredSkills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
   );
   const changeSlotData = getSlotData({
     slot: changeSlot,
@@ -372,6 +385,23 @@ export default function MajorSkillMarbleCalculatorView({
             </div>
           )}
         </div>
+
+        {mode !== "hitter" && (
+          <div className="control-section">
+            <label>지구력 구간</label>
+            <select
+              className="skill-marble-filter-select"
+              value={pitcherStaminaRange}
+              onChange={(event) => onPitcherStaminaRangeChange(event.target.value as PitcherStaminaRange)}
+            >
+              {PITCHER_STAMINA_RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </section>
 
       <section className="major-marble-skill-panel">

@@ -4,11 +4,16 @@ import type {
   CalculatorMode,
   HitterBattingSide,
   HitterPositionGroup,
+  PitcherStaminaRange,
   SkillLevel,
   SkillMeta,
   StarterHand,
 } from "../types";
 import type { GameDataSet } from "../data/gameData";
+import {
+  isPitcherStaminaSkillEligible,
+  PITCHER_STAMINA_RANGE_OPTIONS,
+} from "../utils/pitcherSkillFilters";
 import {
   calculateSkillMarbleOdds,
   type SkillMarbleMode,
@@ -20,6 +25,7 @@ interface SkillMarbleCalculatorViewProps {
   hitterPositionGroup: HitterPositionGroup;
   hitterBattingSide: HitterBattingSide;
   starterHand: StarterHand;
+  pitcherStaminaRange: PitcherStaminaRange;
   gameData: GameDataSet;
   selectedSkillMeta: {
     skill1: SkillMeta | undefined;
@@ -41,6 +47,7 @@ interface SkillMarbleCalculatorViewProps {
   onModeChange: (nextMode: CalculatorMode) => void;
   onHitterBattingSideChange: (nextSide: HitterBattingSide) => void;
   onStarterHandChange: (nextHand: StarterHand) => void;
+  onPitcherStaminaRangeChange: (nextRange: PitcherStaminaRange) => void;
   onMarbleModeChange: (nextMode: SkillMarbleMode) => void;
 }
 
@@ -80,7 +87,8 @@ function getSkillsForPlayerSide(
   skills: SkillMeta[],
   mode: CalculatorMode,
   battingSide: HitterBattingSide,
-  starterHand: StarterHand
+  starterHand: StarterHand,
+  staminaRange: PitcherStaminaRange
 ) {
   const impactOnlySkills = skills.filter(
     (skill) => skill.name !== "도전정신(5성)" && !skill.name.replace(/\s+/g, "").startsWith("포수리드")
@@ -88,6 +96,9 @@ function getSkillsForPlayerSide(
 
   if (mode !== "hitter") {
     return impactOnlySkills.filter((skill) => {
+      if (!isPitcherStaminaSkillEligible(skill, mode, staminaRange)) {
+        return false;
+      }
       if (skill.name.includes("(좌투)")) {
         return starterHand === "left";
       }
@@ -119,6 +130,7 @@ export default function SkillMarbleCalculatorView({
   hitterPositionGroup,
   hitterBattingSide,
   starterHand,
+  pitcherStaminaRange,
   gameData,
   selectedSkillMeta,
   filteredSkills,
@@ -136,15 +148,16 @@ export default function SkillMarbleCalculatorView({
   onModeChange,
   onHitterBattingSideChange,
   onStarterHandChange,
+  onPitcherStaminaRangeChange,
   onMarbleModeChange,
 }: SkillMarbleCalculatorViewProps) {
   const marbleSkillPool = useMemo(
-    () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand),
-    [filteredSkills, hitterBattingSide, mode, starterHand]
+    () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
+    [filteredSkills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
   );
   const marbleCalculationSkills = useMemo(
-    () => getSkillsForPlayerSide(gameData.skills, mode, hitterBattingSide, starterHand),
-    [gameData.skills, hitterBattingSide, mode, starterHand]
+    () => getSkillsForPlayerSide(gameData.skills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
+    [gameData.skills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
   );
   const result = calculateSkillMarbleOdds({
     skills: marbleCalculationSkills,
@@ -304,6 +317,23 @@ export default function SkillMarbleCalculatorView({
               </div>
             )}
           </div>
+
+          {mode !== "hitter" && (
+            <div className="control-section">
+              <label>지구력 구간</label>
+              <select
+                className="skill-marble-filter-select"
+                value={pitcherStaminaRange}
+                onChange={(event) => onPitcherStaminaRangeChange(event.target.value as PitcherStaminaRange)}
+              >
+                {PITCHER_STAMINA_RANGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
         </div>
       </section>

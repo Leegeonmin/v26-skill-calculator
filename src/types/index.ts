@@ -2,6 +2,7 @@
 
 export type PitcherRole = "starter" | "middle" | "closer";
 export type StarterHand = "right" | "left";
+export type PitcherStaminaRange = "140-149" | "134-139" | "120-133" | "117-119" | "100-116";
 export type HitterBattingSide = "right" | "left" | "switch";
 export type CalculatorMode = "hitter" | "starter" | "middle" | "closer";
 export type ToolView =

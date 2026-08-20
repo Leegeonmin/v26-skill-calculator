@@ -14,6 +14,7 @@ import type {
   CardType,
   HitterBattingSide,
   HitterPositionGroup,
+  PitcherStaminaRange,
   SkillLevel,
   SkillMeta,
   StarterHand,
@@ -29,6 +30,7 @@ type ToolboxStageProps = {
   hitterPositionGroup: HitterPositionGroup;
   hitterBattingSide: HitterBattingSide;
   starterHand: StarterHand;
+  pitcherStaminaRange: PitcherStaminaRange;
   skillMarbleMode: SkillMarbleMode;
   cardType: CardType;
   activeCardType: CardType;
@@ -82,6 +84,7 @@ type ToolboxStageProps = {
   onHitterPositionGroupChange: (nextGroup: HitterPositionGroup) => void;
   onHitterBattingSideChange: (nextSide: HitterBattingSide) => void;
   onStarterHandChange: (nextHand: StarterHand) => void;
+  onPitcherStaminaRangeChange: (nextRange: PitcherStaminaRange) => void;
   onSkillMarbleModeChange: (nextMode: SkillMarbleMode) => void;
   onCardTypeChange: (nextCardType: CardType) => void;
   onReset: () => void;
@@ -165,6 +168,7 @@ export default function ToolboxStage({
   hitterPositionGroup,
   hitterBattingSide,
   starterHand,
+  pitcherStaminaRange,
   skillMarbleMode,
   cardType,
   activeCardType,
@@ -206,6 +210,7 @@ export default function ToolboxStage({
   onHitterPositionGroupChange,
   onHitterBattingSideChange,
   onStarterHandChange,
+  onPitcherStaminaRangeChange,
   onSkillMarbleModeChange,
   onCardTypeChange,
   onReset,
@@ -656,6 +661,7 @@ export default function ToolboxStage({
                   hitterPositionGroup={hitterPositionGroup}
                   hitterBattingSide={hitterBattingSide}
                   starterHand={starterHand}
+                  pitcherStaminaRange={pitcherStaminaRange}
                   gameData={gameData}
                   selectedSkillMeta={selectedSkillMeta}
                   filteredSkills={filteredSkills}
@@ -673,6 +679,7 @@ export default function ToolboxStage({
                   onModeChange={onModeChange}
                   onHitterBattingSideChange={onHitterBattingSideChange}
                   onStarterHandChange={onStarterHandChange}
+                  onPitcherStaminaRangeChange={onPitcherStaminaRangeChange}
                   onMarbleModeChange={onSkillMarbleModeChange}
                 />
               ) : toolView === "majorSkillMarble" ? (
@@ -683,6 +690,7 @@ export default function ToolboxStage({
                   hitterPositionGroup={hitterPositionGroup}
                   hitterBattingSide={hitterBattingSide}
                   starterHand={starterHand}
+                  pitcherStaminaRange={pitcherStaminaRange}
                   gameData={gameData}
                   filteredSkills={filteredSkills}
                   selectedSkillMeta={selectedSkillMeta}
@@ -701,6 +709,7 @@ export default function ToolboxStage({
                   onModeChange={onModeChange}
                   onHitterBattingSideChange={onHitterBattingSideChange}
                   onStarterHandChange={onStarterHandChange}
+                  onPitcherStaminaRangeChange={onPitcherStaminaRangeChange}
                   onCardTypeChange={onCardTypeChange}
                 />
               ) : (

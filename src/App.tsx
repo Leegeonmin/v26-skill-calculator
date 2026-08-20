@@ -58,6 +58,7 @@ import type {
   CardType,
   HitterPositionGroup,
   HitterBattingSide,
+  PitcherStaminaRange,
   PitcherRole,
   PlayerType,
   SkillLevel,
@@ -263,6 +264,7 @@ function App() {
     useState<HitterPositionGroup>(DEFAULT_HITTER_POSITION_GROUP);
   const [hitterBattingSide, setHitterBattingSide] = useState<HitterBattingSide>("right");
   const [starterHand, setStarterHand] = useState<StarterHand>("right");
+  const [pitcherStaminaRange, setPitcherStaminaRange] = useState<PitcherStaminaRange>("134-139");
   const [skillMarbleMode, setSkillMarbleMode] = useState<SkillMarbleMode>("twoMajor");
 
   const [cardType, setCardType] = useState<CardType>(DEFAULT_CARD_TYPE);
@@ -1190,6 +1192,15 @@ function App() {
     resetImpactChangeSession();
   };
 
+  const handlePitcherStaminaRangeChange = (nextRange: PitcherStaminaRange) => {
+    setPitcherStaminaRange(nextRange);
+    setSkill1("");
+    setSkill2("");
+    setSkill3("");
+    resetSimulationSession();
+    resetImpactChangeSession();
+  };
+
   const handleHitterBattingSideChange = (nextSide: HitterBattingSide) => {
     setHitterBattingSide(nextSide);
     setSkill1("");
@@ -1921,6 +1932,7 @@ function App() {
               hitterPositionGroup={hitterPositionGroup}
               hitterBattingSide={hitterBattingSide}
               starterHand={starterHand}
+              pitcherStaminaRange={pitcherStaminaRange}
               skillMarbleMode={skillMarbleMode}
               cardType={cardType}
               activeCardType={activeCardType}
@@ -1962,6 +1974,7 @@ function App() {
               onHitterPositionGroupChange={handleHitterPositionGroupChange}
               onHitterBattingSideChange={handleHitterBattingSideChange}
               onStarterHandChange={handleStarterHandChange}
+              onPitcherStaminaRangeChange={handlePitcherStaminaRangeChange}
               onSkillMarbleModeChange={setSkillMarbleMode}
               onCardTypeChange={handleCardTypeChange}
               onReset={handleReset}

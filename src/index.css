@@ -14436,6 +14436,12 @@ input {
   min-width: 0;
 }
 
+.skill-marble-filter-select {
+  min-height: 36px;
+  width: 100%;
+  min-width: 0;
+}
+
 .skill-marble-simple .skill-select {
   border-radius: 8px;
   box-shadow: none;
@@ -14540,7 +14546,7 @@ input {
 
 .major-marble-controls {
   display: grid;
-  grid-template-columns: minmax(260px, 1.15fr) minmax(160px, 0.55fr) minmax(140px, 0.45fr);
+  grid-template-columns: minmax(250px, 1.15fr) minmax(150px, 0.55fr) minmax(140px, 0.45fr) minmax(140px, 0.45fr);
   gap: 12px;
   align-items: end;
   padding: 16px;
