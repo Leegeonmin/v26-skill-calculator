@@ -73,6 +73,10 @@ function isCatcherLead(skill: SkillMeta) {
   return normalizeSkillBaseName(skill.name) === "포수리드";
 }
 
+function isWorkhorse(skill: SkillMeta) {
+  return skill.name.replace(/\s+/g, "").startsWith("마당쇠");
+}
+
 function getSkillsForPlayerSide(
   skills: SkillMeta[],
   mode: CalculatorMode,
@@ -84,7 +88,7 @@ function getSkillsForPlayerSide(
 
   if (mode !== "hitter") {
     return nonCatcherLeadSkills.filter((skill) => {
-      if (mode === "starter" && normalizeSkillBaseName(skill.name) === "마당쇠") {
+      if (mode === "starter" && isWorkhorse(skill)) {
         return false;
       }
       if (!isPitcherStaminaSkillEligible(skill, mode, staminaRange)) {
