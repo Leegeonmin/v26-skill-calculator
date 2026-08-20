@@ -157,6 +157,7 @@ export default function SiteHeader({
             <button type="button" className="site-nav-link" onClick={() => onSelectView("simulator")}>
               <HeaderIcon name="chart" />
               <span>시뮬레이터</span>
+              <em className="site-nav-new-badge">NEW</em>
             </button>
             <div className="site-nav-dropdown">
               <button type="button" onClick={() => onSelectView("simulator")}>
@@ -164,6 +165,14 @@ export default function SiteHeader({
               </button>
               <button type="button" onClick={() => onSelectView("impactChange")}>
                 임팩트 변경 시뮬
+              </button>
+              <button type="button" className="site-nav-dropdown-new" onClick={() => onSelectView("skillMarble")}>
+                <span>임팩트 스킬 마블</span>
+                <em className="site-nav-new-badge">NEW</em>
+              </button>
+              <button type="button" className="site-nav-dropdown-new" onClick={() => onSelectView("majorSkillMarble")}>
+                <span>메이저 스킬 마블</span>
+                <em className="site-nav-new-badge">NEW</em>
               </button>
             </div>
           </div>
@@ -188,7 +197,6 @@ export default function SiteHeader({
           <button type="button" className="site-nav-link" onClick={() => onSelectView("trainingRedistribution")}>
             <HeaderIcon name="guide" />
             <span>훈재분 확률</span>
-            <em className="site-nav-new-badge">NEW</em>
           </button>
           {idleDevGameEnabled && (
             <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
@@ -266,6 +274,14 @@ export default function SiteHeader({
         <button type="button" className={currentView === "simulator" ? "is-active" : undefined} onClick={() => onSelectView("simulator")}>
           고스변 시뮬
         </button>
+        <button type="button" className={currentView === "skillMarble" ? "is-active" : undefined} onClick={() => onSelectView("skillMarble")}>
+          임팩트 마블
+          <em className="site-mobile-nav-new">NEW</em>
+        </button>
+        <button type="button" className={currentView === "majorSkillMarble" ? "is-active" : undefined} onClick={() => onSelectView("majorSkillMarble")}>
+          메이저 마블
+          <em className="site-mobile-nav-new">NEW</em>
+        </button>
         <button type="button" className={currentView === "lineupSkillOcr" ? "is-active" : undefined} onClick={() => onSelectView("lineupSkillOcr")}>
           라인업 인식
         </button>
@@ -277,7 +293,6 @@ export default function SiteHeader({
         </button>
         <button type="button" className={currentView === "trainingRedistribution" ? "is-active" : undefined} onClick={() => onSelectView("trainingRedistribution")}>
           훈재분 확률
-          <em className="site-mobile-nav-new">NEW</em>
         </button>
       </nav>
     </header>

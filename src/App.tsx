@@ -57,6 +57,7 @@ import type {
   CalculatorMode,
   CardType,
   HitterPositionGroup,
+  HitterBattingSide,
   PitcherRole,
   PlayerType,
   SkillLevel,
@@ -79,6 +80,7 @@ import {
 } from "./utils/judge";
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
+import type { SkillMarbleMode } from "./utils/skillMarbleOdds";
 import { logToolUsageEvent } from "./lib/toolUsage";
 import {
   adminGetHomeChangeMessage,
@@ -152,6 +154,8 @@ const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
   "/calculator": "calculator",
   "/simulator": "simulator",
   "/impact-change": "impactChange",
+  "/skill-marble": "skillMarble",
+  "/major-skill-marble": "majorSkillMarble",
   "/ranking": "ranking",
   "/notice": "notice",
   "/skill-compare": "skillCompareBeta",
@@ -163,6 +167,8 @@ const TOOL_VIEW_URLS: Partial<Record<ToolView, string>> = {
   calculator: "/calculator/",
   simulator: "/simulator/",
   impactChange: "/impact-change/",
+  skillMarble: "/skill-marble/",
+  majorSkillMarble: "/major-skill-marble/",
   ranking: "/ranking/",
   notice: "/notice/",
   skillCompareBeta: "/skill-compare/",
@@ -174,6 +180,8 @@ const VALID_TOOL_VIEWS: ToolView[] = [
   "calculator",
   "simulator",
   "impactChange",
+  "skillMarble",
+  "majorSkillMarble",
   "ranking",
   "notice",
   "skillCompareBeta",
@@ -211,6 +219,8 @@ const TOOL_VIEW_USAGE_NAMES: Partial<Record<ToolView, string>> = {
   calculator: "view_calculator",
   simulator: "view_simulator",
   impactChange: "view_impact_change",
+  skillMarble: "view_skill_marble",
+  majorSkillMarble: "view_major_skill_marble",
   ranking: "view_ranking",
   skillCompareBeta: "view_skill_compare",
   lineupSkillOcr: "view_lineup_skill_ocr",
@@ -253,6 +263,9 @@ function App() {
   const [mode, setMode] = useState<CalculatorMode>(DEFAULT_MODE);
   const [hitterPositionGroup, setHitterPositionGroup] =
     useState<HitterPositionGroup>(DEFAULT_HITTER_POSITION_GROUP);
+  const [hitterBattingSide, setHitterBattingSide] = useState<HitterBattingSide>("right");
+  const [starterHand, setStarterHand] = useState<StarterHand>("right");
+  const [skillMarbleMode, setSkillMarbleMode] = useState<SkillMarbleMode>("twoMajor");
 
   const [cardType, setCardType] = useState<CardType>(DEFAULT_CARD_TYPE);
   const [skill1, setSkill1] = useState("");
@@ -335,11 +348,12 @@ function App() {
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
-  const activeCardType: CardType = toolView === "impactChange" ? "impact" : cardType;
+  const activeCardType: CardType =
+    toolView === "impactChange" || toolView === "skillMarble" ? "impact" : cardType;
 
   const gameData = useMemo(
-    () => getGameDataSet({ playerType, pitcherRole }),
-    [playerType, pitcherRole]
+    () => getGameDataSet({ playerType, pitcherRole, starterHand }),
+    [playerType, pitcherRole, starterHand]
   );
 
   const filteredSkills = useMemo(() => {
@@ -882,9 +896,10 @@ function App() {
   const handleReset = () => {
     if (!gameData) return;
 
-    const resetCardType = toolView === "impactChange" ? "impact" : DEFAULT_CARD_TYPE;
+    const resetCardType =
+      toolView === "impactChange" || toolView === "skillMarble" ? "impact" : DEFAULT_CARD_TYPE;
 
-    if (toolView !== "impactChange") {
+    if (toolView !== "impactChange" && toolView !== "skillMarble") {
       setCardType(DEFAULT_CARD_TYPE);
     }
 
@@ -1061,9 +1076,9 @@ function App() {
       return;
     }
 
-    if (nextToolView === "impactChange") {
+    if (nextToolView === "impactChange" || nextToolView === "skillMarble") {
       const [impactLevel1, impactLevel2, impactLevel3] = getDefaultLevels("impact");
-      setToolView("impactChange");
+      setToolView(nextToolView);
       setLevel1(impactLevel1);
       setLevel2(impactLevel2);
       setLevel3(impactLevel3);
@@ -1178,6 +1193,24 @@ function App() {
 
   const handleHitterPositionGroupChange = (nextGroup: HitterPositionGroup) => {
     setHitterPositionGroup(nextGroup);
+    resetSimulationSession();
+    resetImpactChangeSession();
+  };
+
+  const handleStarterHandChange = (nextHand: StarterHand) => {
+    setStarterHand(nextHand);
+    setSkill1("");
+    setSkill2("");
+    setSkill3("");
+    resetSimulationSession();
+    resetImpactChangeSession();
+  };
+
+  const handleHitterBattingSideChange = (nextSide: HitterBattingSide) => {
+    setHitterBattingSide(nextSide);
+    setSkill1("");
+    setSkill2("");
+    setSkill3("");
     resetSimulationSession();
     resetImpactChangeSession();
   };
@@ -1933,6 +1966,9 @@ function App() {
               toolView={toolboxToolView}
               mode={mode}
               hitterPositionGroup={hitterPositionGroup}
+              hitterBattingSide={hitterBattingSide}
+              starterHand={starterHand}
+              skillMarbleMode={skillMarbleMode}
               cardType={cardType}
               activeCardType={activeCardType}
               gameData={gameData}
@@ -1971,6 +2007,9 @@ function App() {
               setTargetGrade={setTargetGrade}
               onModeChange={handleModeChange}
               onHitterPositionGroupChange={handleHitterPositionGroupChange}
+              onHitterBattingSideChange={handleHitterBattingSideChange}
+              onStarterHandChange={handleStarterHandChange}
+              onSkillMarbleModeChange={setSkillMarbleMode}
               onCardTypeChange={handleCardTypeChange}
               onReset={handleReset}
               onGoHome={handleGoHome}

@@ -3,15 +3,20 @@ import type { Dispatch, ReactNode, SetStateAction } from "react";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
 import ImpactSimulatorView from "./ImpactSimulatorView";
+import SkillMarbleCalculatorView from "./SkillMarbleCalculatorView";
+import MajorSkillMarbleCalculatorView from "./MajorSkillMarbleCalculatorView";
 import type { GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import type { ResultGrade } from "../utils/judge";
+import type { SkillMarbleMode } from "../utils/skillMarbleOdds";
 import type {
   CalculatorMode,
   CardType,
+  HitterBattingSide,
   HitterPositionGroup,
   SkillLevel,
   SkillMeta,
+  StarterHand,
   ToolView,
 } from "../types";
 import type { SkillOddsResult } from "../utils/advancedSkillOdds";
@@ -22,6 +27,9 @@ type ToolboxStageProps = {
   toolView: Exclude<ToolView, "home" | "ranking" | "notice">;
   mode: CalculatorMode;
   hitterPositionGroup: HitterPositionGroup;
+  hitterBattingSide: HitterBattingSide;
+  starterHand: StarterHand;
+  skillMarbleMode: SkillMarbleMode;
   cardType: CardType;
   activeCardType: CardType;
   gameData: GameDataSet | null;
@@ -72,6 +80,9 @@ type ToolboxStageProps = {
   setTargetGrade: Dispatch<SetStateAction<ResultGrade>>;
   onModeChange: (nextMode: CalculatorMode) => void;
   onHitterPositionGroupChange: (nextGroup: HitterPositionGroup) => void;
+  onHitterBattingSideChange: (nextSide: HitterBattingSide) => void;
+  onStarterHandChange: (nextHand: StarterHand) => void;
+  onSkillMarbleModeChange: (nextMode: SkillMarbleMode) => void;
   onCardTypeChange: (nextCardType: CardType) => void;
   onReset: () => void;
   onGoHome: () => void;
@@ -152,6 +163,9 @@ export default function ToolboxStage({
   toolView,
   mode,
   hitterPositionGroup,
+  hitterBattingSide,
+  starterHand,
+  skillMarbleMode,
   cardType,
   activeCardType,
   gameData,
@@ -190,6 +204,9 @@ export default function ToolboxStage({
   setTargetGrade,
   onModeChange,
   onHitterPositionGroupChange,
+  onHitterBattingSideChange,
+  onStarterHandChange,
+  onSkillMarbleModeChange,
   onCardTypeChange,
   onReset,
   onGoHome,
@@ -220,25 +237,41 @@ export default function ToolboxStage({
       ? "스킬 점수 계산기"
       : toolView === "simulator"
         ? "고스변 시뮬"
-        : "임팩트 변경 시뮬";
+        : toolView === "skillMarble"
+          ? "임팩트 스킬 마블 계산기"
+          : toolView === "majorSkillMarble"
+            ? "메이저 스킬 마블 계산기"
+          : "임팩트 변경 시뮬";
   const pageKicker =
     toolView === "calculator"
       ? "Skill Score"
       : toolView === "simulator"
         ? "Advanced Roll"
-        : "Impact Roll";
+        : toolView === "skillMarble"
+          ? "Impact Marble"
+          : toolView === "majorSkillMarble"
+            ? "Major Marble"
+          : "Impact Roll";
   const pageDescription =
     toolView === "calculator"
       ? "카드 타입과 포지션을 고른 뒤 세 개의 스킬 점수를 빠르게 계산합니다."
       : toolView === "simulator"
         ? "인게임 고급스킬변경권처럼 굴리고, 원하는 등급까지 자동 롤을 실행합니다."
-        : "일반 스킬 변경권 기준으로 2, 3번 메이저 조합까지 필요한 횟수를 시뮬레이션합니다.";
+        : toolView === "skillMarble"
+          ? "임팩트 1옵을 고정하고 스킬 마블 결과가 기존 2,3옵보다 높거나 낮을 확률을 계산합니다."
+          : toolView === "majorSkillMarble"
+            ? "메이저 스킬 하나가 다른 메이저 스킬로 바뀔 때 더 높거나 낮은 후보를 점수순으로 확인합니다."
+          : "일반 스킬 변경권 기준으로 2, 3번 메이저 조합까지 필요한 횟수를 시뮬레이션합니다.";
   const pageClassName =
     toolView === "calculator"
       ? "calculator-page"
       : toolView === "simulator"
         ? "simulator-page"
-        : "impact-page";
+        : toolView === "skillMarble"
+          ? "skill-marble-page"
+          : toolView === "majorSkillMarble"
+            ? "major-skill-marble-page"
+          : "impact-page";
   const scoreAtLeastPercentLabel = formatTopPercent(skillOdds?.scoreAtLeastProbability);
   const expectedRollsLabel =
     skillOdds?.expectedRollsForScoreAtLeast != null
@@ -440,7 +473,15 @@ export default function ToolboxStage({
         </div>
       </div>
 
-      <main className={`layout-grid ${toolView === "calculator" ? "calculator-layout" : "simulator-layout"}`}>
+      <main
+        className={`layout-grid ${
+          toolView === "calculator"
+            ? "calculator-layout"
+            : toolView === "majorSkillMarble"
+            ? "major-marble-layout"
+            : "simulator-layout"
+        }`}
+      >
         <section
           className={
             toolView === "calculator"
@@ -609,6 +650,59 @@ export default function ToolboxStage({
                     />
                   </div>
                 ) : null
+              ) : toolView === "skillMarble" ? (
+                <SkillMarbleCalculatorView
+                  mode={mode}
+                  hitterPositionGroup={hitterPositionGroup}
+                  hitterBattingSide={hitterBattingSide}
+                  starterHand={starterHand}
+                  gameData={gameData}
+                  selectedSkillMeta={selectedSkillMeta}
+                  filteredSkills={filteredSkills}
+                  resolvedSkill1={resolvedSkill1}
+                  resolvedSkill2={resolvedSkill2}
+                  resolvedSkill3={resolvedSkill3}
+                  level2={level2}
+                  level3={level3}
+                  marbleMode={skillMarbleMode}
+                  setSkill1={setSkill1}
+                  setSkill2={setSkill2}
+                  setSkill3={setSkill3}
+                  setLevel2={setLevel2}
+                  setLevel3={setLevel3}
+                  onModeChange={onModeChange}
+                  onHitterBattingSideChange={onHitterBattingSideChange}
+                  onStarterHandChange={onStarterHandChange}
+                  onMarbleModeChange={onSkillMarbleModeChange}
+                />
+              ) : toolView === "majorSkillMarble" ? (
+                <MajorSkillMarbleCalculatorView
+                  mode={mode}
+                  cardType={cardType}
+                  cardTypeOptions={cardTypeOptions}
+                  hitterPositionGroup={hitterPositionGroup}
+                  hitterBattingSide={hitterBattingSide}
+                  starterHand={starterHand}
+                  gameData={gameData}
+                  filteredSkills={filteredSkills}
+                  selectedSkillMeta={selectedSkillMeta}
+                  resolvedSkill1={resolvedSkill1}
+                  resolvedSkill2={resolvedSkill2}
+                  resolvedSkill3={resolvedSkill3}
+                  level1={level1}
+                  level2={level2}
+                  level3={level3}
+                  setSkill1={setSkill1}
+                  setSkill2={setSkill2}
+                  setSkill3={setSkill3}
+                  setLevel1={setLevel1}
+                  setLevel2={setLevel2}
+                  setLevel3={setLevel3}
+                  onModeChange={onModeChange}
+                  onHitterBattingSideChange={onHitterBattingSideChange}
+                  onStarterHandChange={onStarterHandChange}
+                  onCardTypeChange={onCardTypeChange}
+                />
               ) : (
                 <ImpactSimulatorView
                   resultGradeColor={resultGradeColor}
@@ -638,14 +732,17 @@ export default function ToolboxStage({
 
         </section>
 
-        <aside className="panel panel-result" style={{ borderColor: resultGradeColor }}>
+        {toolView !== "majorSkillMarble" && (
+          <aside className="panel panel-result" style={{ borderColor: resultGradeColor }}>
           <div className="panel-head">
             <h2>결과</h2>
           </div>
 
           <div className="result-hero-card" style={{ borderColor: resultGradeColor }}>
             <div className="result-hero-eyebrow">
-              {toolView === "calculator" && activeCardType === "impact"
+              {toolView === "skillMarble"
+                ? "기존 2,3번 점수"
+                : toolView === "calculator" && activeCardType === "impact"
                 ? "총 스킬 점수 · 1옵 포함"
                 : "총 스킬 점수"}
             </div>
@@ -694,7 +791,7 @@ export default function ToolboxStage({
             <p>
               {toolView === "calculator" && activeCardType === "impact"
                 ? "상위 확률과 기대 횟수는 1옵 제외 점수 기준입니다."
-                : "상위 확률은 카드 타입별 기본 레벨 분포에서 같은 점수 이상이 나올 확률입니다."}
+              : "상위 확률은 카드 타입별 기본 레벨 분포에서 같은 점수 이상이 나올 확률입니다."}
             </p>
           </div>
 
@@ -764,6 +861,12 @@ export default function ToolboxStage({
             </p>
           )}
 
+          {toolView === "skillMarble" && (
+            <p className="tool-note">
+              1번 스킬을 고정하고 1메 확정 또는 2메 확정 결과를 기존 점수와 비교합니다.
+            </p>
+          )}
+
           {toolView === "calculator" && activeCardType === "impact" && (
             <p className="impact-note">임팩트 계산기는 1옵 포함 점수와 1옵 제외 점수를 함께 표시합니다.</p>
           )}
@@ -771,7 +874,12 @@ export default function ToolboxStage({
           {toolView === "impactChange" && (
             <p className="impact-note">임팩트 변경 시뮬은 1번 스킬 고정 + 2, 3번 스킬만 계산합니다.</p>
           )}
-        </aside>
+
+          {toolView === "skillMarble" && (
+            <p className="impact-note">현재 버전은 임팩트 카드 전용입니다.</p>
+          )}
+          </aside>
+        )}
       </main>
 
       {guideContent}

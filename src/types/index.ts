@@ -2,12 +2,15 @@
 
 export type PitcherRole = "starter" | "middle" | "closer";
 export type StarterHand = "right" | "left";
+export type HitterBattingSide = "right" | "left" | "switch";
 export type CalculatorMode = "hitter" | "starter" | "middle" | "closer";
 export type ToolView =
   | "home"
   | "calculator"
   | "simulator"
   | "impactChange"
+  | "skillMarble"
+  | "majorSkillMarble"
   | "ranking"
   | "notice"
   | "skillCompareBeta"

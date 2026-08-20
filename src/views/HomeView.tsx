@@ -85,6 +85,20 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
         description: "나는 일반 스킬 변경권으로 몇번을 돌려야 2메가 뜰까?",
         meta: "Impact Roll",
       },
+      {
+        view: "skillMarble",
+        icon: "calculator",
+        title: "임팩트 스킬 마블 계산기",
+        description: "임팩트 1옵 고정 후 기존 2,3옵보다 높거나 낮을 확률을 계산합니다.",
+        meta: "Impact Marble",
+      },
+      {
+        view: "majorSkillMarble",
+        icon: "calculator",
+        title: "메이저 스킬 마블 계산기",
+        description: "메이저 스킬 하나를 바꿀 때 더 높거나 낮은 후보를 점수순으로 봅니다.",
+        meta: "Major Marble",
+      },
     ],
   },
   {
@@ -195,6 +209,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // Shared with NoticeView; keep this colocated with the home announcement source.
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
+  {
+    date: "2026.08.20",
+    title: "스킬 마블 계산기 2종 추가",
+    body: "임팩트 스킬 마블 계산기와 메이저 스킬 마블 계산기를 추가했습니다. 임팩트 1옵 고정 기준 확률과 메이저 스킬 교체 후보를 선수 타입, 카드 타입, 스킬 레벨 기준으로 확인할 수 있습니다.",
+  },
   {
     date: "2026.08.12",
     title: "타자 스위치히터 스킬 추가",
