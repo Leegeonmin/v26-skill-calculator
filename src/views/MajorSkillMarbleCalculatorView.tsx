@@ -84,6 +84,9 @@ function getSkillsForPlayerSide(
 
   if (mode !== "hitter") {
     return nonCatcherLeadSkills.filter((skill) => {
+      if (mode === "starter" && normalizeSkillBaseName(skill.name) === "마당쇠") {
+        return false;
+      }
       if (!isPitcherStaminaSkillEligible(skill, mode, staminaRange)) {
         return false;
       }
