@@ -36,6 +36,16 @@
       "permanent": true
     },
     {
+      "source": "/skill-marble",
+      "destination": "/skill-marble/",
+      "permanent": true
+    },
+    {
+      "source": "/major-skill-marble",
+      "destination": "/major-skill-marble/",
+      "permanent": true
+    },
+    {
       "source": "/ranking",
       "destination": "/ranking/",
       "permanent": true
