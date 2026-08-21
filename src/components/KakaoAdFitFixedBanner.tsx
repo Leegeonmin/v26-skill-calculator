@@ -5,13 +5,36 @@ const KAKAO_ADFIT_BOTTOM_UNIT = "DAN-liZUYElBnSJmrdve";
 const KAKAO_ADFIT_SIDE_UNIT = "DAN-QB9RMdZh1o49GHe6";
 const KAKAO_ADFIT_MOBILE_TOP_UNIT = "DAN-mzOAh4ii66DEoLwq";
 const KAKAO_ADFIT_MOBILE_MID_UNIT = "DAN-dEaKCISEB3UejEIK";
-const KAKAO_ADFIT_PC_TOP_UNIT = "DAN-wgEEvq8xMIF8IePY";
+const KAKAO_ADFIT_PC_TOP_UNITS = [
+  "DAN-wgEEvq8xMIF8IePY",
+  "DAN-vkuJvjZPyux3QQoh",
+  "DAN-ephNLvlCbInhQxvW",
+];
 
 type KakaoAdFitFixedBannerProps = {
   enabled: boolean;
 };
 
+function useKakaoAdFitScript(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled || typeof document === "undefined") return;
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.type = "text/javascript";
+    script.dataset.v26KakaoAdfit = "true";
+    script.src = KAKAO_ADFIT_SCRIPT_SRC;
+    document.body.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [enabled]);
+}
+
 export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBannerProps) {
+  useKakaoAdFitScript(enabled);
+
   useEffect(() => {
     if (typeof document === "undefined") return;
 
@@ -21,15 +44,6 @@ export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBanner
       return () => {
         document.body.classList.remove("has-fixed-adfit-ad");
       };
-    }
-
-    if (!document.querySelector<HTMLScriptElement>("script[data-v26-kakao-adfit]")) {
-      const script = document.createElement("script");
-      script.async = true;
-      script.type = "text/javascript";
-      script.dataset.v26KakaoAdfit = "true";
-      script.src = KAKAO_ADFIT_SCRIPT_SRC;
-      document.body.appendChild(script);
     }
 
     return () => {
@@ -64,6 +78,8 @@ export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBanner
 }
 
 export function KakaoAdFitMobileTopBanner({ enabled }: KakaoAdFitFixedBannerProps) {
+  useKakaoAdFitScript(enabled);
+
   if (!enabled) return null;
 
   return (
@@ -80,6 +96,8 @@ export function KakaoAdFitMobileTopBanner({ enabled }: KakaoAdFitFixedBannerProp
 }
 
 export function KakaoAdFitMobileMidBanner({ enabled }: KakaoAdFitFixedBannerProps) {
+  useKakaoAdFitScript(enabled);
+
   if (!enabled) return null;
 
   return (
@@ -96,16 +114,18 @@ export function KakaoAdFitMobileMidBanner({ enabled }: KakaoAdFitFixedBannerProp
 }
 
 export function KakaoAdFitPcTopTripleBanner({ enabled }: KakaoAdFitFixedBannerProps) {
+  useKakaoAdFitScript(enabled);
+
   if (!enabled) return null;
 
   return (
     <aside className="kakao-adfit-pc-top-row" aria-label="광고">
-      {Array.from({ length: 3 }, (_, index) => (
+      {KAKAO_ADFIT_PC_TOP_UNITS.map((adUnit) => (
         <ins
-          key={index}
+          key={adUnit}
           className="kakao_ad_area"
           style={{ display: "none" }}
-          data-ad-unit={KAKAO_ADFIT_PC_TOP_UNIT}
+          data-ad-unit={adUnit}
           data-ad-width="300"
           data-ad-height="250"
         />

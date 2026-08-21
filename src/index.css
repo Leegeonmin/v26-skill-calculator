@@ -10684,6 +10684,8 @@ input {
   }
 
   .kakao-adfit-mobile-top-banner {
+    position: relative;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10693,9 +10695,14 @@ input {
     overflow: hidden;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.9);
+    opacity: 1;
+    filter: none;
+    backdrop-filter: none;
   }
 
   .kakao-adfit-mobile-mid-banner {
+    position: relative;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10705,6 +10712,9 @@ input {
     overflow: hidden;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.9);
+    opacity: 1;
+    filter: none;
+    backdrop-filter: none;
   }
 
   .kakao-adfit-mobile-top-banner .kakao_ad_area {
