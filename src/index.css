@@ -14587,15 +14587,30 @@ input {
 }
 
 .major-marble-slot-tab {
+  position: relative;
+  isolation: isolate;
   display: grid;
   gap: 3px;
-  border: 1px solid rgba(148, 163, 184, 0.32);
+  min-height: 62px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 11px 12px;
   background: rgba(248, 250, 252, 0.78);
   color: var(--text);
-  font-weight: 900;
   cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.major-marble-slot-tab strong {
+  font-size: 0.96rem;
+  font-weight: 950;
+  line-height: 1.12;
 }
 
 .major-marble-slot-tab span {
@@ -14604,14 +14619,57 @@ input {
   font-weight: 850;
 }
 
+.major-marble-slot-tab:not(:disabled):hover {
+  border-color: rgba(124, 58, 237, 0.46);
+  background: rgba(255, 255, 255, 0.96);
+  transform: translateY(-1px);
+}
+
 .major-marble-slot-tab.active {
-  border-color: rgba(20, 184, 166, 0.72);
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(255, 255, 255, 0.92));
+  border-color: rgba(124, 58, 237, 0.88);
+  background: linear-gradient(135deg, #7c3aed, #14b8a6);
+  color: #ffffff;
+  box-shadow:
+    0 14px 30px rgba(124, 58, 237, 0.24),
+    0 0 0 2px rgba(124, 58, 237, 0.12);
+  transform: translateY(-1px);
+}
+
+.major-marble-slot-tab.active::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 9px;
+  height: 14px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+  opacity: 0.96;
+}
+
+.major-marble-slot-tab.active span {
+  color: rgba(255, 255, 255, 0.84);
 }
 
 .major-marble-slot-tab:disabled {
   cursor: not-allowed;
-  opacity: 0.58;
+  border-color: rgba(148, 163, 184, 0.24);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(148, 163, 184, 0.08) 0,
+      rgba(148, 163, 184, 0.08) 8px,
+      rgba(255, 255, 255, 0.64) 8px,
+      rgba(255, 255, 255, 0.64) 16px
+    );
+  color: rgba(100, 116, 139, 0.76);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.major-marble-slot-tab:disabled span {
+  color: #b91c1c;
 }
 
 .major-marble-select-panel .skill-select {

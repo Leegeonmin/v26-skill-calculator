@@ -548,8 +548,8 @@ export default function MajorSkillMarbleCalculatorView({
                 onClick={() => setChangeSlot(slot as ChangeSlot)}
                 disabled={!canChange}
               >
-                {slot}번 변경
-                <span>{canChange ? "메이저" : "선택 불가"}</span>
+                <strong>{slot}번 변경</strong>
+                <span>{!canChange ? "메이저 아님" : changeSlot === slot ? "선택됨" : "선택 가능"}</span>
               </button>
             );
           })}
