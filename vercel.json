@@ -1,11 +1,6 @@
 {
   "redirects": [
     {
-      "source": "/ads.txt",
-      "destination": "https://adstxt.journeymv.com/sites/c6709733-b455-43d5-8231-5944a0330c88/ads.txt",
-      "permanent": true
-    },
-    {
       "source": "/guide",
       "destination": "https://www.cpbv-lab.com/skill-score-method",
       "permanent": true

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import { getSkillOcrPlayerOdds } from "../lib/skillOcrOdds";
 import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
 import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
@@ -362,6 +363,7 @@ export default function PublicSkillOcrView({
           <em>{pitcherQuota?.used ? "이번 주 사용 완료" : "1회 가능"}</em>
         </span>
       </section>
+      <KakaoAdFitMobileMidBanner enabled />
 
       {uploadsLoading && <p className="skill-compare-status">사용 기록을 불러오는 중입니다.</p>}
       {uploadsError && <p className="modal-error">{uploadsError}</p>}

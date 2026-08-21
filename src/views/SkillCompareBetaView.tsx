@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import { recognizeSkillChangeImage } from "../lib/skillOcr";
@@ -413,6 +414,7 @@ export default function SkillCompareBetaView({
           </button>
         </div>
       </div>
+      <KakaoAdFitMobileMidBanner enabled />
 
       <section className="skill-compare-controls" aria-label="점수 기준 선택">
         <div className="skill-compare-control-group">

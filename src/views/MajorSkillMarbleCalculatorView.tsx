@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
+import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import type {
   CalculatorMode,
   CardType,
@@ -524,6 +525,7 @@ export default function MajorSkillMarbleCalculatorView({
           </>
         )}
       </section>
+      <KakaoAdFitMobileMidBanner enabled />
 
       <section className="major-marble-skill-panel">
         <div className="major-marble-slot-tabs" aria-label="변경할 메이저 스킬 슬롯">

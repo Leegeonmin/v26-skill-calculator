@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
+import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import type {
   CalculatorMode,
   HitterBattingSide,
@@ -471,6 +472,7 @@ export default function SkillMarbleCalculatorView({
           )}
         </div>
       </section>
+      <KakaoAdFitMobileMidBanner enabled />
 
       <section className="skill-marble-skill-panel">
         <div className="skill-marble-setup-head">

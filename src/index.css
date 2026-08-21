@@ -438,6 +438,10 @@ body {
   line-height: 1.5;
 }
 
+body.has-fixed-adfit-ad {
+  padding-bottom: calc(66px + env(safe-area-inset-bottom));
+}
+
 button,
 input,
 select {
@@ -472,6 +476,87 @@ select {
   min-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
+}
+
+.kakao-adfit-fixed-banner {
+  position: fixed;
+  left: 50%;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 320px;
+  min-height: 50px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+}
+
+.kakao-adfit-fixed-banner .kakao_ad_area {
+  width: 320px;
+  height: 50px;
+}
+
+.kakao-adfit-side-banner {
+  position: fixed;
+  top: 96px;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  min-height: 600px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.kakao-adfit-side-banner-left {
+  left: 16px;
+}
+
+.kakao-adfit-side-banner .kakao_ad_area {
+  width: 160px;
+  height: 600px;
+}
+
+.kakao-adfit-mobile-top-banner {
+  display: none;
+}
+
+.kakao-adfit-mobile-mid-banner {
+  display: none;
+}
+
+.kakao-adfit-pc-top-row {
+  display: none;
+}
+
+.kakao-adfit-pc-top-row .kakao_ad_area {
+  width: 300px;
+  height: 250px;
+}
+
+@media (min-width: 1440px) {
+  .kakao-adfit-side-banner {
+    display: flex;
+  }
+}
+
+@media (min-width: 1100px) {
+  .kakao-adfit-pc-top-row {
+    display: grid;
+    grid-template-columns: repeat(3, 300px);
+    justify-content: space-between;
+    gap: 32px;
+    width: 100%;
+    min-height: 250px;
+    margin: 0 0 18px;
+  }
 }
 
 .app-header {
@@ -10589,6 +10674,49 @@ input {
     padding: 0 10px 20px;
   }
 
+  .kakao-adfit-fixed-banner {
+    display: flex;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    transform: none;
+    border-radius: 0;
+  }
+
+  .kakao-adfit-mobile-top-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100px;
+    margin: 0 auto 14px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .kakao-adfit-mobile-mid-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 50px;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .kakao-adfit-mobile-top-banner .kakao_ad_area {
+    width: 320px;
+    height: 100px;
+  }
+
+  .kakao-adfit-mobile-mid-banner .kakao_ad_area {
+    width: 320px;
+    height: 50px;
+  }
+
   .app-header {
     margin: 0 -10px 14px;
   }
@@ -10665,7 +10793,7 @@ input {
   }
 
   .app-body {
-    padding-top: 14px;
+    padding-top: 0;
   }
 
   .page-toolbar {
@@ -13572,7 +13700,12 @@ input {
   .skill-compare-page,
   .simulator-page,
   .ranking-page {
-    margin-top: 28px;
+    margin-top: 14px;
+  }
+
+  .app-body:has(> .kakao-adfit-mobile-top-banner) {
+    margin-top: 0;
+    padding-top: 0;
   }
 
   .home-primary-grid,

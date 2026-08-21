@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import {
   calculateTrainingRedistributionOdds,
   TRAINING_CARD_RULES,
@@ -135,6 +136,7 @@ export default function TrainingRedistributionView({
           </button>
         </div>
       </header>
+      <KakaoAdFitMobileMidBanner enabled />
 
       <section className="training-layout" aria-label="훈련 재분배 계산">
         <div className="training-config-panel">

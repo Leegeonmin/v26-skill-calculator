@@ -1,5 +1,9 @@
 ﻿import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import {
+  KakaoAdFitMobileMidBanner,
+  KakaoAdFitPcTopTripleBanner,
+} from "../components/KakaoAdFitFixedBanner";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
 import ImpactSimulatorView from "./ImpactSimulatorView";
@@ -464,6 +468,7 @@ export default function ToolboxStage({
 
   return (
     <div className={`main-stage tool-page ${pageClassName}`}>
+      <KakaoAdFitPcTopTripleBanner enabled />
       <div className="page-toolbar tool-page-hero">
         <div className="page-title-block">
           <span className="page-kicker">{pageKicker}</span>
@@ -566,6 +571,7 @@ export default function ToolboxStage({
                     초기화                  </button>
                 </div>
               </div>
+              <KakaoAdFitMobileMidBanner enabled />
 
               {!gameData ? (
                 <div className="panel panel-main">
@@ -608,11 +614,17 @@ export default function ToolboxStage({
               {toolView === "simulator" ? (
                 <div className="simulator-content-shell">
                   {!simulatorSetupComplete ? (
-                    simulatorSetupCard
+                    <>
+                      {simulatorSetupCard}
+                      <KakaoAdFitMobileMidBanner enabled />
+                    </>
                   ) : null}
                 </div>
               ) : toolView === "impactChange" ? (
-                <div className="simulator-content-shell">{impactControlCard}</div>
+                <div className="simulator-content-shell">
+                  {impactControlCard}
+                  <KakaoAdFitMobileMidBanner enabled />
+                </div>
               ) : null}
 
               {!gameData ? (

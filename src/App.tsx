@@ -52,7 +52,9 @@ import {
 import AppChrome from "./components/AppChrome";
 import SiteHeader from "./components/SiteHeader";
 import ToolSeoPanel from "./components/ToolSeoPanel";
-import MediavineScript from "./components/MediavineScript";
+import KakaoAdFitFixedBanner, {
+  KakaoAdFitMobileTopBanner,
+} from "./components/KakaoAdFitFixedBanner";
 import type {
   CalculatorMode,
   CardType,
@@ -462,7 +464,7 @@ function App() {
     toolView === "trainingRedistribution"
       ? "calculator"
       : toolView;
-  const shouldLoadMediavine = !isAdminRoute && !isOcrRoute;
+  const shouldShowKakaoAdFit = !isAdminRoute;
   const authDisplayName = getDisplayNameFromSession(authSession);
   const publicOcrSession: SkillOcrSession | null = authSession
     ? {
@@ -1816,6 +1818,7 @@ function App() {
             themeAction={themeToggle}
           />
           <AppChrome>
+            <KakaoAdFitMobileTopBanner enabled={shouldShowKakaoAdFit} />
             <InfoPageView page={infoPageKey} themeAction={themeToggle} onGoHome={handleGoHome} />
           </AppChrome>
           <footer className="app-footer">
@@ -1831,7 +1834,7 @@ function App() {
             </nav>
             <span>made by 우주</span>
           </footer>
-          <MediavineScript enabled={shouldLoadMediavine} />
+          <KakaoAdFitFixedBanner enabled={shouldShowKakaoAdFit} />
           <Analytics />
         </div>
       </div>
@@ -1853,6 +1856,7 @@ function App() {
           themeAction={themeToggle}
         />
         <AppChrome>
+          <KakaoAdFitMobileTopBanner enabled={shouldShowKakaoAdFit} />
           {authError && <p className="auth-error">{authError}</p>}
 
           <Suspense fallback={<ViewFallback />}>
@@ -2004,7 +2008,7 @@ function App() {
           )}
         </AppChrome>
 
-        <MediavineScript enabled={shouldLoadMediavine} />
+        <KakaoAdFitFixedBanner enabled={shouldShowKakaoAdFit} />
         <Analytics />
       </div>
     </div>
