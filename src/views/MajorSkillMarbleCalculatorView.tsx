@@ -18,6 +18,13 @@ import {
   isPitcherStaminaSkillEligible,
   PITCHER_STAMINA_RANGE_OPTIONS,
 } from "../utils/pitcherSkillFilters";
+import {
+  HITTER_FIVE_TOOL_RANGE_OPTIONS,
+  HITTER_TABLE_SETTER_RUN_OPTIONS,
+  isHitterConditionalSkillEligible,
+  type HitterFiveToolRange,
+  type HitterTableSetterRunRange,
+} from "../utils/hitterSkillFilters";
 
 interface MajorSkillMarbleCalculatorViewProps {
   mode: CalculatorMode;
@@ -82,7 +89,9 @@ function getSkillsForPlayerSide(
   mode: CalculatorMode,
   battingSide: HitterBattingSide,
   starterHand: StarterHand,
-  staminaRange: PitcherStaminaRange
+  staminaRange: PitcherStaminaRange,
+  tableSetterRunRange: HitterTableSetterRunRange,
+  fiveToolRange: HitterFiveToolRange
 ) {
   const nonCatcherLeadSkills = skills.filter((skill) => !isCatcherLead(skill));
 
@@ -106,6 +115,14 @@ function getSkillsForPlayerSide(
   }
 
   return nonCatcherLeadSkills.filter((skill) => {
+    if (
+      !isHitterConditionalSkillEligible(skill, {
+        tableSetterRunRange,
+        fiveToolRange,
+      })
+    ) {
+      return false;
+    }
     if (skill.name.includes("(좌타)")) {
       return battingSide === "left";
     }
@@ -248,9 +265,29 @@ export default function MajorSkillMarbleCalculatorView({
   onCardTypeChange,
 }: MajorSkillMarbleCalculatorViewProps) {
   const [changeSlot, setChangeSlot] = useState<ChangeSlot>(1);
+  const [tableSetterRunRange, setTableSetterRunRange] =
+    useState<HitterTableSetterRunRange>("142-plus");
+  const [fiveToolRange, setFiveToolRange] = useState<HitterFiveToolRange>("275-299");
   const skillPool = useMemo(
-    () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
-    [filteredSkills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
+    () =>
+      getSkillsForPlayerSide(
+        filteredSkills,
+        mode,
+        hitterBattingSide,
+        starterHand,
+        pitcherStaminaRange,
+        tableSetterRunRange,
+        fiveToolRange
+      ),
+    [
+      filteredSkills,
+      fiveToolRange,
+      hitterBattingSide,
+      mode,
+      pitcherStaminaRange,
+      starterHand,
+      tableSetterRunRange,
+    ]
   );
 
   useEffect(() => {
@@ -449,6 +486,42 @@ export default function MajorSkillMarbleCalculatorView({
               ))}
             </select>
           </div>
+        )}
+
+        {mode === "hitter" && (
+          <>
+            <div className="control-section">
+              <label>선봉장 주루</label>
+              <select
+                className="skill-marble-filter-select"
+                value={tableSetterRunRange}
+                onChange={(event) =>
+                  setTableSetterRunRange(event.target.value as HitterTableSetterRunRange)
+                }
+              >
+                {HITTER_TABLE_SETTER_RUN_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="control-section">
+              <label>5툴 주수</label>
+              <select
+                className="skill-marble-filter-select"
+                value={fiveToolRange}
+                onChange={(event) => setFiveToolRange(event.target.value as HitterFiveToolRange)}
+              >
+                {HITTER_FIVE_TOOL_RANGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
         )}
       </section>
 

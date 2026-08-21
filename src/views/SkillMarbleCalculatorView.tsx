@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import type {
   CalculatorMode,
@@ -20,6 +20,13 @@ import {
   type SkillMarbleOutcome,
 } from "../utils/skillMarbleOdds";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
+import {
+  HITTER_FIVE_TOOL_RANGE_OPTIONS,
+  HITTER_TABLE_SETTER_RUN_OPTIONS,
+  isHitterConditionalSkillEligible,
+  type HitterFiveToolRange,
+  type HitterTableSetterRunRange,
+} from "../utils/hitterSkillFilters";
 
 interface SkillMarbleCalculatorViewProps {
   mode: CalculatorMode;
@@ -89,7 +96,9 @@ function getSkillsForPlayerSide(
   mode: CalculatorMode,
   battingSide: HitterBattingSide,
   starterHand: StarterHand,
-  staminaRange: PitcherStaminaRange
+  staminaRange: PitcherStaminaRange,
+  tableSetterRunRange: HitterTableSetterRunRange,
+  fiveToolRange: HitterFiveToolRange
 ) {
   const impactOnlySkills = skills.filter(
     (skill) => skill.name !== "도전정신(5성)" && !skill.name.replace(/\s+/g, "").startsWith("포수리드")
@@ -115,6 +124,14 @@ function getSkillsForPlayerSide(
   }
 
   return impactOnlySkills.filter((skill) => {
+    if (
+      !isHitterConditionalSkillEligible(skill, {
+        tableSetterRunRange,
+        fiveToolRange,
+      })
+    ) {
+      return false;
+    }
     if (skill.name.includes("(좌타)")) {
       return battingSide === "left";
     }
@@ -168,13 +185,50 @@ export default function SkillMarbleCalculatorView({
   onPitcherStaminaRangeChange,
   onMarbleModeChange,
 }: SkillMarbleCalculatorViewProps) {
+  const [tableSetterRunRange, setTableSetterRunRange] =
+    useState<HitterTableSetterRunRange>("142-plus");
+  const [fiveToolRange, setFiveToolRange] = useState<HitterFiveToolRange>("275-299");
   const marbleSkillPool = useMemo(
-    () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
-    [filteredSkills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
+    () =>
+      getSkillsForPlayerSide(
+        filteredSkills,
+        mode,
+        hitterBattingSide,
+        starterHand,
+        pitcherStaminaRange,
+        tableSetterRunRange,
+        fiveToolRange
+      ),
+    [
+      filteredSkills,
+      fiveToolRange,
+      hitterBattingSide,
+      mode,
+      pitcherStaminaRange,
+      starterHand,
+      tableSetterRunRange,
+    ]
   );
   const marbleCalculationSkills = useMemo(
-    () => getSkillsForPlayerSide(gameData.skills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
-    [gameData.skills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
+    () =>
+      getSkillsForPlayerSide(
+        gameData.skills,
+        mode,
+        hitterBattingSide,
+        starterHand,
+        pitcherStaminaRange,
+        tableSetterRunRange,
+        fiveToolRange
+      ),
+    [
+      fiveToolRange,
+      gameData.skills,
+      hitterBattingSide,
+      mode,
+      pitcherStaminaRange,
+      starterHand,
+      tableSetterRunRange,
+    ]
   );
 
   useEffect(() => {
@@ -380,6 +434,41 @@ export default function SkillMarbleCalculatorView({
             </div>
           )}
 
+          {mode === "hitter" && (
+            <>
+              <div className="control-section">
+                <label>선봉장 주루</label>
+                <select
+                  className="skill-marble-filter-select"
+                  value={tableSetterRunRange}
+                  onChange={(event) =>
+                    setTableSetterRunRange(event.target.value as HitterTableSetterRunRange)
+                  }
+                >
+                  {HITTER_TABLE_SETTER_RUN_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="control-section">
+                <label>5툴 주수</label>
+                <select
+                  className="skill-marble-filter-select"
+                  value={fiveToolRange}
+                  onChange={(event) => setFiveToolRange(event.target.value as HitterFiveToolRange)}
+                >
+                  {HITTER_FIVE_TOOL_RANGE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
