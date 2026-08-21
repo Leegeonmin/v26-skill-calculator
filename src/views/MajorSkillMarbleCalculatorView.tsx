@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import type {
   CalculatorMode,
@@ -124,6 +124,19 @@ function getSkillScore(gameData: GameDataSet, skillId: string, level: SkillLevel
   return gameData.scoreTable[skillId]?.[level] ?? 0;
 }
 
+function getFilteredSkillReplacement(skill: SkillMeta | undefined, skillPool: SkillMeta[]) {
+  if (!skill) {
+    return "";
+  }
+
+  if (skillPool.some((candidate) => candidate.id === skill.id)) {
+    return skill.id;
+  }
+
+  const baseName = normalizeSkillBaseName(skill.name);
+  return skillPool.find((candidate) => normalizeSkillBaseName(candidate.name) === baseName)?.id ?? "";
+}
+
 function getSlotData(input: {
   slot: ChangeSlot;
   selectedSkillMeta: MajorSkillMarbleCalculatorViewProps["selectedSkillMeta"];
@@ -239,6 +252,34 @@ export default function MajorSkillMarbleCalculatorView({
     () => getSkillsForPlayerSide(filteredSkills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
     [filteredSkills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
   );
+
+  useEffect(() => {
+    const nextSkill1 = getFilteredSkillReplacement(selectedSkillMeta.skill1, skillPool);
+    const nextSkill2 = getFilteredSkillReplacement(selectedSkillMeta.skill2, skillPool);
+    const nextSkill3 = getFilteredSkillReplacement(selectedSkillMeta.skill3, skillPool);
+
+    if (resolvedSkill1 !== nextSkill1) {
+      setSkill1(nextSkill1);
+    }
+    if (resolvedSkill2 !== nextSkill2) {
+      setSkill2(nextSkill2);
+    }
+    if (resolvedSkill3 !== nextSkill3) {
+      setSkill3(nextSkill3);
+    }
+  }, [
+    resolvedSkill1,
+    resolvedSkill2,
+    resolvedSkill3,
+    selectedSkillMeta.skill1,
+    selectedSkillMeta.skill2,
+    selectedSkillMeta.skill3,
+    setSkill1,
+    setSkill2,
+    setSkill3,
+    skillPool,
+  ]);
+
   const changeSlotData = getSlotData({
     slot: changeSlot,
     selectedSkillMeta,

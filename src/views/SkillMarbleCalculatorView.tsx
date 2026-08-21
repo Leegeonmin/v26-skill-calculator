@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import SkillSelect from "../components/SkillSelect";
 import type {
   CalculatorMode,
@@ -19,6 +19,7 @@ import {
   type SkillMarbleMode,
   type SkillMarbleOutcome,
 } from "../utils/skillMarbleOdds";
+import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 interface SkillMarbleCalculatorViewProps {
   mode: CalculatorMode;
@@ -96,6 +97,9 @@ function getSkillsForPlayerSide(
 
   if (mode !== "hitter") {
     return impactOnlySkills.filter((skill) => {
+      if (mode === "starter" && skill.name.replace(/\s+/g, "").startsWith("마당쇠")) {
+        return false;
+      }
       if (!isPitcherStaminaSkillEligible(skill, mode, staminaRange)) {
         return false;
       }
@@ -123,6 +127,19 @@ function getSkillsForPlayerSide(
 
     return true;
   });
+}
+
+function getFilteredSkillReplacement(skill: SkillMeta | undefined, skillPool: SkillMeta[]) {
+  if (!skill) {
+    return "";
+  }
+
+  if (skillPool.some((candidate) => candidate.id === skill.id)) {
+    return skill.id;
+  }
+
+  const baseName = normalizeSkillBaseName(skill.name);
+  return skillPool.find((candidate) => normalizeSkillBaseName(candidate.name) === baseName)?.id ?? "";
 }
 
 export default function SkillMarbleCalculatorView({
@@ -159,6 +176,34 @@ export default function SkillMarbleCalculatorView({
     () => getSkillsForPlayerSide(gameData.skills, mode, hitterBattingSide, starterHand, pitcherStaminaRange),
     [gameData.skills, hitterBattingSide, mode, pitcherStaminaRange, starterHand]
   );
+
+  useEffect(() => {
+    const nextSkill1 = getFilteredSkillReplacement(selectedSkillMeta.skill1, marbleSkillPool);
+    const nextSkill2 = getFilteredSkillReplacement(selectedSkillMeta.skill2, marbleSkillPool);
+    const nextSkill3 = getFilteredSkillReplacement(selectedSkillMeta.skill3, marbleSkillPool);
+
+    if (resolvedSkill1 !== nextSkill1) {
+      setSkill1(nextSkill1);
+    }
+    if (resolvedSkill2 !== nextSkill2) {
+      setSkill2(nextSkill2);
+    }
+    if (resolvedSkill3 !== nextSkill3) {
+      setSkill3(nextSkill3);
+    }
+  }, [
+    marbleSkillPool,
+    resolvedSkill1,
+    resolvedSkill2,
+    resolvedSkill3,
+    selectedSkillMeta.skill1,
+    selectedSkillMeta.skill2,
+    selectedSkillMeta.skill3,
+    setSkill1,
+    setSkill2,
+    setSkill3,
+  ]);
+
   const result = calculateSkillMarbleOdds({
     skills: marbleCalculationSkills,
     scoreTable: gameData.scoreTable,
