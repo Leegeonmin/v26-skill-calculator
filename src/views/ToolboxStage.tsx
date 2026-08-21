@@ -491,6 +491,8 @@ export default function ToolboxStage({
           className={
             toolView === "calculator"
               ? "calculator-shell"
+              : toolView === "skillMarble" || toolView === "majorSkillMarble"
+              ? "marble-stage-shell"
               : `panel panel-main ${toolView === "simulator" ? "simulator-stage-shell" : ""}`
           }
         >

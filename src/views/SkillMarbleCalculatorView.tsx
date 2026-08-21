@@ -487,6 +487,7 @@ export default function SkillMarbleCalculatorView({
               onChange={setSkill1}
               metaText="1옵 잠금"
               slotNumber={1}
+              collapseOnMobileAfterSelect
             />
           </div>
           <div className="skill-marble-slot-card">
@@ -498,6 +499,7 @@ export default function SkillMarbleCalculatorView({
               onChange={setSkill2}
               metaText={`현재 Lv.${level2}`}
               slotNumber={2}
+              collapseOnMobileAfterSelect
             />
             <label className="skill-marble-inline-level">
               기존 2번 레벨
@@ -519,6 +521,7 @@ export default function SkillMarbleCalculatorView({
               onChange={setSkill3}
               metaText={`현재 Lv.${level3}`}
               slotNumber={3}
+              collapseOnMobileAfterSelect
             />
             <label className="skill-marble-inline-level">
               기존 3번 레벨

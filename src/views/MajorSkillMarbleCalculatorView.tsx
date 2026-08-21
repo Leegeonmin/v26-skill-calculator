@@ -565,6 +565,7 @@ export default function MajorSkillMarbleCalculatorView({
               onChange={setSkill1}
               metaText={mode === "hitter" ? `${battingSideLabel} 기준` : "스킬 선택"}
               slotNumber={1}
+              collapseOnMobileAfterSelect
             />
             <LevelSelect label="1번 레벨" level={level1} onChange={setLevel1} />
           </div>
@@ -577,6 +578,7 @@ export default function MajorSkillMarbleCalculatorView({
               onChange={setSkill2}
               metaText={mode === "hitter" ? `${battingSideLabel} 기준` : "스킬 선택"}
               slotNumber={2}
+              collapseOnMobileAfterSelect
             />
             <LevelSelect label="2번 레벨" level={level2} onChange={setLevel2} />
           </div>
@@ -589,6 +591,7 @@ export default function MajorSkillMarbleCalculatorView({
               onChange={setSkill3}
               metaText={mode === "hitter" ? `${battingSideLabel} 기준` : "스킬 선택"}
               slotNumber={3}
+              collapseOnMobileAfterSelect
             />
             <LevelSelect label="3번 레벨" level={level3} onChange={setLevel3} />
           </div>

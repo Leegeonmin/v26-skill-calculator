@@ -7059,6 +7059,12 @@ select {
   padding: 24px;
 }
 
+.marble-stage-shell {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
 .panel-result {
   padding: 18px;
   position: sticky;
@@ -7385,6 +7391,10 @@ input {
   color: #5f6f88;
   font-size: 0.84rem;
   font-weight: 500;
+}
+
+.skill-select-reselect-btn {
+  display: none;
 }
 
 .skill-result-list {
@@ -11582,6 +11592,50 @@ input {
   .selected-skill-row {
     margin: 0 0 10px;
     padding: 12px;
+  }
+
+  .skill-select.mobile-collapsed .skill-search-wrap,
+  .skill-select.mobile-collapsed .skill-result-list {
+    display: none;
+  }
+
+  .skill-select.mobile-collapsed .selected-skill-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 0;
+  }
+
+  .skill-select.mobile-collapsed .selected-skill-row p,
+  .skill-select.mobile-collapsed .selected-skill-row span {
+    margin-top: 0;
+  }
+
+  .skill-select.mobile-collapsed .selected-skill-row span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .skill-select.mobile-collapsed .selected-skill-row small {
+    display: none;
+  }
+
+  .skill-select.mobile-collapsed .skill-select-reselect-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(66, 95, 184, 0.25);
+    background: #ffffff;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 850;
+    white-space: nowrap;
   }
 
   .skill-result-list {

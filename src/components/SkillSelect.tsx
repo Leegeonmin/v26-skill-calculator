@@ -12,6 +12,7 @@ interface SkillSelectProps {
   disabled?: boolean;
   metaText?: string;
   slotNumber?: number;
+  collapseOnMobileAfterSelect?: boolean;
 }
 
 function SkillSelect({
@@ -23,8 +24,10 @@ function SkillSelect({
   disabled = false,
   metaText,
   slotNumber,
+  collapseOnMobileAfterSelect = false,
 }: SkillSelectProps) {
   const [keyword, setKeyword] = useState("");
+  const [isMobileCollapsed, setIsMobileCollapsed] = useState(false);
 
   const filteredOptions = useMemo(() => {
     const lowerKeyword = keyword.trim().toLowerCase();
@@ -49,9 +52,14 @@ function SkillSelect({
   const selectedSkill = options.find((skill) => skill.id === value);
   const selectedGrade = selectedSkill?.grade;
   const selectedColor = selectedGrade ? SKILL_GRADE_COLORS[selectedGrade] : "#111827";
+  const canCollapseSelection = collapseOnMobileAfterSelect && Boolean(selectedSkill);
 
   return (
-    <div className={`skill-select ${disabled ? "disabled" : ""}`}>
+    <div
+      className={`skill-select ${disabled ? "disabled" : ""} ${
+        canCollapseSelection && isMobileCollapsed ? "mobile-collapsed" : ""
+      }`}
+    >
       <div className="skill-select-head">
         <div className="skill-select-head-main">
           {slotNumber ? <span className="skill-slot-badge">{slotNumber}</span> : null}
@@ -84,6 +92,16 @@ function SkillSelect({
           {selectedSkill?.name ?? "선택 안 됨"}
         </span>
         {metaText ? <small>{metaText.replace("점수 ", "기본 점수 ")}</small> : null}
+        {canCollapseSelection ? (
+          <button
+            type="button"
+            className="skill-select-reselect-btn"
+            onClick={() => setIsMobileCollapsed(false)}
+            disabled={disabled}
+          >
+            다시 선택
+          </button>
+        ) : null}
       </div>
 
       <div className="skill-result-list">
@@ -98,7 +116,11 @@ function SkillSelect({
               <button
                 key={skill.id}
                 type="button"
-                onClick={() => onChange(skill.id)}
+                onClick={() => {
+                  onChange(skill.id);
+                  setKeyword("");
+                  if (collapseOnMobileAfterSelect) setIsMobileCollapsed(true);
+                }}
                 disabled={disabled}
                 className={`skill-option ${isSelected ? "selected" : ""}`}
                 style={{ color, "--skill-option-color": color } as import("react").CSSProperties}
