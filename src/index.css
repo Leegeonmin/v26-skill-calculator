@@ -8717,7 +8717,8 @@ input {
 }
 
 @media (min-width: 941px) {
-  .app-body:has(.home-stage) {
+  .app-body:has(.home-stage),
+  .app-body:has(.kakao-adfit-pc-top-row) {
     padding-top: 12px;
   }
 }
