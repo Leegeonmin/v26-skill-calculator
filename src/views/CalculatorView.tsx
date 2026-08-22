@@ -2,7 +2,7 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import type { GameDataSet } from "../data/gameData";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
-import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { SKILL_GRADE_COLORS, SKILL_GRADE_DARK_COLORS } from "../data/uiColors";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 type SelectedSkillMetaMap = {
@@ -304,9 +304,14 @@ export default function CalculatorView({
             <div className="mobile-pending-skill-card">
               <div className="mobile-pending-skill-copy">
                 <strong
-                  style={{
-                    color: SKILL_GRADE_COLORS[mobilePendingSkill.grade] ?? "#111827",
-                  }}
+                  className="skill-grade-text"
+                  style={
+                    {
+                      "--skill-grade-color": SKILL_GRADE_COLORS[mobilePendingSkill.grade] ?? "#111827",
+                      "--skill-grade-dark-color":
+                        SKILL_GRADE_DARK_COLORS[mobilePendingSkill.grade] ?? "#f8fbff",
+                    } as import("react").CSSProperties
+                  }
                 >
                   {mobilePendingSkill.name}
                 </strong>
@@ -330,13 +335,19 @@ export default function CalculatorView({
               ) : (
                 mobileSearchResults.map((skill) => {
                   const color = SKILL_GRADE_COLORS[skill.grade] ?? "#111827";
+                  const darkColor = SKILL_GRADE_DARK_COLORS[skill.grade] ?? "#f8fbff";
 
                   return (
                     <button
                       key={skill.id}
                       type="button"
-                      className="mobile-skill-search-option"
-                      style={{ color }}
+                      className="mobile-skill-search-option skill-grade-text"
+                      style={
+                        {
+                          "--skill-grade-color": color,
+                          "--skill-grade-dark-color": darkColor,
+                        } as import("react").CSSProperties
+                      }
                       onClick={() => setMobilePendingSkillId(skill.id)}
                     >
                       {skill.name}

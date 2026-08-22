@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState } from "react";
 import type { SkillMeta } from "../types";
-import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { SKILL_GRADE_COLORS, SKILL_GRADE_DARK_COLORS } from "../data/uiColors";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 interface SkillSelectProps {
@@ -53,6 +53,7 @@ function SkillSelect({
   const selectedGrade = selectedSkill?.grade;
   const selectedColor = selectedGrade ? SKILL_GRADE_COLORS[selectedGrade] : "#111827";
   const canCollapseSelection = collapseOnMobileAfterSelect && Boolean(selectedSkill);
+  const selectedDarkColor = selectedGrade ? SKILL_GRADE_DARK_COLORS[selectedGrade] : "#b9c5d8";
 
   return (
     <div
@@ -88,7 +89,15 @@ function SkillSelect({
 
       <div className="selected-skill-row">
         <p>현재 선택:</p>
-        <span style={{ color: selectedSkill ? selectedColor : "#7b879c" }}>
+        <span
+          className="skill-grade-text"
+          style={
+            {
+              "--skill-grade-color": selectedSkill ? selectedColor : "#7b879c",
+              "--skill-grade-dark-color": selectedSkill ? selectedDarkColor : "#b9c5d8",
+            } as import("react").CSSProperties
+          }
+        >
           {selectedSkill?.name ?? "선택 안 됨"}
         </span>
         {metaText ? <small>{metaText.replace("점수 ", "기본 점수 ")}</small> : null}
@@ -110,6 +119,7 @@ function SkillSelect({
         ) : (
           filteredOptions.map((skill) => {
             const color = SKILL_GRADE_COLORS[skill.grade] ?? "#111827";
+            const darkColor = SKILL_GRADE_DARK_COLORS[skill.grade] ?? "#f8fbff";
             const isSelected = skill.id === value;
 
             return (
@@ -123,7 +133,12 @@ function SkillSelect({
                 }}
                 disabled={disabled}
                 className={`skill-option ${isSelected ? "selected" : ""}`}
-                style={{ color, "--skill-option-color": color } as import("react").CSSProperties}
+                style={
+                  {
+                    "--skill-option-color": color,
+                    "--skill-option-dark-color": darkColor,
+                  } as import("react").CSSProperties
+                }
               >
                 {skill.name}
               </button>

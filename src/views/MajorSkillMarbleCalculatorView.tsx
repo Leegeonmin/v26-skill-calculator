@@ -12,7 +12,7 @@ import type {
   StarterHand,
 } from "../types";
 import type { GameDataSet } from "../data/gameData";
-import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { SKILL_GRADE_COLORS, SKILL_GRADE_DARK_COLORS } from "../data/uiColors";
 import { getDefaultLevels } from "../lib/toolboxHelpers";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 import {
@@ -200,10 +200,21 @@ function CandidateList({ title, items }: { title: string; items: CandidateSkill[
         ) : (
           items.map(({ skill, score }) => {
             const color = SKILL_GRADE_COLORS[skill.grade] ?? "var(--text)";
+            const darkColor = SKILL_GRADE_DARK_COLORS[skill.grade] ?? "var(--text)";
 
             return (
               <div key={skill.id} className="major-marble-row">
-                <strong style={{ color }}>{skill.name}</strong>
+                <strong
+                  className="skill-grade-text"
+                  style={
+                    {
+                      "--skill-grade-color": color,
+                      "--skill-grade-dark-color": darkColor,
+                    } as import("react").CSSProperties
+                  }
+                >
+                  {skill.name}
+                </strong>
                 <span>{formatScore(score)}</span>
               </div>
             );

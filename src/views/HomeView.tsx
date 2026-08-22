@@ -2,7 +2,7 @@ import { IconGlyph } from "../components/AppChrome";
 import { KakaoAdFitPcTopTripleBanner } from "../components/KakaoAdFitFixedBanner";
 import { useEffect, useState, type CSSProperties } from "react";
 import { getGameDataSet } from "../data/gameData";
-import { SKILL_GRADE_COLORS } from "../data/uiColors";
+import { SKILL_GRADE_COLORS, SKILL_GRADE_DARK_COLORS } from "../data/uiColors";
 import { getCurrentSeason, getMobileHomeTopRankings } from "../lib/ranking";
 import type { ToolView } from "../types";
 import type { RankingCategory, RankingRow } from "../types/ranking";
@@ -203,6 +203,7 @@ function getHomeRankSkillItems(row: RankingRow) {
       key: `${row.entry_id}-${skillId}-${index}`,
       name: skill?.name ?? skillId ?? "-",
       color: skill ? SKILL_GRADE_COLORS[skill.grade] : "var(--text)",
+      darkColor: skill ? SKILL_GRADE_DARK_COLORS[skill.grade] : "var(--text)",
     };
   });
 }
@@ -433,7 +434,17 @@ export default function HomeView({
                   <span className="home-mobile-rank-skills">
                     {getHomeRankSkillItems(row).map((skill) => (
                       <span key={skill.key}>
-                        <strong style={{ color: skill.color }}>{skill.name}</strong>
+                        <strong
+                          className="skill-grade-text"
+                          style={
+                            {
+                              "--skill-grade-color": skill.color,
+                              "--skill-grade-dark-color": skill.darkColor,
+                            } as CSSProperties
+                          }
+                        >
+                          {skill.name}
+                        </strong>
                       </span>
                     ))}
                   </span>
