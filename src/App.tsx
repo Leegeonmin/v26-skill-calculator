@@ -53,6 +53,7 @@ import AppChrome from "./components/AppChrome";
 import SiteHeader from "./components/SiteHeader";
 import ToolSeoPanel from "./components/ToolSeoPanel";
 import KakaoAdFitFixedBanner, {
+  KakaoAdFitPcTopTripleBanner,
   KakaoAdFitMobileTopBanner,
 } from "./components/KakaoAdFitFixedBanner";
 import type {
@@ -1910,6 +1911,7 @@ function App() {
             />
           ) : toolView === "ranking" ? (
             <div className="main-stage tool-page ranking-page">
+              <KakaoAdFitPcTopTripleBanner enabled={shouldShowKakaoAdFit} />
               <div className="page-toolbar tool-page-hero ranking-page-hero">
                 <div className="page-title-block">
                   <span className="page-kicker">Leaderboard</span>

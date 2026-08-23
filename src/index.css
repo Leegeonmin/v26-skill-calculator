@@ -500,6 +500,27 @@ select {
   height: 50px;
 }
 
+.kakao-adfit-pc-fixed-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 90px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.kakao-adfit-pc-fixed-banner .kakao_ad_area {
+  width: 728px;
+  height: 90px;
+}
+
 .kakao-adfit-side-banner {
   position: fixed;
   top: 96px;
@@ -543,6 +564,16 @@ select {
 
 @media (min-width: 1440px) {
   .kakao-adfit-side-banner {
+    display: flex;
+  }
+}
+
+@media (min-width: 901px) {
+  body.has-fixed-adfit-ad {
+    padding-bottom: 106px;
+  }
+
+  .kakao-adfit-pc-fixed-banner {
     display: flex;
   }
 }

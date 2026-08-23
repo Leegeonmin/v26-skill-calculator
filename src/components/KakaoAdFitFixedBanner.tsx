@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 const KAKAO_ADFIT_SCRIPT_SRC = "https://t1.kakaocdn.net/kas/static/ba.min.js";
 const KAKAO_ADFIT_BOTTOM_UNIT = "DAN-liZUYElBnSJmrdve";
+const KAKAO_ADFIT_PC_BOTTOM_UNIT = "DAN-txLtDHwa08Yk9jUg";
 const KAKAO_ADFIT_SIDE_UNIT = "DAN-QB9RMdZh1o49GHe6";
 const KAKAO_ADFIT_MOBILE_TOP_UNIT = "DAN-mzOAh4ii66DEoLwq";
 const KAKAO_ADFIT_MOBILE_MID_UNIT = "DAN-dEaKCISEB3UejEIK";
@@ -62,6 +63,15 @@ export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBanner
           data-ad-unit={KAKAO_ADFIT_BOTTOM_UNIT}
           data-ad-width="320"
           data-ad-height="50"
+        />
+      </aside>
+      <aside className="kakao-adfit-pc-fixed-banner" aria-label="광고">
+        <ins
+          className="kakao_ad_area"
+          style={{ display: "none" }}
+          data-ad-unit={KAKAO_ADFIT_PC_BOTTOM_UNIT}
+          data-ad-width="728"
+          data-ad-height="90"
         />
       </aside>
       <aside className="kakao-adfit-side-banner kakao-adfit-side-banner-left" aria-label="광고">

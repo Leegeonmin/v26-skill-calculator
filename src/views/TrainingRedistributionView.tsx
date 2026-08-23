@@ -1,5 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
+import {
+  KakaoAdFitMobileMidBanner,
+  KakaoAdFitPcTopTripleBanner,
+} from "../components/KakaoAdFitFixedBanner";
 import {
   calculateTrainingRedistributionOdds,
   TRAINING_CARD_RULES,
@@ -120,6 +123,7 @@ export default function TrainingRedistributionView({
 
   return (
     <main className="training-redistribution-page tool-page">
+      <KakaoAdFitPcTopTripleBanner enabled />
       <header className="training-hero">
         <div>
           <span className="page-kicker">Training Odds</span>
