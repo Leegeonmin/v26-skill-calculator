@@ -424,11 +424,13 @@
 
 html {
   overflow-y: scroll;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(74, 86, 78, 0.08), transparent 32%),
     radial-gradient(circle at top right, rgba(76, 84, 102, 0.06), transparent 28%),
@@ -451,6 +453,9 @@ select {
 .app-bg {
   min-height: 100vh;
   display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   padding: 0 14px 32px;
   background:
     radial-gradient(circle at top left, rgba(74, 86, 78, 0.08), transparent 32%),
@@ -471,6 +476,7 @@ select {
 
 .app-shell {
   width: 100%;
+  min-width: 0;
   max-width: none;
   margin: 0;
   min-height: calc(100vh - 32px);
@@ -6818,6 +6824,7 @@ select {
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 24px;
   align-items: start;
+  min-width: 0;
 }
 
 .calculator-shell {
@@ -6829,6 +6836,8 @@ select {
 .tool-page {
   position: relative;
   width: min(100%, 1240px);
+  min-width: 0;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -7178,7 +7187,9 @@ select {
 .marble-stage-shell {
   display: grid;
   gap: 16px;
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 .panel-result {
@@ -14277,6 +14288,9 @@ input {
 .skill-marble-shell {
   display: grid;
   gap: 18px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .skill-marble-config-card {
@@ -14766,6 +14780,9 @@ input {
 .major-marble-shell {
   display: grid;
   gap: 14px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .major-marble-hero,
@@ -15289,5 +15306,22 @@ input {
 
   .major-marble-mode-note {
     padding: 11px;
+  }
+}
+
+@media (max-width: 390px) {
+  .skill-marble-mode-cards,
+  .skill-marble-score-strip,
+  .skill-marble-simple .skill-marble-probability-grid,
+  .major-marble-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .major-marble-slot-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .major-marble-slot-tab {
+    text-align: left;
   }
 }
