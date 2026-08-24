@@ -15349,3 +15349,84 @@ input {
     font-size: 0.8rem;
   }
 }
+
+@media (max-width: 900px) {
+  .skill-marble-page,
+  .major-skill-marble-page {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .skill-marble-page .layout-grid,
+  .major-skill-marble-page .layout-grid,
+  .skill-marble-page .marble-stage-shell,
+  .major-skill-marble-page .marble-stage-shell,
+  .skill-marble-shell,
+  .major-marble-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .skill-marble-shell > *,
+  .major-marble-shell > *,
+  .skill-marble-hero-card,
+  .skill-marble-result-panel,
+  .skill-marble-setup-panel,
+  .skill-marble-skill-panel,
+  .skill-marble-outcomes,
+  .major-marble-hero,
+  .major-marble-controls,
+  .major-marble-skill-panel,
+  .major-marble-summary-grid,
+  .major-marble-results {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .skill-marble-hero-card,
+  .skill-marble-mode-cards,
+  .skill-marble-score-strip,
+  .skill-marble-simple .skill-marble-probability-grid,
+  .skill-marble-compact-controls,
+  .skill-marble-skill-grid,
+  .skill-marble-outcomes,
+  .major-marble-hero,
+  .major-marble-controls,
+  .major-marble-slot-tabs,
+  .major-marble-summary-grid,
+  .major-marble-results {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .skill-marble-hero-card,
+  .skill-marble-result-panel,
+  .skill-marble-setup-panel,
+  .skill-marble-skill-panel,
+  .skill-marble-outcomes,
+  .major-marble-hero,
+  .major-marble-controls,
+  .major-marble-skill-panel,
+  .major-marble-summary-grid > div,
+  .major-marble-empty-state,
+  .major-marble-list-section {
+    padding: 10px;
+  }
+
+  .skill-marble-hero-copy h2,
+  .major-marble-hero h2 {
+    font-size: 1.22rem;
+    line-height: 1.18;
+  }
+
+  .skill-marble-mode-card,
+  .skill-marble-score-strip > div,
+  .skill-marble-simple .skill-marble-probability-card,
+  .major-marble-slot-tab {
+    min-height: 0;
+    padding: 9px 10px;
+  }
+}
