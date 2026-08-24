@@ -14711,14 +14711,47 @@ input {
 
 @media (max-width: 720px) {
   .skill-marble-hero-card,
-  .skill-marble-mode-cards,
-  .skill-marble-score-strip,
   .skill-marble-compact-controls {
     grid-template-columns: 1fr;
   }
 
+  .skill-marble-mode-cards,
+  .skill-marble-score-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skill-marble-simple .skill-marble-probability-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .skill-marble-mode-card {
-    min-height: 72px;
+    min-height: 64px;
+    padding: 11px;
+  }
+
+  .skill-marble-mode-card strong {
+    font-size: 1.02rem;
+  }
+
+  .skill-marble-mode-card span {
+    font-size: 0.76rem;
+  }
+
+  .skill-marble-simple .skill-marble-probability-card {
+    min-height: 82px;
+    padding: 11px 8px;
+  }
+
+  .skill-marble-simple .skill-marble-probability-card span {
+    font-size: 0.72rem;
+  }
+
+  .skill-marble-simple .skill-marble-probability-card strong {
+    font-size: 1.12rem;
+  }
+
+  .skill-marble-simple .skill-marble-probability-card small {
+    font-size: 0.68rem;
   }
 
   .skill-marble-compact-controls {
@@ -15173,7 +15206,88 @@ input {
     grid-template-columns: 1fr;
   }
 
+  .major-marble-slot-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .major-marble-slot-tab {
+    min-height: 58px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .major-marble-slot-tab strong {
+    font-size: 0.84rem;
+  }
+
+  .major-marble-slot-tab span {
+    font-size: 0.68rem;
+  }
+
+  .major-marble-slot-tab.active::after {
+    top: 7px;
+    right: 8px;
+    width: 7px;
+    height: 11px;
+  }
+
+  .major-marble-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .major-marble-list {
     max-height: 360px;
+  }
+}
+
+@media (max-width: 480px) {
+  .marble-stage-shell,
+  .skill-marble-hero-card,
+  .skill-marble-result-panel,
+  .skill-marble-setup-panel,
+  .skill-marble-skill-panel,
+  .skill-marble-outcomes,
+  .major-marble-hero,
+  .major-marble-controls,
+  .major-marble-skill-panel,
+  .major-marble-summary-grid > div,
+  .major-marble-empty-state,
+  .major-marble-list-section {
+    border-radius: 8px;
+  }
+
+  .marble-stage-shell {
+    padding: 10px;
+  }
+
+  .skill-marble-hero-card,
+  .major-marble-hero,
+  .major-marble-controls,
+  .major-marble-skill-panel {
+    padding: 12px;
+  }
+
+  .skill-marble-setup-panel,
+  .skill-marble-skill-panel {
+    padding: 12px;
+  }
+
+  .skill-marble-hero-copy h2,
+  .major-marble-hero h2 {
+    font-size: 1.45rem;
+  }
+
+  .skill-marble-hero-copy p,
+  .major-marble-hero p {
+    font-size: 0.84rem;
+  }
+
+  .skill-marble-score-strip strong,
+  .major-marble-summary-grid strong {
+    font-size: 1.05rem;
+  }
+
+  .major-marble-mode-note {
+    padding: 11px;
   }
 }
