@@ -579,7 +579,6 @@ export default function ToolboxStage({
                     초기화                  </button>
                 </div>
               </div>
-              <KakaoAdFitMobileMidBanner enabled />
 
               {!gameData ? (
                 <div className="panel panel-main">
@@ -614,6 +613,7 @@ export default function ToolboxStage({
                   setLevel2={setLevel2}
                   setLevel3={setLevel3}
                   getSkillScoreLabel={getSkillScoreLabel}
+                  mobileMidAd={<KakaoAdFitMobileMidBanner enabled />}
                 />
               )}
             </>

@@ -11424,6 +11424,10 @@ input {
     padding: 12px;
   }
 
+  .calculator-page .kakao-adfit-mobile-mid-banner {
+    margin: 0 0 14px;
+  }
+
   .mobile-calc-builder {
     display: grid;
     gap: 12px;

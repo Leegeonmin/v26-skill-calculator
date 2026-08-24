@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState, type ReactNode } from "react";
 import SkillSelect from "../components/SkillSelect";
 import type { GameDataSet } from "../data/gameData";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
@@ -49,6 +49,7 @@ interface CalculatorViewProps {
   setLevel2: (level: SkillLevel) => void;
   setLevel3: (level: SkillLevel) => void;
   getSkillScoreLabel: (score: number | undefined) => string;
+  mobileMidAd?: ReactNode;
 }
 
 function getMobileDefaultLevel(cardType: CardType, selectedCount: number): SkillLevel {
@@ -87,6 +88,7 @@ export default function CalculatorView({
   setLevel2,
   setLevel3,
   getSkillScoreLabel,
+  mobileMidAd,
 }: CalculatorViewProps) {
   const skillLevelOptions = useMemo(() => getSkillLevelOptions(activeCardType), [activeCardType]);
   const currentSkills = useMemo(
@@ -220,6 +222,7 @@ export default function CalculatorView({
   const mobilePendingScore = mobilePendingSkillId
     ? gameData.scoreTable[mobilePendingSkillId]?.[mobilePendingLevel]
     : undefined;
+  const shouldShowMobileBuilder = mobileSelectedSkills.length < 3;
 
   const applyMobileSkills = (nextSkills: MobileSkillDraft[]) => {
     setMobileSelectedSkills(nextSkills);
@@ -311,111 +314,115 @@ export default function CalculatorView({
         </div>
       </div>
 
-      <div className="mobile-calc-builder">
-        <div className="mobile-calc-search">
-          <div className="skill-search-wrap">
-            <span className="skill-search-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" className="ui-icon">
-                <path
-                  d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.33l4.38 4.39 1.42-1.42-4.39-4.38A8 8 0 0 0 10 2Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </span>
-            <input
-              type="text"
-              placeholder="스킬 검색"
-              value={mobileKeyword}
-              onChange={(e) => setMobileKeyword(e.target.value)}
-            />
+      {mobileMidAd}
+
+      {shouldShowMobileBuilder && (
+        <div className="mobile-calc-builder">
+          <div className="mobile-calc-search">
+            <div className="skill-search-wrap">
+              <span className="skill-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="ui-icon">
+                  <path
+                    d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.33l4.38 4.39 1.42-1.42-4.39-4.38A8 8 0 0 0 10 2Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <input
+                type="text"
+                placeholder="스킬 검색"
+                value={mobileKeyword}
+                onChange={(e) => setMobileKeyword(e.target.value)}
+              />
+            </div>
+
+            {mobilePendingSkill ? (
+              <div className="mobile-pending-skill-card">
+                <div className="mobile-pending-skill-copy">
+                  <strong
+                    className="skill-grade-text"
+                    style={
+                      {
+                        "--skill-grade-color": SKILL_GRADE_COLORS[mobilePendingSkill.grade] ?? "#111827",
+                        "--skill-grade-dark-color":
+                          SKILL_GRADE_DARK_COLORS[mobilePendingSkill.grade] ?? "#f8fbff",
+                      } as import("react").CSSProperties
+                    }
+                  >
+                    {mobilePendingSkill.name}
+                  </strong>
+                  <span>레벨을 고른 뒤 입력 버튼을 누르세요.</span>
+                </div>
+                <button
+                  type="button"
+                  className="mobile-pending-skill-reset"
+                  onClick={() => {
+                    setMobilePendingSkillId("");
+                    setMobileKeyword("");
+                  }}
+                >
+                  다시 선택
+                </button>
+              </div>
+            ) : (
+              <div className="mobile-calc-search-results">
+                {mobileSearchResults.length === 0 ? (
+                  <div className="skill-empty">검색 결과가 없습니다.</div>
+                ) : (
+                  mobileSearchResults.map((skill) => {
+                    const color = SKILL_GRADE_COLORS[skill.grade] ?? "#111827";
+                    const darkColor = SKILL_GRADE_DARK_COLORS[skill.grade] ?? "#f8fbff";
+
+                    return (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        className="mobile-skill-search-option skill-grade-text"
+                        style={
+                          {
+                            "--skill-grade-color": color,
+                            "--skill-grade-dark-color": darkColor,
+                          } as import("react").CSSProperties
+                        }
+                        onClick={() => setMobilePendingSkillId(skill.id)}
+                      >
+                        {skill.name}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
 
-          {mobilePendingSkill ? (
-            <div className="mobile-pending-skill-card">
-              <div className="mobile-pending-skill-copy">
-                <strong
-                  className="skill-grade-text"
-                  style={
-                    {
-                      "--skill-grade-color": SKILL_GRADE_COLORS[mobilePendingSkill.grade] ?? "#111827",
-                      "--skill-grade-dark-color":
-                        SKILL_GRADE_DARK_COLORS[mobilePendingSkill.grade] ?? "#f8fbff",
-                    } as import("react").CSSProperties
-                  }
-                >
-                  {mobilePendingSkill.name}
-                </strong>
-                <span>레벨을 고른 뒤 입력 버튼을 누르세요.</span>
-              </div>
-              <button
-                type="button"
-                className="mobile-pending-skill-reset"
-                onClick={() => {
-                  setMobilePendingSkillId("");
-                  setMobileKeyword("");
-                }}
-              >
-                다시 선택
-              </button>
-            </div>
-          ) : (
-            <div className="mobile-calc-search-results">
-              {mobileSearchResults.length === 0 ? (
-                <div className="skill-empty">검색 결과가 없습니다.</div>
-              ) : (
-                mobileSearchResults.map((skill) => {
-                  const color = SKILL_GRADE_COLORS[skill.grade] ?? "#111827";
-                  const darkColor = SKILL_GRADE_DARK_COLORS[skill.grade] ?? "#f8fbff";
+          <div className="mobile-calc-add-row">
+            <select
+              value={mobilePendingLevel}
+              onChange={(e) => setMobilePendingLevel(Number(e.target.value) as SkillLevel)}
+              disabled={!mobilePendingSkillId}
+            >
+              {skillLevelOptions.map((level) => (
+                <option key={level} value={level}>
+                  {level} 레벨
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="toggle-btn active mobile-calc-add-btn"
+              onClick={handleMobileAdd}
+              disabled={!mobilePendingSkillId}
+            >
+              입력
+            </button>
+          </div>
 
-                  return (
-                    <button
-                      key={skill.id}
-                      type="button"
-                      className="mobile-skill-search-option skill-grade-text"
-                      style={
-                        {
-                          "--skill-grade-color": color,
-                          "--skill-grade-dark-color": darkColor,
-                        } as import("react").CSSProperties
-                      }
-                      onClick={() => setMobilePendingSkillId(skill.id)}
-                    >
-                      {skill.name}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          )}
+          <div className="mobile-calc-add-meta">
+            <span>{mobilePendingSkill?.name ?? "스킬을 선택하세요."}</span>
+            <strong>{mobilePendingSkillId ? getSkillScoreLabel(mobilePendingScore) : ""}</strong>
+          </div>
         </div>
-
-        <div className="mobile-calc-add-row">
-          <select
-            value={mobilePendingLevel}
-            onChange={(e) => setMobilePendingLevel(Number(e.target.value) as SkillLevel)}
-            disabled={!mobilePendingSkillId}
-          >
-            {skillLevelOptions.map((level) => (
-              <option key={level} value={level}>
-                {level} 레벨
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="toggle-btn active mobile-calc-add-btn"
-            onClick={handleMobileAdd}
-            disabled={!mobilePendingSkillId || mobileSelectedSkills.length >= 3}
-          >
-            입력
-          </button>
-        </div>
-
-        <div className="mobile-calc-add-meta">
-          <span>{mobilePendingSkill?.name ?? "스킬을 선택하세요."}</span>
-          <strong>{mobilePendingSkillId ? getSkillScoreLabel(mobilePendingScore) : ""}</strong>
-        </div>
-      </div>
+      )}
 
       <div className="skill-grid">
         <div className="skill-col">
