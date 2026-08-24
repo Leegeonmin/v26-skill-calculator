@@ -15392,10 +15392,12 @@ input {
   .skill-marble-score-strip,
   .skill-marble-simple .skill-marble-probability-grid,
   .skill-marble-compact-controls,
+  .skill-marble-compact-controls:has(.control-section:nth-child(4)),
   .skill-marble-skill-grid,
   .skill-marble-outcomes,
   .major-marble-hero,
   .major-marble-controls,
+  .major-marble-controls:has(.control-section:nth-child(5)),
   .major-marble-slot-tabs,
   .major-marble-summary-grid,
   .major-marble-results {
@@ -15428,5 +15430,39 @@ input {
   .major-marble-slot-tab {
     min-height: 0;
     padding: 9px 10px;
+  }
+
+  .skill-marble-compact-controls .control-section,
+  .major-marble-controls .control-section,
+  .skill-marble-compact-controls .toggle-row,
+  .major-marble-controls .toggle-row,
+  .skill-marble-compact-controls .toggle-btn,
+  .major-marble-controls .toggle-btn,
+  .skill-marble-filter-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .skill-marble-compact-controls .toggle-row,
+  .major-marble-controls .toggle-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skill-marble-compact-controls .toggle-row-modes,
+  .major-marble-controls .toggle-row-modes,
+  .major-marble-controls .toggle-row-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skill-marble-hand-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .skill-marble-compact-controls .toggle-btn,
+  .major-marble-controls .toggle-btn {
+    padding: 7px 6px;
+    font-size: 0.8rem;
+    white-space: normal;
   }
 }
