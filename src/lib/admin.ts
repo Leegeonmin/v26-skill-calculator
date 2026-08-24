@@ -7,50 +7,29 @@ export type AdminSession = {
 };
 
 export type AdminUsageSummary = {
-  total_events: number;
   today_events: number;
-  seven_day_events: number;
-  thirty_day_events: number;
   unique_sessions: number;
-  avg_actions_per_session: number | null;
-  advanced_manual_rolls: number;
-  advanced_auto_runs: number;
-  impact_auto_runs: number;
-  hitter_events: number;
-  pitcher_events: number;
-  avg_rolls_to_s: number | null;
-  avg_rolls_to_ssr_plus: number | null;
-  ocr_total_requests: number;
-  ocr_lineup_requests: number;
-  ocr_public_lineup_requests: number;
-  ocr_private_lineup_requests: number;
-  ocr_skill_compare_requests: number;
-  ocr_hitter_requests: number;
-  ocr_pitcher_requests: number;
-  ocr_saved_uploads: number;
-  ocr_saved_hitter_uploads: number;
-  ocr_saved_pitcher_uploads: number;
-  ocr_public_snapshots: number;
-  ocr_public_saved_uploads: number;
-  ocr_public_pending_uploads: number;
-  ocr_public_saved_hitter_uploads: number;
-  ocr_public_saved_pitcher_uploads: number;
-  ocr_breakdown: AdminOcrBreakdown[];
-  tool_breakdown: AdminToolBreakdown[];
+  page_views: number;
+  ad_viewable_events: number;
+  mobile_events: number;
+  desktop_events: number;
+  ad_breakdown: AdminAdBreakdown[];
+  page_breakdown: AdminPageBreakdown[];
   recent_inquiries: AdminNoticeInquiry[];
 };
 
-export type AdminOcrBreakdown = {
-  label: string;
-  request_count: number;
+export type AdminAdBreakdown = {
+  ad_slot: string;
+  ad_unit: string | null;
+  viewable_count: number;
   unique_sessions: number;
-  saved_count: number;
   last_seen_at: string | null;
 };
 
-export type AdminToolBreakdown = {
-  tool: string;
-  event_count: number;
+export type AdminPageBreakdown = {
+  page_view: string;
+  page_path: string | null;
+  view_count: number;
   unique_sessions: number;
   last_seen_at: string | null;
 };

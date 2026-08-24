@@ -4,7 +4,6 @@ import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import { recognizeSkillChangeImage } from "../lib/skillOcr";
 import { getDefaultLevels, getSkillLevelOptions } from "../lib/toolboxHelpers";
-import { logToolUsageEvent } from "../lib/toolUsage";
 import type {
   CalculatorMode,
   CardType,
@@ -22,7 +21,6 @@ import { judgeSkillResultByProbability, type JudgeResult } from "../utils/judge"
 type SkillCompareBetaViewProps = {
   onGoHome: () => void;
   themeAction?: React.ReactNode;
-  toolUsageSessionId: string | null;
 };
 
 type ComparedSkill = SkillChangeSkill & {
@@ -273,7 +271,6 @@ function formatSkillOptionPlaceholder(skill: ComparedSkill, inputMode: CompareIn
 export default function SkillCompareBetaView({
   onGoHome,
   themeAction,
-  toolUsageSessionId,
 }: SkillCompareBetaViewProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
@@ -361,32 +358,8 @@ export default function SkillCompareBetaView({
       setError(null);
       setSelectedSkillIds({});
       const response = await recognizeSkillChangeImage(file);
-
-      void logToolUsageEvent({
-        tool: "ocr_skill_compare_recognize",
-        mode,
-        cardType,
-        rollCount: 1,
-        metadata: {
-          session_id: toolUsageSessionId,
-          request_id: response.request_id,
-          success: true,
-        },
-      }).catch(() => {});
-
       setResult(response);
     } catch (uploadError) {
-      void logToolUsageEvent({
-        tool: "ocr_skill_compare_recognize",
-        mode,
-        cardType,
-        rollCount: 1,
-        metadata: {
-          session_id: toolUsageSessionId,
-          success: false,
-        },
-      }).catch(() => {});
-
       setError(
         uploadError instanceof Error
           ? uploadError.message

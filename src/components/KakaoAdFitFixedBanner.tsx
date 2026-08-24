@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { getOrCreateRevenueSessionId, logRevenueEvent } from "../lib/revenueAnalytics";
 
 const KAKAO_ADFIT_SCRIPT_SRC = "https://t1.kakaocdn.net/kas/static/ba.min.js";
 const KAKAO_ADFIT_BOTTOM_UNIT = "DAN-liZUYElBnSJmrdve";
@@ -16,6 +17,14 @@ type KakaoAdFitFixedBannerProps = {
   enabled: boolean;
 };
 
+type KakaoAdFitSlotProps = {
+  className?: string;
+  adUnit: string;
+  width: number;
+  height: number;
+  slot: string;
+};
+
 function useKakaoAdFitScript(enabled: boolean) {
   useEffect(() => {
     if (!enabled || typeof document === "undefined") return;
@@ -31,6 +40,68 @@ function useKakaoAdFitScript(enabled: boolean) {
       script.remove();
     };
   }, [enabled]);
+}
+
+function KakaoAdFitIns({ adUnit, width, height, slot }: Omit<KakaoAdFitSlotProps, "className">) {
+  const adRef = useRef<HTMLModElement | null>(null);
+
+  useEffect(() => {
+    const sessionId = getOrCreateRevenueSessionId();
+    const element = adRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    let didLogViewable = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const isViewable = entries.some(
+          (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5
+        );
+
+        if (!isViewable || didLogViewable) {
+          return;
+        }
+
+        didLogViewable = true;
+        void logRevenueEvent({
+          eventType: "ad_viewable",
+          sessionId,
+          adSlot: slot,
+          adUnit,
+          adWidth: width,
+          adHeight: height,
+        }).catch(() => {});
+        observer.disconnect();
+      },
+      { threshold: [0.5] }
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [adUnit, height, slot, width]);
+
+  return (
+    <ins
+      ref={adRef}
+      className="kakao_ad_area"
+      style={{ display: "none" }}
+      data-ad-unit={adUnit}
+      data-ad-width={String(width)}
+      data-ad-height={String(height)}
+    />
+  );
+}
+
+function KakaoAdFitSlot({ className, adUnit, width, height, slot }: KakaoAdFitSlotProps) {
+  return (
+    <aside className={className} aria-label="광고">
+      <KakaoAdFitIns adUnit={adUnit} width={width} height={height} slot={slot} />
+    </aside>
+  );
 }
 
 export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBannerProps) {
@@ -56,33 +127,27 @@ export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBanner
 
   return (
     <>
-      <aside className="kakao-adfit-fixed-banner" aria-label="광고">
-        <ins
-          className="kakao_ad_area"
-          style={{ display: "none" }}
-          data-ad-unit={KAKAO_ADFIT_BOTTOM_UNIT}
-          data-ad-width="320"
-          data-ad-height="50"
-        />
-      </aside>
-      <aside className="kakao-adfit-pc-fixed-banner" aria-label="광고">
-        <ins
-          className="kakao_ad_area"
-          style={{ display: "none" }}
-          data-ad-unit={KAKAO_ADFIT_PC_BOTTOM_UNIT}
-          data-ad-width="728"
-          data-ad-height="90"
-        />
-      </aside>
-      <aside className="kakao-adfit-side-banner kakao-adfit-side-banner-left" aria-label="광고">
-        <ins
-          className="kakao_ad_area"
-          style={{ display: "none" }}
-          data-ad-unit={KAKAO_ADFIT_SIDE_UNIT}
-          data-ad-width="160"
-          data-ad-height="600"
-        />
-      </aside>
+      <KakaoAdFitSlot
+        className="kakao-adfit-fixed-banner"
+        adUnit={KAKAO_ADFIT_BOTTOM_UNIT}
+        width={320}
+        height={50}
+        slot="mobile_bottom_fixed"
+      />
+      <KakaoAdFitSlot
+        className="kakao-adfit-pc-fixed-banner"
+        adUnit={KAKAO_ADFIT_PC_BOTTOM_UNIT}
+        width={728}
+        height={90}
+        slot="pc_bottom_fixed"
+      />
+      <KakaoAdFitSlot
+        className="kakao-adfit-side-banner kakao-adfit-side-banner-left"
+        adUnit={KAKAO_ADFIT_SIDE_UNIT}
+        width={160}
+        height={600}
+        slot="pc_left_side"
+      />
     </>
   );
 }
@@ -93,15 +158,13 @@ export function KakaoAdFitMobileTopBanner({ enabled }: KakaoAdFitFixedBannerProp
   if (!enabled) return null;
 
   return (
-    <aside className="kakao-adfit-mobile-top-banner" aria-label="광고">
-      <ins
-        className="kakao_ad_area"
-        style={{ display: "none" }}
-        data-ad-unit={KAKAO_ADFIT_MOBILE_TOP_UNIT}
-        data-ad-width="320"
-        data-ad-height="100"
-      />
-    </aside>
+    <KakaoAdFitSlot
+      className="kakao-adfit-mobile-top-banner"
+      adUnit={KAKAO_ADFIT_MOBILE_TOP_UNIT}
+      width={320}
+      height={100}
+      slot="mobile_top"
+    />
   );
 }
 
@@ -111,15 +174,13 @@ export function KakaoAdFitMobileMidBanner({ enabled }: KakaoAdFitFixedBannerProp
   if (!enabled) return null;
 
   return (
-    <aside className="kakao-adfit-mobile-mid-banner" aria-label="광고">
-      <ins
-        className="kakao_ad_area"
-        style={{ display: "none" }}
-        data-ad-unit={KAKAO_ADFIT_MOBILE_MID_UNIT}
-        data-ad-width="320"
-        data-ad-height="50"
-      />
-    </aside>
+    <KakaoAdFitSlot
+      className="kakao-adfit-mobile-mid-banner"
+      adUnit={KAKAO_ADFIT_MOBILE_MID_UNIT}
+      width={320}
+      height={50}
+      slot="mobile_mid"
+    />
   );
 }
 
@@ -130,14 +191,13 @@ export function KakaoAdFitPcTopTripleBanner({ enabled }: KakaoAdFitFixedBannerPr
 
   return (
     <aside className="kakao-adfit-pc-top-row" aria-label="광고">
-      {KAKAO_ADFIT_PC_TOP_UNITS.map((adUnit) => (
-        <ins
+      {KAKAO_ADFIT_PC_TOP_UNITS.map((adUnit, index) => (
+        <KakaoAdFitIns
           key={adUnit}
-          className="kakao_ad_area"
-          style={{ display: "none" }}
-          data-ad-unit={adUnit}
-          data-ad-width="300"
-          data-ad-height="250"
+          adUnit={adUnit}
+          width={300}
+          height={250}
+          slot={`pc_top_${index + 1}`}
         />
       ))}
     </aside>

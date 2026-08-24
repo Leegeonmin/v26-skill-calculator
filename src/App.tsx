@@ -44,7 +44,6 @@ import {
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import {
   getDefaultLevels,
-  getOrCreateToolUsageSessionId,
   getSkillScoreLabel,
   gradeRank,
   pickValidSkill,
@@ -85,7 +84,7 @@ import {
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
 import type { SkillMarbleMode } from "./utils/skillMarbleOdds";
-import { logToolUsageEvent } from "./lib/toolUsage";
+import { getOrCreateRevenueSessionId, logRevenueEvent } from "./lib/revenueAnalytics";
 import {
   adminGetHomeChangeMessage,
   adminGetIdleDevGameSetting,
@@ -217,18 +216,6 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
   })
 );
 
-const TOOL_VIEW_USAGE_NAMES: Partial<Record<ToolView, string>> = {
-  calculator: "view_calculator",
-  simulator: "view_simulator",
-  impactChange: "view_impact_change",
-  skillMarble: "view_skill_marble",
-  majorSkillMarble: "view_major_skill_marble",
-  ranking: "view_ranking",
-  skillCompareBeta: "view_skill_compare",
-  lineupSkillOcr: "view_lineup_skill_ocr",
-  trainingRedistribution: "view_training_redistribution",
-};
-
 function App() {
   const isAdminRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
@@ -338,7 +325,7 @@ function App() {
   const [ocrDraftPublicUploadId, setOcrDraftPublicUploadId] = useState<string | null>(null);
   const [ocrSaving, setOcrSaving] = useState(false);
   const [ocrSavedUpload, setOcrSavedUpload] = useState<SkillOcrSavedUpload | null>(null);
-  const [toolUsageSessionId] = useState(() => getOrCreateToolUsageSessionId());
+  const [revenueSessionId] = useState(() => getOrCreateRevenueSessionId());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
   const applyingPopStateRef = useRef(false);
 
@@ -798,22 +785,16 @@ function App() {
       return;
     }
 
-    const viewUsageTool = TOOL_VIEW_USAGE_NAMES[toolView];
-
-    if (!viewUsageTool) {
-      return;
-    }
-
-    void logToolUsageEvent({
-      tool: viewUsageTool,
-      mode: toolView,
-      rollCount: 1,
+    void logRevenueEvent({
+      eventType: "page_view",
+      sessionId: revenueSessionId,
+      pagePath: window.location.pathname,
+      pageView: toolView,
       metadata: {
-        session_id: toolUsageSessionId,
-        view: toolView,
+        search: window.location.search,
       },
     }).catch(() => {});
-  }, [infoPageKey, isAdminRoute, isOcrRoute, toolUsageSessionId, toolView]);
+  }, [infoPageKey, isAdminRoute, isOcrRoute, revenueSessionId, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -935,17 +916,6 @@ function App() {
       skillLevels: [level1, level2, level3],
       scoreTable: gameData.scoreTable,
     });
-    const nextOdds = calculateAdvancedSkillOdds({
-      mode,
-      cardType: activeCardType,
-      hitterPositionGroup,
-      skills: gameData.skills,
-      scoreTable: gameData.scoreTable,
-      skillIds: [nextSkill1, nextSkill2, nextSkill3],
-      skillLevels: [level1, level2, level3],
-      targetScore: nextTotalScore,
-    });
-    const nextJudgeResult = judgeSkillResultByProbability(nextOdds?.scoreAtLeastProbability);
 
     setSimRollCount((count) => count + 1);
     setSimBestScore((bestScore) =>
@@ -953,17 +923,6 @@ function App() {
     );
     setSimAutoRollOccurrenceCount(null);
 
-    void logToolUsageEvent({
-      tool: "advanced_manual_roll",
-      mode,
-      cardType: activeCardType,
-      rollCount: 1,
-      resultScore: nextTotalScore,
-      resultGrade: nextJudgeResult?.grade ?? null,
-      metadata: {
-        session_id: toolUsageSessionId,
-      },
-    }).catch(() => {});
   };
 
   const handleAutoRollToTarget = () => {
@@ -972,7 +931,6 @@ function App() {
     let tryCount = 0;
     let bestScoreInRun = simBestScore;
     let finalSkillIds: [string, string, string] = [resolvedSkill1, resolvedSkill2, resolvedSkill3];
-    let finalJudgeResult = judgeResult;
     const judgeCache = new Map<string, ReturnType<typeof judgeSkillResultByProbability>>();
 
     while (tryCount < AUTO_ROLL_LIMIT) {
@@ -1011,7 +969,6 @@ function App() {
 
       tryCount += 1;
       finalSkillIds = nextRoll.skillIds;
-      finalJudgeResult = nextJudgeResult;
       bestScoreInRun =
         bestScoreInRun === null ? nextTotalScore : Math.max(bestScoreInRun, nextTotalScore);
 
@@ -1027,30 +984,6 @@ function App() {
     setSimBestScore(bestScoreInRun);
     setSimAutoRollOccurrenceCount(tryCount);
 
-    const autoRollSuccess =
-      finalJudgeResult && gradeRank(finalJudgeResult.grade) >= gradeRank(targetGrade);
-
-    void logToolUsageEvent({
-      tool: "advanced_auto_roll",
-      mode,
-      cardType: activeCardType,
-      targetGrade,
-      rollCount: tryCount,
-      resultScore:
-        finalJudgeResult && finalSkillIds.every(Boolean)
-          ? calculateSkillTotal({
-              cardType: activeCardType,
-              skillIds: finalSkillIds,
-              skillLevels: [level1, level2, level3],
-              scoreTable: gameData.scoreTable,
-            })
-          : null,
-      resultGrade: finalJudgeResult?.grade ?? null,
-      metadata: {
-        session_id: toolUsageSessionId,
-        success: Boolean(autoRollSuccess),
-      },
-    }).catch(() => {});
   };
 
   const handleToolViewChange = (nextToolView: ToolView) => {
@@ -1249,19 +1182,6 @@ function App() {
       setImpactLastMessage(`${IMPACT_CHANGE_LIMIT}번 안에 2, 3번 메이저가 나오지 않았음`);
     }
 
-    void logToolUsageEvent({
-      tool: "impact_auto_roll",
-      mode,
-      cardType: "impact",
-      targetGrade: "DOUBLE_MAJOR",
-      rollCount: result.rollCount,
-      resultGrade: result.success ? "DOUBLE_MAJOR" : null,
-      metadata: {
-        session_id: toolUsageSessionId,
-        success: result.success,
-        fixedSkillId: resolvedSkill1,
-      },
-    }).catch(() => {});
   };
 
   const handleAdminUnlock = async () => {
@@ -1401,22 +1321,6 @@ function App() {
       const response = await recognizeSkillImage({ role, file });
       const transformed = transformSkillOcrResponse(response, role);
 
-      void logToolUsageEvent({
-        tool: "ocr_lineup_recognize",
-        mode: role,
-        rollCount: 1,
-        metadata: {
-          session_id: toolUsageSessionId,
-          role,
-          access: isPublicLineupOcr ? "public" : "private",
-          request_id: response.request_id,
-          players: response.summary.players,
-          matched_skills: response.summary.matched_skills,
-          unmatched_skills: response.summary.unmatched_skills,
-          success: true,
-        },
-      }).catch(() => {});
-
       setOcrDraftRawResponse(response);
       setOcrDraftPlayers(transformed.players);
       setOcrDraftTotalScore(transformed.totalScore);
@@ -1437,18 +1341,6 @@ function App() {
         setOcrUploads(await skillOcrListPublicUploads(20));
       }
     } catch (error) {
-      void logToolUsageEvent({
-        tool: "ocr_lineup_recognize",
-        mode: role,
-        rollCount: 1,
-        metadata: {
-          session_id: toolUsageSessionId,
-          role,
-          access: isPublicLineupOcr ? "public" : "private",
-          success: false,
-        },
-      }).catch(() => {});
-
       setOcrUploadError(
         error instanceof Error ? error.message : "이미지를 인식하지 못했습니다."
       );
@@ -1876,7 +1768,6 @@ function App() {
           ) : toolView === "skillCompareBeta" ? (
             <SkillCompareBetaView
               themeAction={themeToggle}
-              toolUsageSessionId={toolUsageSessionId}
               onGoHome={handleGoHome}
             />
           ) : toolView === "lineupSkillOcr" ? (

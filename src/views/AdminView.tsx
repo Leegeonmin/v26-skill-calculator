@@ -1,7 +1,7 @@
 import type {
+  AdminAdBreakdown,
   AdminIdleGameRankingEntry,
-  AdminOcrBreakdown,
-  AdminToolBreakdown,
+  AdminPageBreakdown,
   AdminUsageSummary,
 } from "../lib/admin";
 
@@ -42,27 +42,21 @@ type AdminViewProps = {
 };
 
 const toolLabels: Record<string, string> = {
-  tool_view: "화면 진입",
-  view_calculator: "스킬 점수 계산기",
-  view_simulator: "고스변 시뮬",
-  view_impact_change: "임팩트 변경 시뮬",
-  view_ranking: "고스변 랭킹챌린지",
-  view_skill_compare: "고스변 점수 비교",
-  view_lineup_skill_ocr: "라인업 스킬 인식",
-  view_training_redistribution: "훈재분 확률",
-  advanced_manual_roll: "고스변 수동",
-  advanced_auto_roll: "고스변 자동",
-  impact_auto_roll: "임팩트 자동",
-  ocr_lineup_recognize: "라인업 이미지 인식",
-  ocr_skill_compare_recognize: "스킬 화면 인식",
+  home: "홈",
+  calculator: "스킬 점수 계산기",
+  simulator: "고스변 시뮬",
+  impactChange: "임팩트 변경 시뮬",
+  skillMarble: "스킬 마블",
+  majorSkillMarble: "메이저 마블",
+  ranking: "고스변 랭킹챌린지",
+  notice: "공지사항",
+  skillCompareBeta: "고스변 점수 비교",
+  lineupSkillOcr: "라인업 스킬 인식",
+  trainingRedistribution: "훈재분 확률",
 };
 
 function formatNumber(value: number | null | undefined) {
   return value == null ? "-" : value.toLocaleString("ko-KR");
-}
-
-function formatDecimal(value: number | null | undefined) {
-  return value == null ? "-" : value.toFixed(2);
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -76,8 +70,8 @@ function formatDateTime(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
-function getToolLabel(tool: string) {
-  return toolLabels[tool] ?? tool;
+function getToolLabel(pageView: string) {
+  return toolLabels[pageView] ?? pageView;
 }
 
 function formatPercent(value: number, total: number) {
@@ -99,64 +93,57 @@ function formatSeconds(value: number | null | undefined) {
   return `${Math.round(value).toLocaleString("ko-KR")}초`;
 }
 
-function renderOcrRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
+function renderAdRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
   if (statsLoading) {
     return (
       <tr>
-        <td colSpan={6}>이미지 인식 통계를 불러오는 중입니다.</td>
+        <td colSpan={5}>광고 통계를 불러오는 중입니다.</td>
       </tr>
     );
   }
 
-  if (!stats?.ocr_breakdown?.length) {
+  if (!stats?.ad_breakdown?.length) {
     return (
       <tr>
-        <td colSpan={6}>아직 이미지 인식 사용 기록이 없습니다.</td>
+        <td colSpan={5}>아직 광고 로그가 없습니다.</td>
       </tr>
     );
   }
 
-  return stats.ocr_breakdown.map((item: AdminOcrBreakdown) => (
-    <tr key={item.label}>
-      <td>{item.label}</td>
-      <td>{formatNumber(item.request_count)}</td>
-      <td>
-        {stats.ocr_total_requests > 0
-          ? `${((item.request_count / stats.ocr_total_requests) * 100).toFixed(1)}%`
-          : "-"}
-      </td>
+  return stats.ad_breakdown.map((item: AdminAdBreakdown) => (
+    <tr key={`${item.ad_slot}:${item.ad_unit ?? ""}`}>
+      <td>{item.ad_slot}</td>
+      <td>{item.ad_unit ?? "-"}</td>
+      <td>{formatNumber(item.viewable_count)}</td>
       <td>{formatNumber(item.unique_sessions)}</td>
-      <td>{formatNumber(item.saved_count)}</td>
       <td>{formatDateTime(item.last_seen_at)}</td>
     </tr>
   ));
 }
 
-function renderBreakdownRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
-  const viewRows = stats?.tool_breakdown?.filter((item) => item.tool.startsWith("view_")) ?? [];
-  const totalViewEvents = viewRows.reduce((sum, item) => sum + item.event_count, 0);
-
+function renderPageRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
   if (statsLoading) {
     return (
       <tr>
-        <td colSpan={5}>통계를 불러오는 중입니다.</td>
+        <td colSpan={6}>통계를 불러오는 중입니다.</td>
       </tr>
     );
   }
 
-  if (!viewRows.length) {
+  if (!stats?.page_breakdown?.length) {
     return (
       <tr>
-        <td colSpan={5}>아직 도구 화면 진입 기록이 없습니다.</td>
+        <td colSpan={6}>아직 페이지 진입 기록이 없습니다.</td>
       </tr>
     );
   }
 
-  return viewRows.map((item: AdminToolBreakdown) => (
-    <tr key={item.tool}>
-      <td>{getToolLabel(item.tool)}</td>
-      <td>{formatNumber(item.event_count)}</td>
-      <td>{formatPercent(item.event_count, totalViewEvents)}</td>
+  return stats.page_breakdown.map((item: AdminPageBreakdown) => (
+    <tr key={`${item.page_view}:${item.page_path ?? ""}`}>
+      <td>{getToolLabel(item.page_view)}</td>
+      <td>{item.page_path ?? "-"}</td>
+      <td>{formatNumber(item.view_count)}</td>
+      <td>{formatPercent(item.view_count, stats.page_views)}</td>
       <td>{formatNumber(item.unique_sessions)}</td>
       <td>{formatDateTime(item.last_seen_at)}</td>
     </tr>
@@ -373,7 +360,7 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Dashboard</p>
           <h1>운영 대시보드</h1>
           <p className="admin-copy">
-            한국시간 오늘 0시 이후 사용량과 기능별 사용 비중을 먼저 보고, 저장/스냅샷 누적 지표를 함께 확인합니다.
+            광고 수익 분석에 필요한 페이지뷰, 화면 진입 광고, 기기 비중을 확인합니다.
           </p>
         </div>
 
@@ -493,9 +480,9 @@ export default function AdminView({
 
       <div className="admin-grid admin-metric-grid admin-core-metrics">
         <section className="admin-panel">
-          <h2>오늘 사용량</h2>
-          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.today_events)}</p>
-          <p>한국시간 오늘 0시 이후 쌓인 전체 이벤트 수입니다.</p>
+          <h2>오늘 페이지뷰</h2>
+          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.page_views)}</p>
+          <p>한국시간 오늘 0시 이후 사용자 화면 진입 수입니다.</p>
         </section>
 
         <section className="admin-panel">
@@ -505,95 +492,33 @@ export default function AdminView({
         </section>
 
         <section className="admin-panel">
-          <h2>오늘 이미지 인식 호출</h2>
+          <h2>광고 화면 진입</h2>
           <p className="admin-metric">
-            {statsLoading ? "-" : formatNumber(stats?.ocr_total_requests)}
+            {statsLoading ? "-" : formatNumber(stats?.ad_viewable_events)}
           </p>
-          <p>한국시간 오늘 0시 이후 외부 이미지 인식 API를 호출한 횟수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>전체 이미지 인식 저장</h2>
-          <p className="admin-metric">
-            {statsLoading ? "-" : formatNumber(stats?.ocr_saved_uploads)}
-          </p>
-          <p>라인업 스킬 인식 결과를 사용자가 저장한 누적 횟수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>타자 vs 투수</h2>
-          <p className="admin-metric">
-            {statsLoading
-              ? "-"
-              : `${formatNumber(stats?.hitter_events)} / ${formatNumber(stats?.pitcher_events)}`}
-          </p>
-          <p>한국시간 오늘 기준입니다. 왼쪽은 타자, 오른쪽은 투수 계열 이벤트 수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>S / SR+ 평균</h2>
-          <p className="admin-metric">
-            {statsLoading
-              ? "-"
-              : `${formatDecimal(stats?.avg_rolls_to_s)} / ${formatDecimal(
-                  stats?.avg_rolls_to_ssr_plus
-                )}`}
-          </p>
-          <p>한국시간 오늘 고스변 자동 롤에서 목표 등급까지 걸린 평균 시도 횟수입니다.</p>
+          <p>광고 슬롯이 실제 화면에 50% 이상 들어온 횟수입니다.</p>
         </section>
       </div>
 
       <section className="admin-panel admin-table-panel admin-ocr-panel">
         <div className="admin-section-head">
           <div>
-            <p className="admin-eyebrow">Image Scan Cost</p>
-            <h2>오늘 이미지 인식 사용량</h2>
+            <p className="admin-eyebrow">Ad Slots</p>
+            <h2>오늘 광고 슬롯별 로그</h2>
           </div>
-          <p>호출/세션/최근 사용은 한국시간 오늘 기준입니다. 저장과 스냅샷은 현재까지의 누적 기준입니다.</p>
+          <p>사용자 화면에 실제로 들어온 광고 위치를 기준으로 봅니다.</p>
         </div>
 
         <div className="admin-grid admin-grid-compact">
           <section className="admin-subpanel">
-            <span>오늘 라인업 스킬 인식</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_lineup_requests)}</strong>
-            <p>
-              투수 {statsLoading ? "-" : formatNumber(stats?.ocr_pitcher_requests)} / 타자{" "}
-              {statsLoading ? "-" : formatNumber(stats?.ocr_hitter_requests)}
-            </p>
+            <span>모바일 이벤트</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.mobile_events)}</strong>
+            <p>오늘 모바일 기기에서 발생한 수익 분석 이벤트입니다.</p>
           </section>
           <section className="admin-subpanel">
-            <span>오늘 스킬 화면 인식</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_skill_compare_requests)}</strong>
-            <p>고급 스킬 변경권 점수 비교에서 발생한 인식 요청입니다.</p>
-          </section>
-          <section className="admin-subpanel">
-            <span>전체 저장된 라인업</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_saved_uploads)}</strong>
-            <p>
-              투수 {statsLoading ? "-" : formatNumber(stats?.ocr_saved_pitcher_uploads)} / 타자{" "}
-              {statsLoading ? "-" : formatNumber(stats?.ocr_saved_hitter_uploads)}
-            </p>
-          </section>
-          <section className="admin-subpanel">
-            <span>오늘 공개 라인업 스킬 인식</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_lineup_requests)}</strong>
-            <p>Google 로그인 사용자의 공개 라인업 인식 요청입니다.</p>
-          </section>
-          <section className="admin-subpanel">
-            <span>전체 공개 인식 스냅샷</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_snapshots)}</strong>
-            <p>
-              저장 {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_uploads)} / 미저장{" "}
-              {statsLoading ? "-" : formatNumber(stats?.ocr_public_pending_uploads)}
-            </p>
-          </section>
-          <section className="admin-subpanel">
-            <span>전체 공개 저장 라인업</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_uploads)}</strong>
-            <p>
-              투수 {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_pitcher_uploads)} / 타자{" "}
-              {statsLoading ? "-" : formatNumber(stats?.ocr_public_saved_hitter_uploads)}
-            </p>
+            <span>데스크톱 이벤트</span>
+            <strong>{statsLoading ? "-" : formatNumber(stats?.desktop_events)}</strong>
+            <p>오늘 데스크톱 기기에서 발생한 수익 분석 이벤트입니다.</p>
           </section>
         </div>
 
@@ -601,15 +526,14 @@ export default function AdminView({
           <table className="admin-table">
             <thead>
               <tr>
-                <th>구분</th>
-                <th>오늘 호출</th>
-                <th>오늘 비중</th>
-                <th>오늘 세션</th>
-                <th>전체 저장</th>
-                <th>최근 사용</th>
+                <th>광고 위치</th>
+                <th>광고 단위</th>
+                <th>화면 진입</th>
+                <th>세션</th>
+                <th>최근</th>
               </tr>
             </thead>
-            <tbody>{renderOcrRows(stats, statsLoading)}</tbody>
+            <tbody>{renderAdRows(stats, statsLoading)}</tbody>
           </table>
         </div>
       </section>
@@ -617,24 +541,25 @@ export default function AdminView({
       <section className="admin-panel admin-table-panel admin-tool-ratio-panel">
         <div className="admin-section-head">
           <div>
-            <p className="admin-eyebrow">Usage</p>
-            <h2>오늘 도구별 화면 진입 비율</h2>
+            <p className="admin-eyebrow">Pages</p>
+            <h2>오늘 페이지별 진입 비율</h2>
           </div>
-          <p>한국시간 오늘 0시 이후 각 도구 화면에 들어간 횟수를 기준으로 비율을 계산합니다.</p>
+          <p>광고 수익 기여 후보가 큰 콘텐츠를 페이지 진입 기준으로 봅니다.</p>
         </div>
 
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>도구</th>
+                <th>페이지</th>
+                <th>경로</th>
                 <th>진입</th>
                 <th>비율</th>
                 <th>세션</th>
                 <th>최근 진입</th>
               </tr>
             </thead>
-            <tbody>{renderBreakdownRows(stats, statsLoading)}</tbody>
+            <tbody>{renderPageRows(stats, statsLoading)}</tbody>
           </table>
         </div>
       </section>

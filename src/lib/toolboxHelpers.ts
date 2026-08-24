@@ -2,27 +2,6 @@ import type { CardType, SkillLevel, SkillMeta } from "../types";
 import type { ResultGrade } from "../utils/judge";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
-export const TOOL_USAGE_SESSION_KEY = "v26-tool-usage-session";
-
-export function getOrCreateToolUsageSessionId(): string {
-  if (typeof window === "undefined") {
-    return "server";
-  }
-
-  const stored = window.sessionStorage.getItem(TOOL_USAGE_SESSION_KEY);
-  if (stored) {
-    return stored;
-  }
-
-  const nextId =
-    typeof window.crypto?.randomUUID === "function"
-      ? window.crypto.randomUUID()
-      : `tool-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
-  window.sessionStorage.setItem(TOOL_USAGE_SESSION_KEY, nextId);
-  return nextId;
-}
-
 export function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
   if (cardType === "allStar") {
     return [8, 7, 7];

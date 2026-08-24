@@ -2966,14 +2966,6 @@ select {
   grid-template-rows: auto 1fr auto;
 }
 
-.admin-metric-grid .admin-panel:nth-child(n + 3) {
-  display: none;
-}
-
-.admin-ocr-panel .admin-grid-compact .admin-subpanel:nth-child(n + 3) {
-  display: none;
-}
-
 .admin-panel {
   display: grid;
   gap: 10px;
