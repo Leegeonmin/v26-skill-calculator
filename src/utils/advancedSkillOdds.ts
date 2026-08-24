@@ -50,6 +50,10 @@ function getFamilyWeight(family: SkillFamily, weights: Partial<Record<SkillFamil
 }
 
 function getDistributionLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
+  if (cardType === "allStar") {
+    return [8, 7, 7];
+  }
+
   if (cardType === "goldenGlove") {
     return [6, 6, 6];
   }

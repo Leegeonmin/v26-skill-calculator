@@ -3,6 +3,7 @@ import SkillSelect from "../components/SkillSelect";
 import type { GameDataSet } from "../data/gameData";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
 import { SKILL_GRADE_COLORS, SKILL_GRADE_DARK_COLORS } from "../data/uiColors";
+import { getSkillLevelOptions } from "../lib/toolboxHelpers";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 type SelectedSkillMetaMap = {
@@ -51,6 +52,10 @@ interface CalculatorViewProps {
 }
 
 function getMobileDefaultLevel(cardType: CardType, selectedCount: number): SkillLevel {
+  if (cardType === "allStar") {
+    return selectedCount === 0 ? 8 : 7;
+  }
+
   if (cardType === "goldenGlove") {
     return 6;
   }
@@ -83,6 +88,7 @@ export default function CalculatorView({
   setLevel3,
   getSkillScoreLabel,
 }: CalculatorViewProps) {
+  const skillLevelOptions = useMemo(() => getSkillLevelOptions(activeCardType), [activeCardType]);
   const currentSkills = useMemo(
     () =>
       [
@@ -155,6 +161,30 @@ export default function CalculatorView({
       setMobilePendingLevel(nextDefaultLevel);
     });
   }, [activeCardType, mobileSelectedSkills.length]);
+
+  useEffect(() => {
+    if (skillLevelOptions.includes(level1)) {
+      return;
+    }
+
+    setLevel1(getMobileDefaultLevel(activeCardType, 0));
+  }, [activeCardType, level1, setLevel1, skillLevelOptions]);
+
+  useEffect(() => {
+    if (skillLevelOptions.includes(level2)) {
+      return;
+    }
+
+    setLevel2(getMobileDefaultLevel(activeCardType, 1));
+  }, [activeCardType, level2, setLevel2, skillLevelOptions]);
+
+  useEffect(() => {
+    if (skillLevelOptions.includes(level3)) {
+      return;
+    }
+
+    setLevel3(getMobileDefaultLevel(activeCardType, 2));
+  }, [activeCardType, level3, setLevel3, skillLevelOptions]);
 
   const mobileExcludedIds = useMemo(
     () => mobileSelectedSkills.map((skill) => skill.id),
@@ -365,7 +395,7 @@ export default function CalculatorView({
             onChange={(e) => setMobilePendingLevel(Number(e.target.value) as SkillLevel)}
             disabled={!mobilePendingSkillId}
           >
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>
@@ -402,7 +432,7 @@ export default function CalculatorView({
             value={level1}
             onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
           >
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>
@@ -421,7 +451,7 @@ export default function CalculatorView({
             metaText={getSkillScoreLabel(skillScores.skill2)}
           />
           <select value={level2} onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}>
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>
@@ -440,7 +470,7 @@ export default function CalculatorView({
             metaText={getSkillScoreLabel(skillScores.skill3)}
           />
           <select value={level3} onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}>
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>

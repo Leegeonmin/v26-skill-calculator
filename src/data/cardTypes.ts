@@ -4,5 +4,6 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   impact: "임팩트",
   signature: "시그니처",
   goldenGlove: "골든글러브",
+  allStar: "올스타",
   national: "국가대표",
 };

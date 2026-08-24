@@ -24,11 +24,19 @@ export function getOrCreateToolUsageSessionId(): string {
 }
 
 export function getDefaultLevels(cardType: CardType): [SkillLevel, SkillLevel, SkillLevel] {
+  if (cardType === "allStar") {
+    return [8, 7, 7];
+  }
+
   if (cardType === "goldenGlove") {
     return [6, 6, 6];
   }
 
   return [6, 5, 5];
+}
+
+export function getSkillLevelOptions(cardType: CardType): SkillLevel[] {
+  return cardType === "allStar" ? [5, 6, 7, 8, 9, 10] : [5, 6, 7, 8];
 }
 
 export function pickValidSkill(

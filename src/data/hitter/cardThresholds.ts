@@ -44,6 +44,25 @@ export const CARD_THRESHOLDS: CardThresholdTable = {
     { score: 50, percent: 0.018 },
   ],
 
+  allStar: [
+    { score: 20, percent: 37.67 },
+    { score: 22, percent: 28.01 },
+    { score: 24, percent: 20.42 },
+    { score: 26, percent: 14.63 },
+    { score: 28, percent: 10.26 },
+    { score: 30, percent: 7.0 },
+    { score: 32, percent: 4.62 },
+    { score: 34, percent: 2.96 },
+    { score: 36, percent: 1.83 },
+    { score: 38, percent: 1.09 },
+    { score: 40, percent: 0.62 },
+    { score: 42, percent: 0.336 },
+    { score: 44, percent: 0.174 },
+    { score: 46, percent: 0.086 },
+    { score: 48, percent: 0.041 },
+    { score: 50, percent: 0.018 },
+  ],
+
   goldenGlove: [
     { score: 22, percent: 34.92 },
     { score: 24, percent: 26.23 },

@@ -212,6 +212,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.08.24",
+    title: "올스타 카드 스킬 점수 지원",
+    body: "스킬 점수 계산기와 고스변 점수 비교에 올스타 카드 타입을 추가했습니다. 올스타 선택 시 기본 8/7/7 레벨과 9, 10레벨 점수 기준을 확인할 수 있습니다.",
+  },
+  {
     date: "2026.08.21",
     title: "스킬 마블 계산기 사용성 개선",
     body: "임팩트 스킬 마블 계산기와 메이저 스킬 마블 계산기의 모바일 선택 화면을 정리하고, 스킬 선택 후 목록 접기와 다시 선택 기능을 추가했습니다. 선봉장, 5툴플레이어, 철완처럼 조건별로 나뉘는 스킬도 실제 계산 기준에 맞게 후보와 예시에 반영되도록 조정했습니다.",

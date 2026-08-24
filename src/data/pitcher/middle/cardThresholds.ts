@@ -46,6 +46,7 @@ const SIGNATURE_THRESHOLDS = [
 export const MIDDLE_CARD_THRESHOLDS: CardThresholdTable = {
   impact: IMPACT_THRESHOLDS,
   signature: SIGNATURE_THRESHOLDS,
+  allStar: SIGNATURE_THRESHOLDS,
   goldenGlove: SIGNATURE_THRESHOLDS,
   national: SIGNATURE_THRESHOLDS,
 };

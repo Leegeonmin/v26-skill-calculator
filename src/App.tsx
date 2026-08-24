@@ -345,7 +345,11 @@ function App() {
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
   const activeCardType: CardType =
-    toolView === "impactChange" || toolView === "skillMarble" ? "impact" : cardType;
+    toolView === "impactChange" || toolView === "skillMarble"
+      ? "impact"
+      : (toolView === "simulator" || toolView === "majorSkillMarble") && cardType === "allStar"
+        ? "signature"
+        : cardType;
 
   const gameData = useMemo(
     () => getGameDataSet({ playerType, pitcherRole, starterHand }),

@@ -4,6 +4,7 @@ const ALL_CARD_TYPES: CardType[] = [
   "impact",
   "signature",
   "goldenGlove",
+  "allStar",
   "national",
 ];
 
@@ -464,7 +465,7 @@ export const SKILLS: SkillMeta[] = [
     id: "hitter_spirit_signature_live_allstar",
     name: "패기(시그/올스타)",
     grade: "major",
-    availableCardTypes: ["signature"],
+    availableCardTypes: ["signature", "allStar"],
   },
   {
     id: "hitter_eagle_eye",

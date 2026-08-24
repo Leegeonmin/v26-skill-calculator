@@ -3,6 +3,7 @@ import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import { recognizeSkillChangeImage } from "../lib/skillOcr";
+import { getDefaultLevels, getSkillLevelOptions } from "../lib/toolboxHelpers";
 import { logToolUsageEvent } from "../lib/toolUsage";
 import type {
   CalculatorMode,
@@ -43,6 +44,7 @@ const MODE_OPTIONS: Array<{ value: CalculatorMode; label: string }> = [
 const CARD_TYPE_OPTIONS: Array<{ value: CardType; label: string }> = [
   { value: "impact", label: "임팩트" },
   { value: "signature", label: "시그니처" },
+  { value: "allStar", label: "올스타" },
   { value: "goldenGlove", label: "골든글러브" },
   { value: "national", label: "국가대표" },
 ];
@@ -55,14 +57,14 @@ const HITTER_POSITION_GROUP_OPTIONS: Array<{ value: HitterPositionGroup; label: 
   { value: "fielder", label: "야수" },
   { value: "catcher", label: "포수" },
 ];
-const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
 type CompareInputMode = "auto" | "manual";
 
-function createBlankSkillChangeResponse(): SkillChangeResponse {
+function createBlankSkillChangeResponse(cardType: CardType = "signature"): SkillChangeResponse {
+  const defaultLevels = getDefaultLevels(cardType);
   const blankSkills = [1, 2, 3].map((slot) => ({
     slot,
     name: null,
-    level: 5,
+    level: defaultLevels[slot - 1],
   }));
 
   return {
@@ -151,7 +153,9 @@ function findSkillMeta(
 }
 
 function normalizeLevel(level: number | null): SkillLevel {
-  return level === 5 || level === 6 || level === 7 || level === 8 ? level : 5;
+  return level === 5 || level === 6 || level === 7 || level === 8 || level === 9 || level === 10
+    ? level
+    : 5;
 }
 
 function compareSkills(
@@ -283,6 +287,7 @@ export default function SkillCompareBetaView({
   const [exampleOpen, setExampleOpen] = useState(false);
   const [selectedSkillIds, setSelectedSkillIds] = useState<Record<string, string>>({});
   const [compareInputMode, setCompareInputMode] = useState<CompareInputMode>("auto");
+  const skillLevelOptions = useMemo(() => getSkillLevelOptions(cardType), [cardType]);
 
   const dataSet = useMemo(() => getDataSet(mode, starterHand), [mode, starterHand]);
   const comparedLeft = useMemo(
@@ -311,14 +316,42 @@ export default function SkillCompareBetaView({
     }
 
     setError(null);
-    setResult((currentResult) => currentResult ?? createBlankSkillChangeResponse());
-  }, [compareInputMode]);
+    setResult((currentResult) => currentResult ?? createBlankSkillChangeResponse(cardType));
+  }, [cardType, compareInputMode]);
 
   function handleCompareInputModeChange(nextMode: CompareInputMode) {
     setCompareInputMode(nextMode);
     setSelectedSkillIds({});
-    setResult(nextMode === "manual" ? createBlankSkillChangeResponse() : null);
+    setResult(nextMode === "manual" ? createBlankSkillChangeResponse(cardType) : null);
     setError(null);
+  }
+
+  function handleCardTypeChange(nextCardType: CardType) {
+    const nextLevelOptions = getSkillLevelOptions(nextCardType);
+    const nextDefaultLevels = getDefaultLevels(nextCardType);
+
+    setCardType(nextCardType);
+    setSelectedSkillIds({});
+    setResult((currentResult) => {
+      if (!currentResult) {
+        return currentResult;
+      }
+
+      const normalizeSkills = (skills: SkillChangeSkill[]) =>
+        skills.map((skill, index) => {
+          const level = normalizeLevel(skill.level);
+          return {
+            ...skill,
+            level: nextLevelOptions.includes(level) ? level : nextDefaultLevels[index] ?? 5,
+          };
+        });
+
+      return {
+        ...currentResult,
+        left: normalizeSkills(currentResult.left),
+        right: normalizeSkills(currentResult.right),
+      };
+    });
   }
 
   async function upload(file: File) {
@@ -471,7 +504,7 @@ export default function SkillCompareBetaView({
 
         <label className="skill-compare-card-select">
           <span>카드 타입</span>
-          <select value={cardType} onChange={(event) => setCardType(event.target.value as CardType)}>
+          <select value={cardType} onChange={(event) => handleCardTypeChange(event.target.value as CardType)}>
             {CARD_TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -686,7 +719,7 @@ export default function SkillCompareBetaView({
                         updateSkillLevel("left", skill.slot, Number(event.target.value) as SkillLevel)
                       }
                     >
-                      {SKILL_LEVEL_OPTIONS.map((level) => (
+                      {skillLevelOptions.map((level) => (
                         <option key={level} value={level}>
                           Lv.{level}
                         </option>
@@ -741,7 +774,7 @@ export default function SkillCompareBetaView({
                         )
                       }
                     >
-                      {SKILL_LEVEL_OPTIONS.map((level) => (
+                      {skillLevelOptions.map((level) => (
                         <option key={level} value={level}>
                           Lv.{level}
                         </option>

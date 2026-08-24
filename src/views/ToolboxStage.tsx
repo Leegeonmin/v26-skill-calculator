@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useMemo, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import {
   KakaoAdFitMobileMidBanner,
@@ -235,12 +235,20 @@ export default function ToolboxStage({
     toolView === "simulator" &&
     simulatorSetupState.toolView === "simulator" &&
     simulatorSetupState.complete;
+  const standardCardTypeOptions = useMemo(
+    () => cardTypeOptions.filter((option) => option.value !== "allStar"),
+    [cardTypeOptions]
+  );
+  const simulatorCardTypeOptions = toolView === "simulator" ? standardCardTypeOptions : cardTypeOptions;
+  const majorMarbleCardTypeOptions =
+    toolView === "majorSkillMarble" ? standardCardTypeOptions : cardTypeOptions;
+  const visibleCardType = cardType === "allStar" ? activeCardType : cardType;
 
   const modeLabel = getModeLabel(mode);
   const hitterPositionLabel =
     mode === "hitter" ? (hitterPositionGroup === "fielder" ? "야수" : "포수") : null;
   const cardTypeLabel =
-    cardTypeOptions.find((option) => option.value === cardType)?.label ?? cardType;
+    cardTypeOptions.find((option) => option.value === activeCardType)?.label ?? activeCardType;
   const pageTitle =
     toolView === "calculator"
       ? "스킬 점수 계산기"
@@ -365,11 +373,11 @@ export default function ToolboxStage({
           <div className="control-section">
             <label>카드 타입</label>
             <div className="toggle-row toggle-row-cards">
-              {cardTypeOptions.map((option) => (
+              {simulatorCardTypeOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
-                  className={`toggle-btn ${cardType === option.value ? "active" : ""}`}
+                  className={`toggle-btn ${visibleCardType === option.value ? "active" : ""}`}
                   onClick={() => onCardTypeChange(option.value)}
                 >
                   {option.label}
@@ -699,8 +707,8 @@ export default function ToolboxStage({
               ) : toolView === "majorSkillMarble" ? (
                 <MajorSkillMarbleCalculatorView
                   mode={mode}
-                  cardType={cardType}
-                  cardTypeOptions={cardTypeOptions}
+                  cardType={visibleCardType}
+                  cardTypeOptions={majorMarbleCardTypeOptions}
                   hitterPositionGroup={hitterPositionGroup}
                   hitterBattingSide={hitterBattingSide}
                   starterHand={starterHand}

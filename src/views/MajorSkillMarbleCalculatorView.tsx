@@ -13,7 +13,7 @@ import type {
 } from "../types";
 import type { GameDataSet } from "../data/gameData";
 import { SKILL_GRADE_COLORS, SKILL_GRADE_DARK_COLORS } from "../data/uiColors";
-import { getDefaultLevels } from "../lib/toolboxHelpers";
+import { getDefaultLevels, getSkillLevelOptions } from "../lib/toolboxHelpers";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 import {
   isPitcherStaminaSkillEligible,
@@ -67,8 +67,6 @@ type CandidateSkill = {
   skill: SkillMeta;
   score: number;
 };
-
-const SLOT_LEVELS: SkillLevel[] = [5, 6, 7, 8];
 
 function formatScore(score: number) {
   return score.toLocaleString("ko-KR", {
@@ -228,17 +226,19 @@ function CandidateList({ title, items }: { title: string; items: CandidateSkill[
 function LevelSelect({
   label,
   level,
+  levelOptions,
   onChange,
 }: {
   label: string;
   level: SkillLevel;
+  levelOptions: SkillLevel[];
   onChange: (level: SkillLevel) => void;
 }) {
   return (
     <label className="skill-marble-inline-level">
       {label}
       <select value={level} onChange={(event) => onChange(Number(event.target.value) as SkillLevel)}>
-        {SLOT_LEVELS.map((item) => (
+        {levelOptions.map((item) => (
           <option key={item} value={item}>
             Lv.{item}
           </option>
@@ -280,6 +280,7 @@ export default function MajorSkillMarbleCalculatorView({
   const [tableSetterRunRange, setTableSetterRunRange] =
     useState<HitterTableSetterRunRange>("142-plus");
   const [fiveToolRange, setFiveToolRange] = useState<HitterFiveToolRange>("275-299");
+  const skillLevelOptions = useMemo(() => getSkillLevelOptions(cardType), [cardType]);
   const skillPool = useMemo(
     () =>
       getSkillsForPlayerSide(
@@ -344,16 +345,17 @@ export default function MajorSkillMarbleCalculatorView({
       ? getSkillScore(gameData, changeSlotData.skillId, changeSlotData.level)
       : null;
   const marbleResultLevel = getDefaultLevels(cardType)[changeSlot - 1];
-  const selectedBaseNames = [selectedSkillMeta.skill1, selectedSkillMeta.skill2, selectedSkillMeta.skill3].map(
-    (skill) => (skill ? normalizeSkillBaseName(skill.name) : "")
-  );
-  const otherSlotBaseNames = new Set(
-    selectedBaseNames.filter((baseName, index) => baseName && index !== changeSlot - 1)
-  );
   const candidates = useMemo<CandidateSkill[]>(() => {
     if (currentScore == null) {
       return [];
     }
+
+    const selectedBaseNames = [selectedSkillMeta.skill1, selectedSkillMeta.skill2, selectedSkillMeta.skill3].map(
+      (skill) => (skill ? normalizeSkillBaseName(skill.name) : "")
+    );
+    const otherSlotBaseNames = new Set(
+      selectedBaseNames.filter((baseName, index) => baseName && index !== changeSlot - 1)
+    );
 
     return skillPool
       .filter((skill) => {
@@ -374,7 +376,17 @@ export default function MajorSkillMarbleCalculatorView({
         score: getSkillScore(gameData, skill.id, marbleResultLevel),
       }))
       .filter((candidate) => candidate.score !== currentScore);
-  }, [changeSlotData.skillId, currentScore, gameData, marbleResultLevel, otherSlotBaseNames, skillPool]);
+  }, [
+    changeSlot,
+    changeSlotData.skillId,
+    currentScore,
+    gameData,
+    marbleResultLevel,
+    selectedSkillMeta.skill1,
+    selectedSkillMeta.skill2,
+    selectedSkillMeta.skill3,
+    skillPool,
+  ]);
   const higherSkills = candidates
     .filter((candidate) => candidate.score > (currentScore ?? 0))
     .sort((a, b) => b.score - a.score || a.skill.name.localeCompare(b.skill.name));
@@ -580,7 +592,7 @@ export default function MajorSkillMarbleCalculatorView({
               slotNumber={1}
               collapseOnMobileAfterSelect
             />
-            <LevelSelect label="1번 레벨" level={level1} onChange={setLevel1} />
+            <LevelSelect label="1번 레벨" level={level1} levelOptions={skillLevelOptions} onChange={setLevel1} />
           </div>
           <div className="skill-marble-slot-card">
             <SkillSelect
@@ -593,7 +605,7 @@ export default function MajorSkillMarbleCalculatorView({
               slotNumber={2}
               collapseOnMobileAfterSelect
             />
-            <LevelSelect label="2번 레벨" level={level2} onChange={setLevel2} />
+            <LevelSelect label="2번 레벨" level={level2} levelOptions={skillLevelOptions} onChange={setLevel2} />
           </div>
           <div className="skill-marble-slot-card">
             <SkillSelect
@@ -606,7 +618,7 @@ export default function MajorSkillMarbleCalculatorView({
               slotNumber={3}
               collapseOnMobileAfterSelect
             />
-            <LevelSelect label="3번 레벨" level={level3} onChange={setLevel3} />
+            <LevelSelect label="3번 레벨" level={level3} levelOptions={skillLevelOptions} onChange={setLevel3} />
           </div>
         </div>
       </section>

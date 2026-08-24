@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import SimulatorSkillCard from "../components/SimulatorSkillCard";
+import { getSkillLevelOptions } from "../lib/toolboxHelpers";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
 import type { ResultGrade } from "../utils/judge";
 
@@ -89,6 +90,7 @@ export default function AdvancedSimulatorView({
   const [rollingPreview, setRollingPreview] = useState<RollingPreviewCard[]>([]);
   const intervalRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  const skillLevelOptions = useMemo(() => getSkillLevelOptions(activeCardType), [activeCardType]);
 
   const hasSimulationResult = simRollCount > 0;
   const occurrenceLabel =
@@ -405,7 +407,7 @@ export default function AdvancedSimulatorView({
             onChange={(e) => setLevel1(Number(e.target.value) as SkillLevel)}
             disabled={activeCardType === "impact" || isRolling}
           >
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>
@@ -441,7 +443,7 @@ export default function AdvancedSimulatorView({
             onChange={(e) => setLevel2(Number(e.target.value) as SkillLevel)}
             disabled={isRolling}
           >
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>
@@ -477,7 +479,7 @@ export default function AdvancedSimulatorView({
             onChange={(e) => setLevel3(Number(e.target.value) as SkillLevel)}
             disabled={isRolling}
           >
-            {[5, 6, 7, 8].map((level) => (
+            {skillLevelOptions.map((level) => (
               <option key={level} value={level}>
                 {level} 레벨
               </option>

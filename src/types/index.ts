@@ -19,9 +19,9 @@ export type ToolView =
   | "trainingRedistribution";
 export type HitterPositionGroup = "fielder" | "catcher";
 
-export type CardType = "impact" | "signature" | "goldenGlove" | "national";
+export type CardType = "impact" | "signature" | "goldenGlove" | "allStar" | "national";
 
-export type SkillLevel = 5 | 6 | 7 | 8;
+export type SkillLevel = 5 | 6 | 7 | 8 | 9 | 10;
 
 export type SkillGrade =
   | "amateur"
@@ -35,6 +35,8 @@ export interface SkillScoreByLevel {
   6?: number;
   7?: number;
   8?: number;
+  9?: number;
+  10?: number;
 }
 
 export interface SkillScoreTable {

@@ -84,6 +84,7 @@ const ALLSTAR_THRESHOLDS = [
 export const CLOSER_CARD_THRESHOLDS: CardThresholdTable = {
   impact: IMPACT_THRESHOLDS,
   signature: SIGNATURE_THRESHOLDS,
+  allStar: SIGNATURE_THRESHOLDS,
   goldenGlove: ALLSTAR_THRESHOLDS,
   national: NATIONAL_THRESHOLDS,
 };
