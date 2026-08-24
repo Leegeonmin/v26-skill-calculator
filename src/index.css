@@ -10861,7 +10861,7 @@ input {
   }
 
   .app-body {
-    padding-top: 0;
+    padding: 0;
   }
 
   .page-toolbar {
@@ -15309,7 +15309,7 @@ input {
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 430px) {
   .skill-marble-mode-cards,
   .skill-marble-score-strip,
   .skill-marble-simple .skill-marble-probability-grid,
@@ -15323,5 +15323,29 @@ input {
 
   .major-marble-slot-tab {
     text-align: left;
+  }
+
+  .skill-marble-mode-card,
+  .skill-marble-simple .skill-marble-probability-card,
+  .major-marble-slot-tab {
+    min-height: 0;
+    padding: 9px 10px;
+  }
+
+  .skill-marble-mode-card strong,
+  .skill-marble-simple .skill-marble-probability-card strong {
+    font-size: 1rem;
+  }
+
+  .skill-marble-hero-copy h2,
+  .major-marble-hero h2 {
+    font-size: 1.26rem;
+  }
+
+  .skill-marble-hero-copy p,
+  .major-marble-hero p,
+  .skill-marble-empty-state,
+  .major-marble-empty-state {
+    font-size: 0.8rem;
   }
 }
