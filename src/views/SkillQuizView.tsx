@@ -6,7 +6,7 @@ import {
 } from "../components/KakaoAdFitFixedBanner";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { getDefaultLevels } from "../lib/toolboxHelpers";
-import { submitSkillQuizScore, type SkillQuizRankSummary } from "../lib/skillQuiz";
+import { getSkillQuizMyRank, submitSkillQuizScore, type SkillQuizRankSummary } from "../lib/skillQuiz";
 import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
 import { calculateSkillTotal } from "../utils/calculate";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
@@ -312,7 +312,7 @@ type SkillQuizSharePayload = {
   tierColor: string;
   seasonLabel: string;
   roleLabel: string;
-  rankSummary: SkillQuizRankSummary | null;
+  rankLabel: string;
   url: string;
 };
 
@@ -402,12 +402,7 @@ async function copySkillQuizResultImage(payload: SkillQuizSharePayload) {
     ["정답", `${payload.correctCount}/${QUESTION_COUNT}`],
     ["최고 콤보", `${payload.bestCombo}`],
     ["평균 응답", formatSeconds(payload.averageMs)],
-    [
-      "시즌 순위",
-      payload.rankSummary
-        ? `${payload.rankSummary.total.toLocaleString("ko-KR")}명 중 ${payload.rankSummary.rank.toLocaleString("ko-KR")}위`
-        : "집계 대기",
-    ],
+    ["시즌 순위", payload.rankLabel],
   ];
 
   statCards.forEach(([label, value], index) => {
@@ -524,7 +519,7 @@ export default function SkillQuizView({
   const [error, setError] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const [seasonRankSummary, setSeasonRankSummary] = useState<SkillQuizRankSummary | null>(null);
-  const [seasonRankStatus, setSeasonRankStatus] = useState<"idle" | "saving" | "saved" | "login" | "error">("idle");
+  const [seasonRankStatus, setSeasonRankStatus] = useState<"idle" | "loading" | "saving" | "saved" | "login" | "none" | "error">("idle");
 
   const currentQuestion = questions[questionIndex] ?? null;
   const progressPercent = Math.max(0, Math.min(100, (timeLeftMs / (QUESTION_SECONDS * 1000)) * 100));
@@ -539,6 +534,33 @@ export default function SkillQuizView({
     averageMs: resultAverageMs,
     completedAt: new Date().toISOString(),
   };
+
+  useEffect(() => {
+    if (!authSession || !supabaseReady) {
+      setSeasonRankSummary(null);
+      setSeasonRankStatus("login");
+      return;
+    }
+
+    let cancelled = false;
+    setSeasonRankStatus("loading");
+
+    void getSkillQuizMyRank(season.key, season.rule.id)
+      .then((rankSummary) => {
+        if (cancelled) return;
+        setSeasonRankSummary(rankSummary);
+        setSeasonRankStatus(rankSummary ? "saved" : "none");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSeasonRankSummary(null);
+        setSeasonRankStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authSession, season.key, season.rule.id, supabaseReady]);
 
   const finishGame = () => {
     setPhase("result");
@@ -634,8 +656,6 @@ export default function SkillQuizView({
       setLastCorrect(null);
       setQuestionStartedAt(Date.now());
       setShareStatus("idle");
-      setSeasonRankStatus("idle");
-      setSeasonRankSummary(null);
       setError(null);
       setPhase("playing");
     } catch (nextError) {
@@ -643,11 +663,62 @@ export default function SkillQuizView({
     }
   };
 
+  const getSeasonRankDisplay = () => {
+    if (seasonRankSummary) {
+      return {
+        title: `${seasonRankSummary.total.toLocaleString("ko-KR")}명 중`,
+        value: `${seasonRankSummary.rank.toLocaleString("ko-KR")}위`,
+        copy: `${season.label} 현재 순위`,
+      };
+    }
+
+    if (seasonRankStatus === "saving") {
+      return {
+        title: "시즌 순위",
+        value: "저장 중",
+        copy: "최고기록 저장 중",
+      };
+    }
+
+    if (seasonRankStatus === "loading") {
+      return {
+        title: "시즌 순위",
+        value: "확인 중",
+        copy: "내 시즌 순위 조회 중",
+      };
+    }
+
+    if (seasonRankStatus === "login") {
+      return {
+        title: "시즌 순위",
+        value: "로그인 필요",
+        copy: "로그인 후 최고기록 저장",
+      };
+    }
+
+    if (seasonRankStatus === "error") {
+      return {
+        title: "시즌 순위",
+        value: "확인 실패",
+        copy: "랭킹 저장 또는 조회 실패",
+      };
+    }
+
+    return {
+      title: "시즌 순위",
+      value: "기록 없음",
+      copy: "이번 시즌 최고기록 대기",
+    };
+  };
+
   const shareResult = async () => {
     const displayedScore = finalScore;
     const displayedTier = getTier(displayedScore);
     const shareUrl =
       typeof window === "undefined" ? "https://www.cpbv-lab.com/skill-quiz/" : `${window.location.origin}/skill-quiz/`;
+    const rankLabel = seasonRankSummary
+      ? `${seasonRankSummary.total.toLocaleString("ko-KR")}명 중 ${seasonRankSummary.rank.toLocaleString("ko-KR")}위`
+      : getSeasonRankDisplay().value;
 
     try {
       await copySkillQuizResultImage({
@@ -659,7 +730,7 @@ export default function SkillQuizView({
         tierColor: displayedTier.color,
         seasonLabel: season.label,
         roleLabel: season.rule.roleLabel,
-        rankSummary: seasonRankSummary,
+        rankLabel,
         url: shareUrl,
       });
       setShareStatus("copied");
@@ -825,21 +896,7 @@ export default function SkillQuizView({
     const nextTierCopy = displayedTier.next
       ? `${displayedTier.next.name}까지 ${formatScore(displayedTier.next.score - displayedScore)}점`
       : "최고 티어 달성";
-    const seasonRankTitle = seasonRankSummary
-      ? `${seasonRankSummary.total.toLocaleString("ko-KR")}명 중`
-      : "시즌 순위";
-    const seasonRankValue = seasonRankSummary
-      ? `${seasonRankSummary.rank.toLocaleString("ko-KR")}위`
-      : seasonRankStatus === "saving"
-        ? "저장 중"
-        : "집계 대기";
-    const seasonRankCopy = seasonRankSummary
-      ? `${season.label} 현재 순위`
-      : seasonRankStatus === "login"
-        ? "로그인 후 최고기록 저장"
-        : seasonRankStatus === "error"
-          ? "랭킹 저장 실패"
-          : "최고기록 갱신 시 집계";
+    const seasonRankDisplay = getSeasonRankDisplay();
 
     return (
       <div className="skill-quiz-result">
@@ -870,9 +927,9 @@ export default function SkillQuizView({
             <em>{tier.name} 기준</em>
           </article>
           <article>
-            <span>{seasonRankTitle}</span>
-            <strong>{seasonRankValue}</strong>
-            <em>{seasonRankCopy}</em>
+            <span>{seasonRankDisplay.title}</span>
+            <strong>{seasonRankDisplay.value}</strong>
+            <em>{seasonRankDisplay.copy}</em>
           </article>
         </section>
 
