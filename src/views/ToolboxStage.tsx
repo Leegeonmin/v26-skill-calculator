@@ -29,7 +29,7 @@ import { formatTopPercent } from "../utils/formatOdds";
 import { getAdvancedSkillChangeSkillPool } from "../utils/skillChangeRollCore";
 
 type ToolboxStageProps = {
-  toolView: Exclude<ToolView, "home" | "ranking" | "notice">;
+  toolView: Exclude<ToolView, "home" | "ranking" | "skillQuiz" | "notice">;
   mode: CalculatorMode;
   hitterPositionGroup: HitterPositionGroup;
   hitterBattingSide: HitterBattingSide;

@@ -99,6 +99,7 @@ import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
 const NoticeView = lazy(() => import("./views/NoticeView"));
 const SkillCompareBetaView = lazy(() => import("./views/SkillCompareBetaView"));
 const RankingView = lazy(() => import("./views/RankingView"));
+const SkillQuizView = lazy(() => import("./views/SkillQuizView"));
 const AdminView = lazy(() => import("./views/AdminView"));
 const SkillOcrView = lazy(() => import("./views/SkillOcrView"));
 const PublicSkillOcrView = lazy(() => import("./views/PublicSkillOcrView"));
@@ -158,6 +159,7 @@ const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
   "/skill-marble": "skillMarble",
   "/major-skill-marble": "majorSkillMarble",
   "/ranking": "ranking",
+  "/skill-quiz": "skillQuiz",
   "/notice": "notice",
   "/skill-compare": "skillCompareBeta",
   "/lineup-skill-ocr": "lineupSkillOcr",
@@ -171,6 +173,7 @@ const TOOL_VIEW_URLS: Partial<Record<ToolView, string>> = {
   skillMarble: "/skill-marble/",
   majorSkillMarble: "/major-skill-marble/",
   ranking: "/ranking/",
+  skillQuiz: "/skill-quiz/",
   notice: "/notice/",
   skillCompareBeta: "/skill-compare/",
   lineupSkillOcr: "/lineup-skill-ocr/",
@@ -184,6 +187,7 @@ const VALID_TOOL_VIEWS: ToolView[] = [
   "skillMarble",
   "majorSkillMarble",
   "ranking",
+  "skillQuiz",
   "notice",
   "skillCompareBeta",
   "lineupSkillOcr",
@@ -447,9 +451,10 @@ function App() {
   const resultGradeColor = judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#b7bfd2";
   const judgeGrade = judgeResult?.grade ?? "-";
   const supabaseReady = isSupabaseConfigured();
-  const toolboxToolView: Exclude<ToolView, "home" | "ranking" | "notice"> =
+  const toolboxToolView: Exclude<ToolView, "home" | "ranking" | "skillQuiz" | "notice"> =
     toolView === "home" ||
     toolView === "ranking" ||
+    toolView === "skillQuiz" ||
     toolView === "notice" ||
     toolView === "skillCompareBeta" ||
     toolView === "lineupSkillOcr" ||
@@ -997,6 +1002,7 @@ function App() {
     if (
       nextToolView === "home" ||
       nextToolView === "ranking" ||
+      nextToolView === "skillQuiz" ||
       nextToolView === "notice" ||
       nextToolView === "skillCompareBeta" ||
       nextToolView === "trainingRedistribution"
@@ -1826,6 +1832,13 @@ function App() {
                 </section>
               </main>
             </div>
+          ) : toolView === "skillQuiz" ? (
+            <SkillQuizView
+              authSession={authSession}
+              supabaseReady={supabaseReady}
+              themeAction={themeToggle}
+              onGoHome={handleGoHome}
+            />
           ) : (
             <ToolboxStage
               toolView={toolboxToolView}
@@ -1905,7 +1918,10 @@ function App() {
           )}
         </AppChrome>
 
-        <KakaoAdFitFixedBanner enabled={shouldShowKakaoAdFit} />
+        <KakaoAdFitFixedBanner
+          enabled={shouldShowKakaoAdFit}
+          showSide={toolView !== "skillQuiz"}
+        />
         <Analytics />
       </div>
     </div>

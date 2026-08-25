@@ -15,7 +15,7 @@ type HomeViewProps = {
 
 type HomeWidget = {
   view: Exclude<ToolView, "home">;
-  icon: "trophy" | "calculator" | "sparkles" | "compare" | "zap" | "users" | "flame" | "scan" | "notice" | "chart" | "userScan";
+  icon: "trophy" | "calculator" | "sparkles" | "compare" | "zap" | "users" | "flame" | "scan" | "notice" | "chart" | "userScan" | "quiz";
   title: string;
   description: string;
   meta: string;
@@ -56,6 +56,13 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
         title: "라인업 스킬 인식",
         description: "Google 로그인 후 주 1회씩 타자/투수 라인업 스킬 점수를 인식합니다.",
         meta: "LINEUP SKILL",
+      },
+      {
+        view: "skillQuiz",
+        icon: "quiz",
+        title: "스잘알 챌린지",
+        description: "3점차 스킬 조합 중 더 높은 쪽을 8초 안에 맞힙니다.",
+        meta: "SKILL QUIZ",
       },
       {
         view: "trainingRedistribution",
@@ -318,6 +325,7 @@ export default function HomeView({
     HOME_WIDGET_SECTIONS[0].widgets[0],
     HOME_WIDGET_SECTIONS[1].widgets[0],
     HOME_WIDGET_SECTIONS[0].widgets[2],
+    HOME_WIDGET_SECTIONS[0].widgets[3],
   ];
 
   useEffect(() => {
@@ -368,6 +376,16 @@ export default function HomeView({
           <span key={index} style={{ "--particle-index": index } as CSSProperties} />
         ))}
       </div>
+      <button
+        type="button"
+        className="home-skill-quiz-cta"
+        onClick={() => onSelectView("skillQuiz")}
+      >
+        <span className="home-skill-quiz-cta-kicker">이번 주 시즌 도전</span>
+        <strong>스잘알 챌린지</strong>
+        <span>3점차 스킬 조합을 8초 안에 맞히기</span>
+        <em>바로 도전</em>
+      </button>
       <section className="home-dashboard" aria-label="주요 도구">
         <div className="home-primary-panel">
           <KakaoAdFitPcTopTripleBanner enabled />

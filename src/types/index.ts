@@ -13,6 +13,7 @@ export type ToolView =
   | "skillMarble"
   | "majorSkillMarble"
   | "ranking"
+  | "skillQuiz"
   | "notice"
   | "skillCompareBeta"
   | "lineupSkillOcr"

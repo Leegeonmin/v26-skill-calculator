@@ -25,7 +25,7 @@ function UserIcon() {
   );
 }
 
-function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking" | "guide" | "bat" }) {
+function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking" | "guide" | "bat" | "quiz" }) {
   if (name === "calculator") {
     return (
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
@@ -64,6 +64,17 @@ function HeaderIcon({ name }: { name: "calculator" | "chart" | "scan" | "ranking
       <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
         <path
           d="M3 17.5V3h1.5v13H17v1.5H3Zm3-3v-4h2.5v4H6Zm4 0V6h2.5v8.5H10Zm4 0V8.5h2.5v6H14Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "quiz") {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true" className="site-nav-icon">
+        <path
+          d="M4 3.5h12A1.5 1.5 0 0 1 17.5 5v10a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 15V5A1.5 1.5 0 0 1 4 3.5Zm1 3v2h4v-2H5Zm6 0v2h4v-2h-4ZM5 11v2h4v-2H5Zm6 0v2h4v-2h-4Z"
           fill="currentColor"
         />
       </svg>
@@ -194,6 +205,11 @@ export default function SiteHeader({
             <HeaderIcon name="ranking" />
             <span>랭킹</span>
           </button>
+          <button type="button" className="site-nav-link" onClick={() => onSelectView("skillQuiz")}>
+            <HeaderIcon name="quiz" />
+            <span>스잘알</span>
+            <em className="site-nav-new-badge">NEW</em>
+          </button>
           <button type="button" className="site-nav-link" onClick={() => onSelectView("trainingRedistribution")}>
             <HeaderIcon name="guide" />
             <span>훈재분 확률</span>
@@ -290,6 +306,10 @@ export default function SiteHeader({
         </button>
         <button type="button" className={currentView === "ranking" ? "is-active" : undefined} onClick={() => onSelectView("ranking")}>
           랭킹
+        </button>
+        <button type="button" className={currentView === "skillQuiz" ? "is-active" : undefined} onClick={() => onSelectView("skillQuiz")}>
+          스잘알
+          <em className="site-mobile-nav-new">NEW</em>
         </button>
         <button type="button" className={currentView === "trainingRedistribution" ? "is-active" : undefined} onClick={() => onSelectView("trainingRedistribution")}>
           훈재분 확률

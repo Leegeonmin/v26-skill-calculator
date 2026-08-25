@@ -15,6 +15,7 @@ const KAKAO_ADFIT_PC_TOP_UNITS = [
 
 type KakaoAdFitFixedBannerProps = {
   enabled: boolean;
+  showSide?: boolean;
 };
 
 type KakaoAdFitSlotProps = {
@@ -104,7 +105,10 @@ function KakaoAdFitSlot({ className, adUnit, width, height, slot }: KakaoAdFitSl
   );
 }
 
-export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBannerProps) {
+export default function KakaoAdFitFixedBanner({
+  enabled,
+  showSide = true,
+}: KakaoAdFitFixedBannerProps) {
   useKakaoAdFitScript(enabled);
 
   useEffect(() => {
@@ -141,14 +145,35 @@ export default function KakaoAdFitFixedBanner({ enabled }: KakaoAdFitFixedBanner
         height={90}
         slot="pc_bottom_fixed"
       />
-      <KakaoAdFitSlot
-        className="kakao-adfit-side-banner kakao-adfit-side-banner-left"
-        adUnit={KAKAO_ADFIT_SIDE_UNIT}
-        width={160}
-        height={600}
-        slot="pc_left_side"
-      />
+      {showSide && (
+        <KakaoAdFitSlot
+          className="kakao-adfit-side-banner kakao-adfit-side-banner-left"
+          adUnit={KAKAO_ADFIT_SIDE_UNIT}
+          width={160}
+          height={600}
+          slot="pc_left_side"
+        />
+      )}
     </>
+  );
+}
+
+export function KakaoAdFitPcSideBanner({
+  enabled,
+  side,
+}: KakaoAdFitFixedBannerProps & { side: "left" | "right" }) {
+  useKakaoAdFitScript(enabled);
+
+  if (!enabled) return null;
+
+  return (
+    <KakaoAdFitSlot
+      className={`kakao-adfit-inline-side-banner kakao-adfit-inline-side-banner-${side}`}
+      adUnit={KAKAO_ADFIT_SIDE_UNIT}
+      width={160}
+      height={600}
+      slot={`skill_quiz_${side}_side`}
+    />
   );
 }
 

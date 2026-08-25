@@ -12,6 +12,7 @@ type IconName =
   | "scan"
   | "chart"
   | "userScan"
+  | "quiz"
   | "google";
 
 export function IconGlyph({ name, className = "" }: { name: IconName; className?: string }) {
@@ -130,6 +131,17 @@ export function IconGlyph({ name, className = "" }: { name: IconName; className?
       <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
         <path
           d="M4 8V4h4v2H6v2H4Zm12-4h4v4h-2V6h-2V4ZM4 16h2v2h2v2H4v-4Zm14 2v-2h2v4h-4v-2h2ZM12 6.4a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4Zm0 8c3.05 0 5.4 1.58 5.4 3.55V19H6.6v-1.05c0-1.97 2.35-3.55 5.4-3.55Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "quiz") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <path
+          d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm2 4v3h4V8H7Zm6 0v3h4V8h-4Zm-6 5v3h4v-3H7Zm6 0v3h4v-3h-4Z"
           fill="currentColor"
         />
       </svg>
