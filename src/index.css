@@ -6576,6 +6576,12 @@ select {
   border-color: rgba(51, 65, 85, 0.6);
 }
 
+.app-bg[data-theme="dark"] .skill-quiz-result-actions .primary-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  border-color: transparent;
+}
+
 .app-bg[data-theme="dark"] .skill-quiz-result-actions .ghost-btn {
   background: #334155;
   color: #cbd5e1;
