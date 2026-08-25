@@ -337,20 +337,17 @@ function drawRoundedRect(
   context.closePath();
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-async function saveSkillQuizResultImage(payload: SkillQuizSharePayload) {
+async function copySkillQuizResultImage(payload: SkillQuizSharePayload) {
   if (typeof document === "undefined") {
     throw new Error("이미지를 만들 수 없습니다.");
+  }
+
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.clipboard ||
+    typeof ClipboardItem === "undefined"
+  ) {
+    throw new Error("이미지 클립보드를 사용할 수 없습니다.");
   }
 
   const canvas = document.createElement("canvas");
@@ -446,10 +443,10 @@ async function saveSkillQuizResultImage(payload: SkillQuizSharePayload) {
 
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png", 0.95));
   if (!blob) {
-    throw new Error("이미지를 저장할 수 없습니다.");
+    throw new Error("이미지를 복사할 수 없습니다.");
   }
 
-  downloadBlob(blob, `cpbv-skill-quiz-${Date.now()}.png`);
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
 }
 
 function TierBadge({ tier }: { tier: ReturnType<typeof getTier> }) {
@@ -525,7 +522,7 @@ export default function SkillQuizView({
   const [seasonBest, setSeasonBest] = useState<QuizRecord | null>(() => readRecord(seasonRecordKey));
   const [allTimeBest, setAllTimeBest] = useState<QuizRecord | null>(() => readRecord(ALL_TIME_RECORD_KEY));
   const [error, setError] = useState<string | null>(null);
-  const [shareStatus, setShareStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const [seasonRankSummary, setSeasonRankSummary] = useState<SkillQuizRankSummary | null>(null);
   const [seasonRankStatus, setSeasonRankStatus] = useState<"idle" | "saving" | "saved" | "login" | "error">("idle");
 
@@ -653,7 +650,7 @@ export default function SkillQuizView({
       typeof window === "undefined" ? "https://www.cpbv-lab.com/skill-quiz/" : `${window.location.origin}/skill-quiz/`;
 
     try {
-      await saveSkillQuizResultImage({
+      await copySkillQuizResultImage({
         score: displayedScore,
         correctCount,
         bestCombo,
@@ -665,7 +662,7 @@ export default function SkillQuizView({
         rankSummary: seasonRankSummary,
         url: shareUrl,
       });
-      setShareStatus("saved");
+      setShareStatus("copied");
     } catch {
       setShareStatus("error");
     }
@@ -887,13 +884,13 @@ export default function SkillQuizView({
             시작 화면
           </button>
           <button type="button" className="ghost-btn" onClick={shareResult}>
-            결과 이미지 저장
+            결과 이미지 복사
           </button>
         </div>
 
         {shareStatus !== "idle" && (
           <p className={`skill-quiz-share-status is-${shareStatus}`}>
-            {shareStatus === "saved" ? "결과 이미지가 저장되었습니다." : "이미지를 저장할 수 없습니다."}
+            {shareStatus === "copied" ? "결과 이미지가 클립보드에 복사되었습니다." : "이미지를 복사할 수 없습니다."}
           </p>
         )}
       </div>
