@@ -219,6 +219,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.08.25",
+    title: "스잘알 챌린지 추가",
+    body: "두 스킬 조합 중 더 높은 점수를 고르는 스잘알 챌린지를 추가했습니다. 시즌 조건별 기록과 랭킹을 확인할 수 있고, 결과 화면에서는 공유용 결과 이미지를 저장할 수 있습니다.",
+  },
+  {
     date: "2026.08.24",
     title: "올스타 카드 스킬 점수 지원",
     body: "스킬 점수 계산기와 고스변 점수 비교에 올스타 카드 타입을 추가했습니다. 올스타 선택 시 기본 8/7/7 레벨과 9, 10레벨 점수 기준을 확인할 수 있습니다.",
