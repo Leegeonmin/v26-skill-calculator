@@ -26,7 +26,7 @@ type IdleDeadlineLike = {
 };
 
 const REVENUE_SESSION_KEY = "v26-revenue-session";
-const REVENUE_LOGGING_ENABLED = true;
+const REVENUE_LOGGING_ENABLED = import.meta.env.VITE_REVENUE_LOGGING_ENABLED === "true";
 const queuedEvents: QueuedRevenueEvent[] = [];
 let flushScheduled = false;
 let flushInFlight = false;
