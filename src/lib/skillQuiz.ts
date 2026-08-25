@@ -8,6 +8,14 @@ export type SkillQuizRankSummary = {
   ruleId?: string;
 };
 
+export type SkillQuizTopRank = {
+  rank: number;
+  email: string;
+  score: number;
+  correctCount: number;
+  bestCombo: number;
+};
+
 type SubmitSkillQuizScoreInput = {
   seasonKey: string;
   seasonLabel: string;
@@ -49,6 +57,39 @@ function normalizeRankSummary(value: unknown): SkillQuizRankSummary | null {
   };
 }
 
+function normalizeTopRankings(value: unknown): SkillQuizTopRank[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+
+      const record = item as Record<string, unknown>;
+      const rank = Number(record.rank);
+      const score = Number(record.score);
+      const correctCount = Number(record.correctCount);
+      const bestCombo = Number(record.bestCombo);
+
+      if (
+        !Number.isFinite(rank) ||
+        !Number.isFinite(score) ||
+        !Number.isFinite(correctCount) ||
+        !Number.isFinite(bestCombo)
+      ) {
+        return null;
+      }
+
+      return {
+        rank,
+        email: typeof record.email === "string" ? record.email : "unknown",
+        score,
+        correctCount,
+        bestCombo,
+      };
+    })
+    .filter((item): item is SkillQuizTopRank => item !== null);
+}
+
 export async function submitSkillQuizScore(input: SubmitSkillQuizScoreInput) {
   const supabase = requireSupabase();
   const { data, error } = await supabase.rpc("submit_skill_quiz_score", {
@@ -81,4 +122,18 @@ export async function getSkillQuizMyRank(seasonKey: string, ruleId: string) {
   }
 
   return normalizeRankSummary(data);
+}
+
+export async function getSkillQuizTop10(seasonKey: string, ruleId: string) {
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.rpc("get_skill_quiz_top10", {
+    p_season_key: seasonKey,
+    p_rule_id: ruleId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return normalizeTopRankings(data);
 }

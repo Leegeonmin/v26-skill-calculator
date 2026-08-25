@@ -5767,7 +5767,8 @@ select {
 .skill-quiz-rule-strip,
 .skill-quiz-review,
 .skill-quiz-result-hero,
-.skill-quiz-record-grid article {
+.skill-quiz-record-grid article,
+.skill-quiz-top-rank-card {
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.85);
@@ -5949,6 +5950,124 @@ select {
   font-weight: 950;
   line-height: 1;
   box-shadow: 0 8px 18px color-mix(in srgb, var(--tier-color) 22%, transparent);
+}
+
+.skill-quiz-top-rank-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.skill-quiz-top-rank-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skill-quiz-top-rank-head div {
+  display: grid;
+  gap: 3px;
+}
+
+.skill-quiz-top-rank-head span {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skill-quiz-top-rank-head h2 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.skill-quiz-top-rank-head .ghost-btn {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.skill-quiz-top-rank-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-quiz-top-rank-list li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+.skill-quiz-top-rank-position {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.skill-quiz-top-rank-user {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.skill-quiz-top-rank-user strong,
+.skill-quiz-top-rank-user em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-quiz-top-rank-user strong {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.skill-quiz-top-rank-user em,
+.skill-quiz-rank-empty {
+  font-size: 0.76rem;
+  font-weight: 750;
+  font-style: normal;
+  color: #64748b;
+}
+
+.skill-quiz-top-rank-list b {
+  font-size: 0.9rem;
+  font-weight: 950;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.skill-quiz-rank-empty {
+  margin: 0;
+  padding: 18px 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  text-align: center;
 }
 
 /* PLAYING PHASE */
@@ -6294,6 +6413,7 @@ select {
 .app-bg[data-theme="dark"] .skill-quiz-review,
 .app-bg[data-theme="dark"] .skill-quiz-result-hero,
 .app-bg[data-theme="dark"] .skill-quiz-record-grid article,
+.app-bg[data-theme="dark"] .skill-quiz-top-rank-card,
 .app-bg[data-theme="dark"] .skill-quiz-set {
   border-color: rgba(51, 65, 85, 0.7);
   background: rgba(15, 23, 42, 0.85);
@@ -6339,6 +6459,25 @@ select {
 
 .app-bg[data-theme="dark"] .skill-quiz-record-grid strong {
   color: #f8fafc;
+}
+
+.app-bg[data-theme="dark"] .skill-quiz-top-rank-head h2,
+.app-bg[data-theme="dark"] .skill-quiz-top-rank-user strong {
+  color: #f8fafc;
+}
+
+.app-bg[data-theme="dark"] .skill-quiz-top-rank-list li,
+.app-bg[data-theme="dark"] .skill-quiz-rank-empty {
+  border-color: rgba(51, 65, 85, 0.8);
+  background: rgba(30, 41, 59, 0.72);
+}
+
+.app-bg[data-theme="dark"] .skill-quiz-top-rank-position {
+  background: #334155;
+}
+
+.app-bg[data-theme="dark"] .skill-quiz-top-rank-list b {
+  color: #93c5fd;
 }
 
 .app-bg[data-theme="dark"] .skill-quiz-tier-badge {

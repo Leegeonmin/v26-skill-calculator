@@ -1,12 +1,18 @@
 import type { Session } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import {
   KakaoAdFitMobileMidBanner,
   KakaoAdFitPcSideBanner,
 } from "../components/KakaoAdFitFixedBanner";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { getDefaultLevels } from "../lib/toolboxHelpers";
-import { getSkillQuizMyRank, submitSkillQuizScore, type SkillQuizRankSummary } from "../lib/skillQuiz";
+import {
+  getSkillQuizMyRank,
+  getSkillQuizTop10,
+  submitSkillQuizScore,
+  type SkillQuizRankSummary,
+  type SkillQuizTopRank,
+} from "../lib/skillQuiz";
 import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
 import { calculateSkillTotal } from "../utils/calculate";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
@@ -513,13 +519,15 @@ export default function SkillQuizView({
   const [totalAnswerMs, setTotalAnswerMs] = useState(0);
   const [selectedSide, setSelectedSide] = useState<QuizSide | null>(null);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
-  const [questionStartedAt, setQuestionStartedAt] = useState(Date.now());
+  const [questionStartedAt, setQuestionStartedAt] = useState(() => Date.now());
   const [seasonBest, setSeasonBest] = useState<QuizRecord | null>(() => readRecord(seasonRecordKey));
   const [allTimeBest, setAllTimeBest] = useState<QuizRecord | null>(() => readRecord(ALL_TIME_RECORD_KEY));
   const [error, setError] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const [seasonRankSummary, setSeasonRankSummary] = useState<SkillQuizRankSummary | null>(null);
   const [seasonRankStatus, setSeasonRankStatus] = useState<"idle" | "loading" | "saving" | "saved" | "login" | "none" | "error">("idle");
+  const [topRankings, setTopRankings] = useState<SkillQuizTopRank[]>([]);
+  const [topRankingsStatus, setTopRankingsStatus] = useState<"loading" | "idle" | "empty" | "error">("loading");
 
   const currentQuestion = questions[questionIndex] ?? null;
   const progressPercent = Math.max(0, Math.min(100, (timeLeftMs / (QUESTION_SECONDS * 1000)) * 100));
@@ -536,31 +544,63 @@ export default function SkillQuizView({
   };
 
   useEffect(() => {
-    if (!authSession || !supabaseReady) {
-      setSeasonRankSummary(null);
-      setSeasonRankStatus("login");
-      return;
-    }
-
     let cancelled = false;
-    setSeasonRankStatus("loading");
-
-    void getSkillQuizMyRank(season.key, season.rule.id)
-      .then((rankSummary) => {
-        if (cancelled) return;
-        setSeasonRankSummary(rankSummary);
-        setSeasonRankStatus(rankSummary ? "saved" : "none");
-      })
-      .catch(() => {
+    const timer = window.setTimeout(() => {
+      if (!authSession || !supabaseReady) {
         if (cancelled) return;
         setSeasonRankSummary(null);
-        setSeasonRankStatus("error");
-      });
+        setSeasonRankStatus("login");
+        return;
+      }
+
+      setSeasonRankStatus("loading");
+
+      void getSkillQuizMyRank(season.key, season.rule.id)
+        .then((rankSummary) => {
+          if (cancelled) return;
+          setSeasonRankSummary(rankSummary);
+          setSeasonRankStatus(rankSummary ? "saved" : "none");
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setSeasonRankSummary(null);
+          setSeasonRankStatus("error");
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [authSession, season.key, season.rule.id, supabaseReady]);
+
+  const refreshTopRankings = useCallback(() => {
+    if (!supabaseReady) {
+      setTopRankings([]);
+      setTopRankingsStatus("error");
+      return;
+    }
+
+    setTopRankingsStatus("loading");
+
+    void getSkillQuizTop10(season.key, season.rule.id)
+      .then((rankings) => {
+        setTopRankings(rankings);
+        setTopRankingsStatus(rankings.length > 0 ? "idle" : "empty");
+      })
+      .catch(() => {
+        setTopRankings([]);
+        setTopRankingsStatus("error");
+      });
+  }, [season.key, season.rule.id, supabaseReady]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(refreshTopRankings, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [refreshTopRankings]);
 
   const finishGame = () => {
     setPhase("result");
@@ -587,6 +627,7 @@ export default function SkillQuizView({
           .then((rankSummary) => {
             setSeasonRankSummary(rankSummary);
             setSeasonRankStatus(rankSummary ? "saved" : "idle");
+            refreshTopRankings();
           })
           .catch(() => {
             setSeasonRankStatus("error");
@@ -772,6 +813,41 @@ export default function SkillQuizView({
     };
   }, [phase, questionIndex, questions.length]);
 
+  const renderStartRanking = () => (
+    <section className="skill-quiz-top-rank-card" aria-labelledby="skill-quiz-top-rank-title">
+      <div className="skill-quiz-top-rank-head">
+        <div>
+          <span>Season Ranking</span>
+          <h2 id="skill-quiz-top-rank-title">TOP 10</h2>
+        </div>
+        <button type="button" className="ghost-btn" onClick={refreshTopRankings}>
+          새로고침
+        </button>
+      </div>
+
+      {topRankingsStatus === "loading" ? (
+        <p className="skill-quiz-rank-empty">랭킹 불러오는 중...</p>
+      ) : topRankingsStatus === "error" ? (
+        <p className="skill-quiz-rank-empty">랭킹을 불러오지 못했습니다.</p>
+      ) : topRankingsStatus === "empty" ? (
+        <p className="skill-quiz-rank-empty">아직 이번 시즌 기록이 없습니다.</p>
+      ) : (
+        <ol className="skill-quiz-top-rank-list">
+          {topRankings.map((entry) => (
+            <li key={`${entry.rank}-${entry.email}-${entry.score}`}>
+              <span className="skill-quiz-top-rank-position">{entry.rank}</span>
+              <div className="skill-quiz-top-rank-user">
+                <strong>{entry.email}</strong>
+                <em>{entry.correctCount}/{QUESTION_COUNT} 정답 · 콤보 {entry.bestCombo}</em>
+              </div>
+              <b>{formatScore(entry.score)}점</b>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+
   const renderStart = () => (
     <div className="skill-quiz-start">
       <section className="skill-quiz-hero">
@@ -808,6 +884,8 @@ export default function SkillQuizView({
           <em>{seasonBest ? `${formatScore(seasonBest.score)}점 기준` : "첫 기록 대기"}</em>
         </article>
       </section>
+
+      {renderStartRanking()}
     </div>
   );
 
