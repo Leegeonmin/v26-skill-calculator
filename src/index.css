@@ -6453,6 +6453,12 @@ select {
   background: #334155;
 }
 
+.app-bg[data-theme="dark"] .skill-quiz-start-btn {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #ffffff;
+  border-color: transparent;
+}
+
 .app-bg[data-theme="dark"] .skill-quiz-record-grid article {
   background: rgba(30, 41, 59, 0.6);
 }
