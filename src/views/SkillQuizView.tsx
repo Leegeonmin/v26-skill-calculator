@@ -303,6 +303,155 @@ function formatSeconds(ms: number) {
   return `${(ms / 1000).toFixed(1)}초`;
 }
 
+type SkillQuizSharePayload = {
+  score: number;
+  correctCount: number;
+  bestCombo: number;
+  averageMs: number;
+  tierName: string;
+  tierColor: string;
+  seasonLabel: string;
+  roleLabel: string;
+  rankSummary: SkillQuizRankSummary | null;
+  url: string;
+};
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function saveSkillQuizResultImage(payload: SkillQuizSharePayload) {
+  if (typeof document === "undefined") {
+    throw new Error("이미지를 만들 수 없습니다.");
+  }
+
+  const canvas = document.createElement("canvas");
+  const width = 1080;
+  const height = 1350;
+  const scale = Math.max(1, window.devicePixelRatio || 1);
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("이미지를 만들 수 없습니다.");
+  }
+
+  context.scale(scale, scale);
+  context.fillStyle = "#0f172a";
+  context.fillRect(0, 0, width, height);
+
+  const gradient = context.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#1d4ed8");
+  gradient.addColorStop(0.5, "#0f172a");
+  gradient.addColorStop(1, "#111827");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+
+  context.fillStyle = "rgba(255, 255, 255, 0.08)";
+  drawRoundedRect(context, 70, 70, width - 140, height - 140, 34);
+  context.fill();
+
+  context.fillStyle = "#ffffff";
+  context.font = "700 34px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText("CPBV LAB", 118, 145);
+
+  context.fillStyle = "rgba(255, 255, 255, 0.72)";
+  context.font = "700 36px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText("스잘알 챌린지 결과", 118, 218);
+
+  context.fillStyle = "#ffffff";
+  context.font = "900 150px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText(`${formatScore(payload.score)}점`, 112, 380);
+
+  context.fillStyle = payload.tierColor;
+  drawRoundedRect(context, 118, 425, 260, 92, 46);
+  context.fill();
+  context.fillStyle = "#ffffff";
+  context.font = "900 42px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText(payload.tierName, 168, 486);
+
+  const statCards = [
+    ["정답", `${payload.correctCount}/${QUESTION_COUNT}`],
+    ["최고 콤보", `${payload.bestCombo}`],
+    ["평균 응답", formatSeconds(payload.averageMs)],
+    [
+      "시즌 순위",
+      payload.rankSummary
+        ? `${payload.rankSummary.total.toLocaleString("ko-KR")}명 중 ${payload.rankSummary.rank.toLocaleString("ko-KR")}위`
+        : "집계 대기",
+    ],
+  ];
+
+  statCards.forEach(([label, value], index) => {
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const cardX = 118 + column * 430;
+    const cardY = 575 + row * 190;
+
+    context.fillStyle = "rgba(255, 255, 255, 0.92)";
+    drawRoundedRect(context, cardX, cardY, 390, 145, 22);
+    context.fill();
+    context.fillStyle = "#64748b";
+    context.font = "800 28px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    context.fillText(label, cardX + 34, cardY + 54);
+    context.fillStyle = "#0f172a";
+    context.font = "900 42px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    context.fillText(value, cardX + 34, cardY + 108, 320);
+  });
+
+  context.fillStyle = "rgba(255, 255, 255, 0.92)";
+  drawRoundedRect(context, 118, 982, 844, 174, 24);
+  context.fill();
+  context.fillStyle = "#475569";
+  context.font = "800 30px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText(payload.seasonLabel, 154, 1042);
+  context.fillStyle = "#0f172a";
+  context.font = "900 42px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText(payload.roleLabel, 154, 1100);
+
+  context.fillStyle = "rgba(255, 255, 255, 0.74)";
+  context.font = "700 28px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  context.fillText(payload.url, 118, 1240);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png", 0.95));
+  if (!blob) {
+    throw new Error("이미지를 저장할 수 없습니다.");
+  }
+
+  downloadBlob(blob, `cpbv-skill-quiz-${Date.now()}.png`);
+}
+
 function TierBadge({ tier }: { tier: ReturnType<typeof getTier> }) {
   return (
     <span className="skill-quiz-tier-badge" style={{ "--tier-color": tier.color } as CSSProperties}>
@@ -376,7 +525,7 @@ export default function SkillQuizView({
   const [seasonBest, setSeasonBest] = useState<QuizRecord | null>(() => readRecord(seasonRecordKey));
   const [allTimeBest, setAllTimeBest] = useState<QuizRecord | null>(() => readRecord(ALL_TIME_RECORD_KEY));
   const [error, setError] = useState<string | null>(null);
-  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [shareStatus, setShareStatus] = useState<"idle" | "saved" | "error">("idle");
   const [seasonRankSummary, setSeasonRankSummary] = useState<SkillQuizRankSummary | null>(null);
   const [seasonRankStatus, setSeasonRankStatus] = useState<"idle" | "saving" | "saved" | "login" | "error">("idle");
 
@@ -502,40 +651,22 @@ export default function SkillQuizView({
     const displayedTier = getTier(displayedScore);
     const shareUrl =
       typeof window === "undefined" ? "https://www.cpbv-lab.com/skill-quiz/" : `${window.location.origin}/skill-quiz/`;
-    const shareText = [
-      "스잘알 챌린지 결과",
-      `이번 시즌: ${season.rule.roleLabel}`,
-      `점수: ${formatScore(displayedScore)}점`,
-      `정답: ${correctCount}/${QUESTION_COUNT}`,
-      `티어: ${displayedTier.name}`,
-      seasonRankSummary ? `현재 순위: ${seasonRankSummary.total.toLocaleString("ko-KR")}명 중 ${seasonRankSummary.rank.toLocaleString("ko-KR")}위` : null,
-      shareUrl,
-    ].filter(Boolean).join("\n");
 
     try {
-      if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({
-          title: "스잘알 챌린지 결과",
-          text: shareText,
-          url: shareUrl,
-        });
-        setShareStatus("idle");
-        return;
-      }
-
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(shareText);
-        setShareStatus("copied");
-        return;
-      }
-
-      setShareStatus("error");
-    } catch (shareError) {
-      if (shareError instanceof DOMException && shareError.name === "AbortError") {
-        setShareStatus("idle");
-        return;
-      }
-
+      await saveSkillQuizResultImage({
+        score: displayedScore,
+        correctCount,
+        bestCombo,
+        averageMs: resultAverageMs,
+        tierName: displayedTier.name,
+        tierColor: displayedTier.color,
+        seasonLabel: season.label,
+        roleLabel: season.rule.roleLabel,
+        rankSummary: seasonRankSummary,
+        url: shareUrl,
+      });
+      setShareStatus("saved");
+    } catch {
       setShareStatus("error");
     }
   };
@@ -756,13 +887,13 @@ export default function SkillQuizView({
             시작 화면
           </button>
           <button type="button" className="ghost-btn" onClick={shareResult}>
-            공유
+            결과 이미지 저장
           </button>
         </div>
 
         {shareStatus !== "idle" && (
           <p className={`skill-quiz-share-status is-${shareStatus}`}>
-            {shareStatus === "copied" ? "결과가 복사되었습니다." : "공유를 사용할 수 없습니다."}
+            {shareStatus === "saved" ? "결과 이미지가 저장되었습니다." : "이미지를 저장할 수 없습니다."}
           </p>
         )}
       </div>
