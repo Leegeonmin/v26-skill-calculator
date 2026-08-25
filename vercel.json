@@ -46,6 +46,11 @@
       "permanent": true
     },
     {
+      "source": "/skill-quiz",
+      "destination": "/skill-quiz/",
+      "permanent": true
+    },
+    {
       "source": "/notice",
       "destination": "/notice/",
       "permanent": true
