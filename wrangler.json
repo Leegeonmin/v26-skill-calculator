@@ -1,0 +1,27 @@
+{
+  "name": "v26-skill-calculator",
+  "compatibility_date": "2026-08-27",
+  "main": "worker/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*",
+      "/guide",
+      "/methodology",
+      "/calculator-guide",
+      "/calculator",
+      "/simulator",
+      "/impact-change",
+      "/skill-marble",
+      "/major-skill-marble",
+      "/ranking",
+      "/notice",
+      "/skill-compare",
+      "/lineup-skill-ocr",
+      "/training-redistribution",
+      "/admin"
+    ]
+  }
+}

@@ -1,10 +1,12 @@
-# Cloudflare Pages Migration
+# Cloudflare Workers Migration
 
 ## Project settings
 
 - Build command: `npm run build`
-- Build output directory: `dist`
-- Framework preset: Vite
+- Deploy command: `npx wrangler deploy`
+- Static assets directory: `dist`
+- Worker config: `wrangler.json`
+- Framework preset: Vite or none
 - Node.js version: 22.x
 
 ## Environment variables
@@ -31,16 +33,17 @@ Do not store pulled env files in git. `.env.local`, `.env.vercel*`, `.dev.vars`,
 
 ## Routing
 
-Cloudflare routing is configured through:
+Cloudflare routing is configured in two places:
 
-- `public/_redirects`
-- `public/_headers`
+- `wrangler.json` controls which paths run Worker code before static assets.
+- `worker/index.js` handles redirects, `/admin`, and `/api/idle-dev-game/*`.
+- `public/_redirects` and `public/_headers` remain for Pages compatibility.
 
 Vite copies both files into `dist` during `npm run build`.
 
-## Pages Functions
+## API handlers
 
-Vercel functions under `api/idle-dev-game/*` are mirrored for Cloudflare Pages under:
+Vercel functions under `api/idle-dev-game/*` are mirrored under:
 
 - `functions/api/idle-dev-game/config.js`
 - `functions/api/idle-dev-game/stats.js`
@@ -48,12 +51,13 @@ Vercel functions under `api/idle-dev-game/*` are mirrored for Cloudflare Pages u
 - `functions/api/idle-dev-game/result.js`
 - `functions/api/idle-dev-game/rank.js`
 
-These functions use Cloudflare `context.env` first and also support local `process.env` fallback for compatibility.
+The Worker entrypoint imports these handlers from `worker/index.js`.
+The handlers use Cloudflare `context.env` first and also support local `process.env` fallback for compatibility.
 
 ## Pre-DNS checklist
 
-1. Create a Cloudflare Pages project from the same git repository.
-2. Set build command to `npm run build` and output directory to `dist`.
+1. Create a Cloudflare Worker from the same git repository.
+2. Set build command to `npm run build` and deploy command to `npx wrangler deploy`.
 3. Add all Production environment variables.
 4. Deploy a preview build.
 5. Verify:
