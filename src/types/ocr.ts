@@ -2,13 +2,6 @@ import type { CalculatorMode, CardType, SkillGrade, SkillLevel, StarterHand } fr
 
 export type SkillOcrRole = "hitter" | "pitcher";
 
-export type SkillOcrSession = {
-  session_token: string;
-  username: string;
-  display_name: string | null;
-  expires_at: string;
-};
-
 export type SkillOcrApiSkill = {
   slot: number;
   name: string | null;

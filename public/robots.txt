@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /tyrant
 
 Sitemap: https://www.cpbv-lab.com/sitemap.xml

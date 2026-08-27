@@ -27,13 +27,8 @@ import {
   skillOcrDeletePublicUpload,
   skillOcrFinalizePublicUpload,
   skillOcrGetPublicWeeklyQuota,
-  skillOcrListUploads,
   skillOcrListPublicUploads,
-  skillOcrLogin,
-  skillOcrLogout,
   skillOcrSavePublicUpload,
-  skillOcrSaveUpload,
-  skillOcrValidateSession,
 } from "./lib/skillOcr";
 import {
   calculateSkillOcrSummary,
@@ -73,7 +68,6 @@ import type {
   SkillOcrRole,
   SkillOcrSavedUpload,
   SkillOcrSelectedPlayer,
-  SkillOcrSession,
 } from "./types/ocr";
 import { calculateSkillTotal } from "./utils/calculate";
 import { calculateAdvancedSkillOdds } from "./utils/advancedSkillOdds";
@@ -101,7 +95,6 @@ const SkillCompareBetaView = lazy(() => import("./views/SkillCompareBetaView"));
 const RankingView = lazy(() => import("./views/RankingView"));
 const SkillQuizView = lazy(() => import("./views/SkillQuizView"));
 const AdminView = lazy(() => import("./views/AdminView"));
-const SkillOcrView = lazy(() => import("./views/SkillOcrView"));
 const PublicSkillOcrView = lazy(() => import("./views/PublicSkillOcrView"));
 const TrainingRedistributionView = lazy(() => import("./views/TrainingRedistributionView"));
 const ToolboxStage = lazy(() => import("./views/ToolboxStage"));
@@ -125,9 +118,6 @@ const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
 const ADMIN_PATH = "/admin";
 const ADMIN_SESSION_KEY = "v26-admin-session";
-const OCR_PATH = "/tyrant";
-const OCR_SESSION_KEY = "v26-skill-ocr-session";
-const OCR_FIXED_USERNAME = import.meta.env.VITE_OCR_USERNAME ?? "";
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "skillScoreMethod",
@@ -223,8 +213,6 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
 function App() {
   const isAdminRoute =
     typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
-  const isOcrRoute =
-    typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === OCR_PATH;
   const infoPageKey =
     typeof window !== "undefined"
       ? INFO_PAGE_PATHS[window.location.pathname.replace(/\/+$/, "") || "/"] ?? null
@@ -310,10 +298,6 @@ function App() {
   const [adminIdleDevGameSaving, setAdminIdleDevGameSaving] = useState(false);
   const [adminIdleDevGameStatus, setAdminIdleDevGameStatus] = useState<"idle" | "saved" | "error">("idle");
   const [adminIdleDevGameError, setAdminIdleDevGameError] = useState<string | null>(null);
-  const [ocrPasswordInput, setOcrPasswordInput] = useState("");
-  const [ocrAuthError, setOcrAuthError] = useState<string | null>(null);
-  const [ocrCheckingSession, setOcrCheckingSession] = useState(isOcrRoute);
-  const [ocrSession, setOcrSession] = useState<SkillOcrSession | null>(null);
   const [ocrUploads, setOcrUploads] = useState<SkillOcrSavedUpload[]>([]);
   const [ocrPublicQuota, setOcrPublicQuota] = useState<SkillOcrPublicQuota[]>([]);
   const [ocrUploadsLoading, setOcrUploadsLoading] = useState(false);
@@ -463,16 +447,6 @@ function App() {
       : toolView;
   const shouldShowKakaoAdFit = !isAdminRoute;
   const authDisplayName = getDisplayNameFromSession(authSession);
-  const publicOcrSession: SkillOcrSession | null = authSession
-    ? {
-        session_token: "public",
-        username: authDisplayName ?? "Google 사용자",
-        display_name: authDisplayName,
-        expires_at: authSession.expires_at
-          ? new Date(authSession.expires_at * 1000).toISOString()
-          : new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      }
-    : null;
 
   const loadAdminIdleGameRankings = async (sessionToken: string) => {
     try {
@@ -553,61 +527,6 @@ function App() {
       }
     })();
   }, [isAdminRoute]);
-
-  useEffect(() => {
-    if (!isOcrRoute) {
-      return;
-    }
-
-    const storedSessionToken = window.localStorage.getItem(OCR_SESSION_KEY);
-
-    if (!storedSessionToken) {
-      setOcrCheckingSession(false);
-      setOcrSession(null);
-      return;
-    }
-
-    void (async () => {
-      try {
-        const session = await skillOcrValidateSession(storedSessionToken);
-
-        if (!session) {
-          window.localStorage.removeItem(OCR_SESSION_KEY);
-          setOcrSession(null);
-          setOcrCheckingSession(false);
-          return;
-        }
-
-        setOcrSession(session);
-      } catch {
-        window.localStorage.removeItem(OCR_SESSION_KEY);
-        setOcrSession(null);
-      } finally {
-        setOcrCheckingSession(false);
-      }
-    })();
-  }, [isOcrRoute]);
-
-  useEffect(() => {
-    if (!isOcrRoute || !ocrSession) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        setOcrUploadsLoading(true);
-        setOcrUploadsError(null);
-        const uploads = await skillOcrListUploads(ocrSession.session_token, 20);
-        setOcrUploads(uploads);
-      } catch (error) {
-        setOcrUploadsError(
-          error instanceof Error ? error.message : "이미지 인식 저장 기록을 불러오지 못했습니다."
-        );
-      } finally {
-        setOcrUploadsLoading(false);
-      }
-    })();
-  }, [isOcrRoute, ocrSession]);
 
   useEffect(() => {
     if (toolView !== "lineupSkillOcr") {
@@ -729,7 +648,7 @@ function App() {
   }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
-    if (isAdminRoute || isOcrRoute || infoPageKey) {
+    if (isAdminRoute || infoPageKey) {
       return;
     }
 
@@ -748,10 +667,10 @@ function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [infoPageKey, isAdminRoute, isOcrRoute]);
+  }, [infoPageKey, isAdminRoute]);
 
   useEffect(() => {
-    if (isAdminRoute || isOcrRoute || infoPageKey) {
+    if (isAdminRoute || infoPageKey) {
       return;
     }
 
@@ -773,20 +692,20 @@ function App() {
     }
 
     window.history.pushState({}, "", url.toString());
-  }, [infoPageKey, isAdminRoute, isOcrRoute, toolView]);
+  }, [infoPageKey, isAdminRoute, toolView]);
 
   useEffect(() => {
-    if (isAdminRoute || isOcrRoute || infoPageKey) {
+    if (isAdminRoute || infoPageKey) {
       return;
     }
 
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     });
-  }, [infoPageKey, isAdminRoute, isOcrRoute, toolView]);
+  }, [infoPageKey, isAdminRoute, toolView]);
 
   useEffect(() => {
-    if (isAdminRoute || isOcrRoute || infoPageKey) {
+    if (isAdminRoute || infoPageKey) {
       return;
     }
 
@@ -799,7 +718,7 @@ function App() {
         search: window.location.search,
       },
     }).catch(() => {});
-  }, [infoPageKey, isAdminRoute, isOcrRoute, revenueSessionId, toolView]);
+  }, [infoPageKey, isAdminRoute, revenueSessionId, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -1250,59 +1169,8 @@ function App() {
     }
   };
 
-  const handleOcrLogin = async () => {
-    if (!OCR_FIXED_USERNAME) {
-      setOcrAuthError("이미지 인식 접속 설정이 필요합니다.");
-      return;
-    }
-
-    if (!ocrPasswordInput.trim()) {
-      setOcrAuthError("비밀번호를 입력해주세요.");
-      return;
-    }
-
-    try {
-      const session = await skillOcrLogin(OCR_FIXED_USERNAME, ocrPasswordInput);
-      setOcrAuthError(null);
-      setOcrSession(session);
-      window.localStorage.setItem(OCR_SESSION_KEY, session.session_token);
-    } catch (error) {
-      setOcrAuthError(error instanceof Error ? error.message : "이미지 인식 로그인에 실패했습니다.");
-    }
-  };
-
-  const handleOcrLogout = async () => {
-    const sessionToken = ocrSession?.session_token ?? window.localStorage.getItem(OCR_SESSION_KEY);
-
-    if (sessionToken) {
-      try {
-        await skillOcrLogout(sessionToken);
-      } catch {
-        // Clear the client session even if the server-side token is already invalid.
-      }
-    }
-
-    setOcrSession(null);
-    setOcrPasswordInput("");
-    setOcrAuthError(null);
-    setOcrUploads([]);
-    setOcrUploadError(null);
-    setOcrDraftPlayers([]);
-    setOcrDraftImageName(null);
-    setOcrDraftRole(null);
-    setOcrDraftRawResponse(null);
-    setOcrDraftTotalScore(0);
-    setOcrDraftAverageScore(0);
-    setOcrDraftPublicUploadId(null);
-    setOcrSaving(false);
-    setOcrSavedUpload(null);
-    window.localStorage.removeItem(OCR_SESSION_KEY);
-  };
-
   const handleOcrUploadImage = async (role: SkillOcrRole, file: File) => {
-    const isPublicLineupOcr = toolView === "lineupSkillOcr";
-
-    if (isPublicLineupOcr && !authSession) {
+    if (!authSession) {
       setOcrUploadError("Google 로그인 후 사용할 수 있습니다.");
       return;
     }
@@ -1319,10 +1187,8 @@ function App() {
     setOcrSavedUpload(null);
 
     try {
-      if (isPublicLineupOcr) {
-        const quota = await skillOcrClaimPublicWeeklyUsage(role);
-        setOcrPublicQuota(quota);
-      }
+      const quota = await skillOcrClaimPublicWeeklyUsage(role);
+      setOcrPublicQuota(quota);
 
       const response = await recognizeSkillImage({ role, file });
       const transformed = transformSkillOcrResponse(response, role);
@@ -1332,20 +1198,18 @@ function App() {
       setOcrDraftTotalScore(transformed.totalScore);
       setOcrDraftAverageScore(transformed.averageScore);
 
-      if (isPublicLineupOcr) {
-        const snapshot = await skillOcrCreatePublicSnapshot({
-          role,
-          imageName: file.name,
-          requestId: response.request_id,
-          rawResponse: response,
-          selectedPlayers: transformed.players,
-          totalScore: transformed.totalScore,
-          averageScore: transformed.averageScore,
-        });
-        setOcrDraftPublicUploadId(snapshot.id);
-        setOcrSavedUpload(snapshot);
-        setOcrUploads(await skillOcrListPublicUploads(20));
-      }
+      const snapshot = await skillOcrCreatePublicSnapshot({
+        role,
+        imageName: file.name,
+        requestId: response.request_id,
+        rawResponse: response,
+        selectedPlayers: transformed.players,
+        totalScore: transformed.totalScore,
+        averageScore: transformed.averageScore,
+      });
+      setOcrDraftPublicUploadId(snapshot.id);
+      setOcrSavedUpload(snapshot);
+      setOcrUploads(await skillOcrListPublicUploads(20));
     } catch (error) {
       setOcrUploadError(
         error instanceof Error ? error.message : "이미지를 인식하지 못했습니다."
@@ -1356,14 +1220,12 @@ function App() {
   };
 
   const handleOcrSaveDraft = async () => {
-    const isPublicLineupOcr = toolView === "lineupSkillOcr";
-
-    if ((!ocrSession && !isPublicLineupOcr) || !ocrDraftRole || !ocrDraftRawResponse) {
+    if (!ocrDraftRole || !ocrDraftRawResponse) {
       setOcrUploadError("저장할 이미지 인식 결과가 없습니다.");
       return;
     }
 
-    if (isPublicLineupOcr && !authSession) {
+    if (!authSession) {
       setOcrUploadError("Google 로그인 후 저장할 수 있습니다.");
       return;
     }
@@ -1387,20 +1249,13 @@ function App() {
         totalScore: ocrDraftTotalScore,
         averageScore: ocrDraftAverageScore,
       };
-      const savedUpload = isPublicLineupOcr
-        ? ocrDraftPublicUploadId
-          ? await skillOcrFinalizePublicUpload({
-              uploadId: ocrDraftPublicUploadId,
-              ...saveInput,
-            })
-          : await skillOcrSavePublicUpload(saveInput)
-        : await skillOcrSaveUpload({
-            sessionToken: ocrSession?.session_token ?? "",
+      const savedUpload = ocrDraftPublicUploadId
+        ? await skillOcrFinalizePublicUpload({
+            uploadId: ocrDraftPublicUploadId,
             ...saveInput,
-          });
-      const uploads = isPublicLineupOcr
-        ? await skillOcrListPublicUploads(20)
-        : await skillOcrListUploads(ocrSession?.session_token ?? "", 20);
+          })
+        : await skillOcrSavePublicUpload(saveInput);
+      const uploads = await skillOcrListPublicUploads(20);
 
       setOcrSavedUpload(savedUpload);
       setOcrUploads(uploads);
@@ -1658,53 +1513,6 @@ function App() {
     );
   }
 
-  if (isOcrRoute) {
-    return (
-      <div className="app-bg" data-theme={theme}>
-        <div className="app-shell">
-          <Suspense fallback={<ViewFallback />}>
-            <SkillOcrView
-              session={ocrSession}
-              checkingSession={ocrCheckingSession}
-              passwordInput={ocrPasswordInput}
-              authError={ocrAuthError}
-              uploads={ocrUploads}
-              uploadsLoading={ocrUploadsLoading}
-              uploadsError={ocrUploadsError}
-              uploadBusyRole={ocrUploadBusyRole}
-              uploadError={ocrUploadError}
-              draftPlayers={ocrDraftPlayers}
-              draftTotalScore={ocrDraftTotalScore}
-              draftAverageScore={ocrDraftAverageScore}
-              saving={ocrSaving}
-              savedUpload={ocrSavedUpload}
-              onPasswordChange={(value) => {
-                setOcrPasswordInput(value);
-                if (ocrAuthError) {
-                  setOcrAuthError(null);
-                }
-              }}
-              onLogin={() => void handleOcrLogin()}
-              onLogout={() => void handleOcrLogout()}
-              onUploadImage={(role, file) => void handleOcrUploadImage(role, file)}
-              onPlayerSelectedChange={handleOcrPlayerSelectedChange}
-              onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
-              onPlayerPositionChange={handleOcrPlayerPositionChange}
-              onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}
-              onSkillChange={handleOcrSkillChange}
-              onSkillLevelChange={handleOcrSkillLevelChange}
-              onSaveDraft={() => void handleOcrSaveDraft()}
-              onSelectSavedUpload={setOcrSavedUpload}
-              onClearSavedUpload={() => setOcrSavedUpload(null)}
-              onGoHome={handleGoHome}
-            />
-          </Suspense>
-          <Analytics />
-        </div>
-      </div>
-    );
-  }
-
   if (infoPageKey) {
     return (
       <div className="app-bg" data-theme={theme}>
@@ -1778,7 +1586,7 @@ function App() {
             />
           ) : toolView === "lineupSkillOcr" ? (
             <PublicSkillOcrView
-              authenticated={Boolean(publicOcrSession)}
+              authenticated={Boolean(authSession)}
               displayName={authDisplayName}
               uploads={ocrUploads}
               uploadsLoading={ocrUploadsLoading}

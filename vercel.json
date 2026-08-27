@@ -97,24 +97,11 @@
           "value": "noindex, nofollow"
         }
       ]
-    },
-    {
-      "source": "/tyrant",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
     }
   ],
   "rewrites": [
     {
       "source": "/admin",
-      "destination": "/"
-    },
-    {
-      "source": "/tyrant",
       "destination": "/"
     }
   ]
