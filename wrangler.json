@@ -21,7 +21,17 @@
       "/skill-compare",
       "/lineup-skill-ocr",
       "/training-redistribution",
-      "/admin"
+      "/admin",
+      "/admin/*"
     ]
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false
+    }
   }
 }

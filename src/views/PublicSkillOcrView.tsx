@@ -230,7 +230,6 @@ export default function PublicSkillOcrView({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "upload">("summary");
-  const [exampleOpen, setExampleOpen] = useState(false);
 
   if (!authenticated) {
     return (
@@ -446,23 +445,6 @@ export default function PublicSkillOcrView({
       ) : (
         <>
           <section className="public-ocr-upload-panel">
-            <div className="public-ocr-guide-card">
-              <PublicOcrIcon name="check" />
-              <div>
-                <strong>모바일 캡처 권장</strong>
-                <ul className="ocr-guide-list">
-                  <li>PC 캡처보다 모바일에서 세로로 캡처한 라인업 화면이 더 정확합니다.</li>
-                  <li>
-                    게임 환경설정 &gt; 해상도에서 <strong>최고</strong> 또는 <strong>높음</strong>으로 설정하세요.
-                  </li>
-                  <li>이미지 인식 결과는 부정확할 수 있으니 카드 타입, 스킬, 레벨을 꼭 확인하세요.</li>
-                  <li>투수/타자는 각각 최대 9명만 선택해 저장하세요.</li>
-                </ul>
-              </div>
-              <button type="button" className="ocr-example-link" onClick={() => setExampleOpen(true)}>
-                예시 이미지
-              </button>
-            </div>
             <input
               ref={pitcherInputRef}
               className="ocr-file-input"
@@ -751,28 +733,6 @@ export default function PublicSkillOcrView({
             </section>
           )}
 
-          {exampleOpen && (
-            <div className="modal-backdrop" role="presentation" onClick={() => setExampleOpen(false)}>
-              <section
-                className="modal-card ocr-example-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="모바일 라인업 캡처 예시"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="ocr-example-modal-head">
-                  <div>
-                    <p className="modal-eyebrow">Example</p>
-                    <h2>모바일 캡처 예시</h2>
-                  </div>
-                  <button type="button" className="ghost-btn" onClick={() => setExampleOpen(false)}>
-                    닫기
-                  </button>
-                </div>
-                <img src="/ocr-lineup-example.png" alt="모바일 라인업 캡처 예시" />
-              </section>
-            </div>
-          )}
         </>
       )}
     </main>

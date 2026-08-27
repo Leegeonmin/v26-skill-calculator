@@ -857,11 +857,11 @@ const pages = [
       },
       {
         title: "제3자 서비스",
-        body: "로그인과 데이터 저장에 Supabase를, 익명 방문 통계 확인에 Vercel Analytics를 사용합니다. AdSense 적용 시 광고 제공과 부정 사용 방지를 위한 쿠키 또는 유사 기술이 사용될 수 있습니다.",
+        body: "로그인과 데이터 저장에 Supabase를, 익명 방문 통계 확인에 Vercel Analytics를 사용합니다. Kakao AdFit 광고 제공과 부정 사용 방지를 위한 쿠키 또는 유사 기술이 사용될 수 있습니다.",
       },
       {
         title: "광고와 쿠키",
-        body: "Google AdSense가 적용되는 경우 Google과 파트너는 광고 제공, 광고 성과 측정과 부정 사용 방지를 위해 쿠키 또는 유사 기술을 사용할 수 있습니다.",
+        body: "Kakao AdFit은 광고 제공, 광고 성과 측정과 부정 사용 방지를 위해 쿠키 또는 유사 기술을 사용할 수 있습니다.",
       },
       {
         title: "문의 및 삭제 요청",

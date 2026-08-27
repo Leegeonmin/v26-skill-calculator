@@ -67,6 +67,6 @@ The handlers use Cloudflare `context.env` first and also support local `process.
    - `/idle-dev-game/index.html`
    - `/api/idle-dev-game/config`
    - `/api/idle-dev-game/stats`
-6. Confirm Kakao AdFit/AdSense scripts load on the preview domain where allowed.
+6. Confirm Kakao AdFit scripts load on the preview domain where allowed.
 7. Add `www.cpbv-lab.com` as a custom domain.
 8. Switch DNS only after preview checks pass.

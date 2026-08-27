@@ -45,7 +45,6 @@ import {
 } from "./lib/toolboxHelpers";
 import AppChrome from "./components/AppChrome";
 import SiteHeader from "./components/SiteHeader";
-import ToolSeoPanel from "./components/ToolSeoPanel";
 import KakaoAdFitFixedBanner, {
   KakaoAdFitPcTopTripleBanner,
   KakaoAdFitMobileTopBanner,
@@ -118,6 +117,11 @@ const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
 const ADMIN_PATH = "/admin";
 const ADMIN_SESSION_KEY = "v26-admin-session";
+function isAdminPath(pathname: string) {
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+  return normalizedPath === ADMIN_PATH || normalizedPath.startsWith(`${ADMIN_PATH}/`);
+}
+
 const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/about": "about",
   "/guide": "skillScoreMethod",
@@ -211,8 +215,7 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
 );
 
 function App() {
-  const isAdminRoute =
-    typeof window !== "undefined" && window.location.pathname.replace(/\/+$/, "") === ADMIN_PATH;
+  const isAdminRoute = typeof window !== "undefined" && isAdminPath(window.location.pathname);
   const infoPageKey =
     typeof window !== "undefined"
       ? INFO_PAGE_PATHS[window.location.pathname.replace(/\/+$/, "") || "/"] ?? null
@@ -1706,24 +1709,9 @@ function App() {
               onAutoRoll={handleAutoRollToTarget}
               onImpactRoll={handleImpactChangeRoll}
               resetImpactChangeSession={resetImpactChangeSession}
-              guideContent={<ToolSeoPanel toolView={toolboxToolView} />}
             />
           )}
           </Suspense>
-
-          {(toolView === "skillCompareBeta" ||
-            toolView === "lineupSkillOcr" ||
-            toolView === "trainingRedistribution") && (
-            <ToolSeoPanel
-              toolView={
-                toolView === "skillCompareBeta" ||
-                toolView === "lineupSkillOcr" ||
-                toolView === "trainingRedistribution"
-                  ? toolView
-                  : toolboxToolView
-              }
-            />
-          )}
         </AppChrome>
 
         <KakaoAdFitFixedBanner

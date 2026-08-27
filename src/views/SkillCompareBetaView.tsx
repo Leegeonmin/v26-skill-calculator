@@ -281,7 +281,6 @@ export default function SkillCompareBetaView({
     useState<HitterPositionGroup>("fielder");
   const [starterHand, setStarterHand] = useState<StarterHand>("right");
   const [cardType, setCardType] = useState<CardType>("signature");
-  const [exampleOpen, setExampleOpen] = useState(false);
   const [selectedSkillIds, setSelectedSkillIds] = useState<Record<string, string>>({});
   const [compareInputMode, setCompareInputMode] = useState<CompareInputMode>("auto");
   const skillLevelOptions = useMemo(() => getSkillLevelOptions(cardType), [cardType]);
@@ -507,24 +506,6 @@ export default function SkillCompareBetaView({
 
       {compareInputMode === "auto" ? (
       <section className="skill-compare-upload-panel">
-        <div className="skill-compare-guide-card">
-          <div>
-            <strong>고스변 화면 캡처 가이드</strong>
-            <ul>
-              <li>기존 스킬과 변경 후보 스킬 3개가 모두 보이는 화면을 업로드하세요.</li>
-              <li>스킬명과 레벨 숫자가 잘리지 않게 모바일에서 세로로 캡처하는 것을 권장합니다.</li>
-              <li>이미지 인식 결과는 부정확할 수 있으니 선수 구분, 카드 타입, 스킬 레벨을 확인하세요.</li>
-            </ul>
-          </div>
-          <button
-            type="button"
-            className="skill-compare-example-link"
-            onClick={() => setExampleOpen(true)}
-          >
-            예시 이미지
-          </button>
-        </div>
-
         <input
           ref={inputRef}
           type="file"
@@ -560,33 +541,6 @@ export default function SkillCompareBetaView({
           <strong>직접 스킬을 선택해서 비교합니다.</strong>
           <p>아래 비교표에서 현재 스킬과 변경 후보 스킬, 레벨을 직접 입력하세요.</p>
         </section>
-      )}
-
-      {exampleOpen && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={() => setExampleOpen(false)}
-        >
-          <section
-            className="modal-card skill-compare-example-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="고스변 화면 캡처 예시"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="ocr-example-modal-head">
-              <div>
-                <p className="modal-eyebrow">Example</p>
-                <h2>고스변 화면 예시</h2>
-              </div>
-              <button type="button" className="ghost-btn" onClick={() => setExampleOpen(false)}>
-                닫기
-              </button>
-            </div>
-            <img src="/skill-change-example.png" alt="고스변 화면 캡처 예시" />
-          </section>
-        </div>
       )}
 
       {error && <p className="modal-error">{error}</p>}

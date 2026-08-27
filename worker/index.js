@@ -33,6 +33,10 @@ function redirectResponse(requestUrl, destination) {
   return Response.redirect(location, 301);
 }
 
+function isAdminPath(pathname) {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
 async function serveAdmin(request, env) {
   const url = new URL(request.url);
   url.pathname = "/index.html";
@@ -52,6 +56,10 @@ async function serveAdmin(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === "/admin") {
+      return redirectResponse(url, "/admin/");
+    }
+
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
     const redirectDestination = REDIRECTS.get(pathname);
@@ -59,7 +67,7 @@ export default {
       return redirectResponse(url, redirectDestination);
     }
 
-    if (pathname === "/admin") {
+    if (isAdminPath(pathname)) {
       return serveAdmin(request, env);
     }
 

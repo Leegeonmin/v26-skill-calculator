@@ -11,4 +11,6 @@
 /skill-compare /skill-compare/ 301
 /lineup-skill-ocr /lineup-skill-ocr/ 301
 /training-redistribution /training-redistribution/ 301
-/admin /index.html 200
+/admin /admin/ 301
+/admin/ /index.html 200
+/admin/* /index.html 200

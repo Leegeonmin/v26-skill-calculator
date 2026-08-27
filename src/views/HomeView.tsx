@@ -126,46 +126,6 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
   },
 ];
 
-const HOME_CONTENT_SECTIONS = [
-  {
-    title: "보직부터 맞춰 계산합니다",
-    body:
-      "타자, 선발, 중계, 마무리는 스킬 종류, 점수가 다릅니다. 같은 스킬이어도 역할을 잘못 고르면 점수가 엉뚱하게 보일 수 있어서, 먼저 보직과 카드 타입을 나눈 뒤 계산합니다.",
-  },
-  {
-    title: "총점 옆에 희귀도를 붙였습니다",
-    body:
-      "총점만 높다고 끝은 아닙니다. 이 조합이 고스변에서 어느 정도 보기 힘든지 같이 봐야 판단이 쉬워서, 상위 확률과 기대 시도 횟수를 같이 보여줍니다.",
-  },
-  {
-    title: "변경권 쓰기 전에 먼저 테스트",
-    body:
-      "시뮬레이터가 실제 결과를 맞혀주는 건 아닙니다. 대신 목표 등급이나 2메이저 조합을 노릴 때 어느 정도 각오해야 하는지 미리 감을 잡는 용도로 씁니다.",
-  },
-  {
-    title: "현재 조합을 유지할지 판단합니다",
-    body:
-      "좋은 스킬 이름이 하나 있어도 나머지 두 칸과 레벨이 낮으면 전체 조합 가치는 달라집니다. 계산 결과에서 현재 점수보다 높은 조합이 얼마나 흔한지 확인하면 지금 멈출지, 변경권을 더 쓸지 결정하기 쉽습니다.",
-  },
-  {
-    title: "카드 사용 기간까지 같이 봅니다",
-    body:
-      "오래 쓸 핵심 카드는 높은 목표를 잡을 수 있지만 곧 교체할 카드는 적당한 점수에서 멈추는 편이 낫습니다. CPBV LAB의 등급과 기대 횟수는 이런 타협선을 정할 때 쓰는 참고값입니다.",
-  },
-  {
-    title: "데이터 기준을 공개합니다",
-    body:
-      "점수표 확인일과 계산 방식은 안내 페이지에 따로 정리합니다. 게임 업데이트나 커뮤니티 자료 변경이 확인되면 계산기, 시뮬레이터, 이미지 인식 결과가 같은 기준을 쓰도록 함께 수정합니다.",
-  },
-];
-
-const HOME_EXAMPLE_STEPS = [
-  "카드 타입, 보직, 스킬 3개와 레벨을 그대로 넣습니다.",
-  "총점만 보지 말고 등급, 상위 확률, 기대 횟수를 같이 봅니다.",
-  "목표 등급이 있으면 고스변 시뮬에서 자동 롤로 난이도를 확인합니다.",
-  "이미지 인식 결과는 저장 전에 카드 타입과 포지션이 맞는지 한 번 더 봅니다.",
-];
-
 const HOME_USAGE_STEPS = [
   {
     title: "점수 먼저 확인",
@@ -575,58 +535,6 @@ export default function HomeView({
             </span>
           </button>
           </div>
-      </section>
-
-      <section className="home-beginner-entry" aria-labelledby="home-beginner-entry-title">
-        <div className="home-beginner-entry-copy">
-          <span>Beginner Guide</span>
-          <h2 id="home-beginner-entry-title">뉴비라면 여기부터</h2>
-          <p>
-            처음부터 완벽한 조합만 노리면 변경권을 너무 빨리 씁니다. 스킬 점수, 보직, 카드
-            타입별로 어느 정도에서 타협할지 정리합니다.
-          </p>
-        </div>
-        <a className="home-beginner-entry-link" href="/beginner-guides">
-          뉴비 가이드 보기
-          <svg viewBox="0 0 24 24" className="ui-icon" aria-hidden="true">
-            <path
-              d="M9.29 6.71 13.59 11H4v2h9.59l-4.3 4.29 1.42 1.42L17.41 12l-6.7-6.71-1.42 1.42Z"
-              fill="currentColor"
-            />
-          </svg>
-        </a>
-      </section>
-
-      <section className="home-content-guide" aria-labelledby="home-content-guide-title">
-        <div className="home-content-guide-head">
-          <span>How it works</span>
-          <h2 id="home-content-guide-title">계산할 때 체크리스트</h2>
-          <p>
-            스킬 이름만 보고 고르면 헷갈리는 경우가 많습니다. 역할, 카드 타입, 레벨을 맞춘 뒤
-            총점과 희귀도를 같이 보는 쪽으로 정리했습니다.
-          </p>
-        </div>
-
-        <div className="home-content-grid">
-          {HOME_CONTENT_SECTIONS.map((section) => (
-            <article key={section.title} className="home-content-card">
-              <h3>{section.title}</h3>
-              <p>{section.body}</p>
-            </article>
-          ))}
-        </div>
-
-        <div className="home-example-panel">
-          <div>
-            <span>Example workflow</span>
-            <h3>사용법</h3>
-          </div>
-          <ol>
-            {HOME_EXAMPLE_STEPS.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-        </div>
       </section>
 
       <nav className="home-site-links" aria-label="사이트 정보">

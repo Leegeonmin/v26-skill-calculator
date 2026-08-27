@@ -98,7 +98,6 @@ type ToolboxStageProps = {
   onAutoRoll: () => void;
   onImpactRoll: () => void;
   resetImpactChangeSession: () => void;
-  guideContent?: ReactNode;
 };
 
 function getModeLabel(mode: CalculatorMode): string {
@@ -113,56 +112,6 @@ function getModeLabel(mode: CalculatorMode): string {
       return "마무리";
     default:
       return mode;
-  }
-}
-
-function getResultInterpretation(input: {
-  toolView: ToolboxStageProps["toolView"];
-  grade: string;
-  topPercentLabel: string;
-  activeCardType: CardType;
-}) {
-  if (input.toolView !== "calculator") {
-    return null;
-  }
-
-  const basis =
-    input.activeCardType === "impact"
-      ? "임팩트 카드는 1옵 제외 점수와 함께 봐야 합니다."
-      : "카드 타입별 기준표에서 같은 점수 이상이 나올 확률을 기준으로 봅니다.";
-
-  switch (input.grade) {
-    case "SR+":
-      return {
-        title: "거의 종결권 조합입니다",
-        body: `${input.topPercentLabel} 수준이면 쉽게 다시 보기 어려운 구간입니다. ${basis}`,
-      };
-    case "SS":
-      return {
-        title: "멈춰도 되는 상위권 조합입니다",
-        body: `${input.topPercentLabel} 수준이라면 대부분의 카드에서 충분히 강한 결과입니다. ${basis}`,
-      };
-    case "S":
-      return {
-        title: "좋은 조합이지만 목표에 따라 갈립니다",
-        body: `${input.topPercentLabel} 구간입니다. 오래 쓸 핵심 카드라면 한 단계 위를 노릴지 시뮬로 확인해보는 편이 좋습니다.`,
-      };
-    case "A":
-      return {
-        title: "실사용은 가능하지만 욕심낼 여지가 있습니다",
-        body: `${input.topPercentLabel} 구간입니다. 변경권 여유가 있으면 S 이상 목표까지 필요한 횟수를 비교해보세요.`,
-      };
-    case "B":
-    case "C":
-      return {
-        title: "임시 사용 또는 재시도 후보입니다",
-        body: `${input.topPercentLabel} 구간이라 장기 카드라면 재시도를 고려할 수 있습니다. 다만 곧 교체할 카드라면 타협해도 됩니다.`,
-      };
-    default:
-      return {
-        title: "스킬을 입력하면 해석이 표시됩니다",
-        body: "결과 점수, 등급, 상위 확률을 기준으로 멈춤 여부와 다음 액션을 함께 확인할 수 있습니다.",
-      };
   }
 }
 
@@ -224,7 +173,6 @@ export default function ToolboxStage({
   onAutoRoll,
   onImpactRoll,
   resetImpactChangeSession,
-  guideContent,
 }: ToolboxStageProps) {
   const [simulatorSetupState, setSimulatorSetupState] = useState({
     toolView,
@@ -297,13 +245,6 @@ export default function ToolboxStage({
           maximumFractionDigits: skillOdds.expectedRollsForScoreAtLeast < 10 ? 1 : 0,
         })}회`
       : "-";
-  const resultInterpretation = getResultInterpretation({
-    toolView,
-    grade: judgeGrade,
-    topPercentLabel: scoreAtLeastPercentLabel,
-    activeCardType,
-  });
-
   const simulatorSetupCard = (
     <>
       <div className="panel-head">
@@ -838,48 +779,6 @@ export default function ToolboxStage({
             </div>
           </div>
 
-          {toolView === "calculator" && resultInterpretation && (
-            <div className="result-context-flow" aria-label="점수 해석과 다음 행동">
-              <section className="result-context-card result-interpret-card">
-                <span className="result-context-kicker">점수 해석</span>
-                <h3>{resultInterpretation.title}</h3>
-                <p>{resultInterpretation.body}</p>
-              </section>
-
-              <section className="result-context-card">
-                <span className="result-context-kicker">다음에 확인할 것</span>
-                <div className="result-action-list">
-                  <div>
-                    <strong>고스변 시뮬로 목표까지 보기</strong>
-                    <span>현재 등급보다 한 단계 위를 노릴 때 필요한 기대 횟수를 비교합니다.</span>
-                  </div>
-                  <div>
-                    <strong>비슷한 점수대 기준표 보기</strong>
-                    <span>같은 카드 타입에서 이 점수가 어느 정도 희귀한지 확인합니다.</span>
-                  </div>
-                </div>
-              </section>
-
-              <section className="result-context-card">
-                <span className="result-context-kicker">자주 하는 실수</span>
-                <ul className="result-check-list">
-                  <li>카드 타입을 실제 카드와 다르게 설정</li>
-                  <li>임팩트 카드에서 1옵 포함/제외 점수를 혼동</li>
-                  <li>총점만 보고 상위 확률과 기대 횟수를 보지 않음</li>
-                </ul>
-              </section>
-
-              <section className="result-context-card">
-                <span className="result-context-kicker">관련 도구</span>
-                <div className="result-related-tools">
-                  <span>고스변 점수 비교</span>
-                  <span>라인업 스킬 인식</span>
-                  <span>훈련 재분배 확률</span>
-                </div>
-              </section>
-            </div>
-          )}
-
           {toolView === "simulator" && (
             <p className="tool-note">
               설정 화면에서 조건을 정한 뒤 시뮬 화면으로 들어가면 고스변 결과를 바로 확인할 수 있습니다.
@@ -913,7 +812,6 @@ export default function ToolboxStage({
         )}
       </main>
 
-      {guideContent}
     </div>
   );
 }
