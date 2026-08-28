@@ -27,11 +27,6 @@ function normalizeRpcError(error: { message?: string } | null, fallback: string)
   return new Error(error?.message || fallback);
 }
 
-function getSingleRow<T>(data: unknown): T | null {
-  const row = Array.isArray(data) ? data[0] : data;
-  return (row as T | null) ?? null;
-}
-
 type PublicUploadRow = Omit<SkillOcrSavedUpload, "role"> & {
   upload_role?: SkillOcrRole;
   role?: SkillOcrRole;
@@ -43,23 +38,6 @@ function mapPublicUploadRows(data: unknown): SkillOcrSavedUpload[] {
     role: row.role ?? row.upload_role ?? "hitter",
     is_saved: row.is_saved ?? true,
   }));
-}
-
-export async function skillOcrGetUpload(
-  sessionToken: string,
-  uploadId: string
-): Promise<SkillOcrSavedUpload | null> {
-  const supabase = requireSupabase();
-  const { data, error } = await supabase.rpc("skill_ocr_get_upload", {
-    p_session_token: sessionToken,
-    p_upload_id: uploadId,
-  });
-
-  if (error) {
-    throw normalizeRpcError(error, "라인업 기록을 불러오지 못했습니다.");
-  }
-
-  return getSingleRow<SkillOcrSavedUpload>(data);
 }
 
 export async function skillOcrSavePublicUpload(input: {
