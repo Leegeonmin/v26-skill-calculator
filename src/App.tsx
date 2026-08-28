@@ -11,14 +11,12 @@ import {
   signOut,
 } from "./lib/auth";
 import {
-  adminGetToolUsageSummary,
   adminGetIdleGameRankings,
   adminLogin,
   adminLogout,
   adminUpdateIdleGameRankingEntry,
   adminValidateSession,
   type AdminIdleGameRankingEntry,
-  type AdminUsageSummary,
 } from "./lib/admin";
 import {
   recognizeSkillImage,
@@ -283,9 +281,6 @@ function App() {
 
     return Boolean(window.sessionStorage.getItem(ADMIN_SESSION_KEY));
   });
-  const [adminStats, setAdminStats] = useState<AdminUsageSummary | null>(null);
-  const [adminStatsLoading, setAdminStatsLoading] = useState(false);
-  const [adminStatsError, setAdminStatsError] = useState<string | null>(null);
   const [adminIdleRankings, setAdminIdleRankings] = useState<AdminIdleGameRankingEntry[]>([]);
   const [adminIdleRankingsLoading, setAdminIdleRankingsLoading] = useState(false);
   const [adminIdleRankingsError, setAdminIdleRankingsError] = useState<string | null>(null);
@@ -562,32 +557,6 @@ function App() {
       }
     })();
   }, [authSession, toolView]);
-
-  useEffect(() => {
-    if (!isAdminRoute || !adminUnlocked) {
-      return;
-    }
-
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-    if (!sessionToken) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        setAdminStatsLoading(true);
-        setAdminStatsError(null);
-        const summary = await adminGetToolUsageSummary(sessionToken);
-        setAdminStats(summary);
-      } catch (error) {
-        setAdminStatsError(
-          error instanceof Error ? error.message : "통계 정보를 불러오지 못했습니다."
-        );
-      } finally {
-        setAdminStatsLoading(false);
-      }
-    })();
-  }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
     if (!isAdminRoute || !adminUnlocked) {
@@ -1463,9 +1432,6 @@ function App() {
               usernameInput={adminUsernameInput}
               passwordInput={adminPasswordInput}
               passwordError={adminPasswordError}
-              stats={adminStats}
-              statsLoading={adminStatsLoading}
-              statsError={adminStatsError}
               homeChangeMessage={adminHomeChangeDraft}
               homeChangeSaving={adminHomeChangeSaving}
               homeChangeStatus={adminHomeChangeStatus}

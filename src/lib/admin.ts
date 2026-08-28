@@ -6,42 +6,6 @@ export type AdminSession = {
   expires_at: string;
 };
 
-export type AdminUsageSummary = {
-  today_events: number;
-  unique_sessions: number;
-  page_views: number;
-  ad_viewable_events: number;
-  mobile_events: number;
-  desktop_events: number;
-  ad_breakdown: AdminAdBreakdown[];
-  page_breakdown: AdminPageBreakdown[];
-  recent_inquiries: AdminNoticeInquiry[];
-};
-
-export type AdminAdBreakdown = {
-  ad_slot: string;
-  ad_unit: string | null;
-  viewable_count: number;
-  unique_sessions: number;
-  last_seen_at: string | null;
-};
-
-export type AdminPageBreakdown = {
-  page_view: string;
-  page_path: string | null;
-  view_count: number;
-  unique_sessions: number;
-  last_seen_at: string | null;
-};
-
-export type AdminNoticeInquiry = {
-  id: string;
-  message: string;
-  contact: string | null;
-  page_url: string | null;
-  created_at: string;
-};
-
 export type AdminIdleGameRankingEntry = {
   entry_id: string;
   rank: number | null;
@@ -122,22 +86,6 @@ export async function adminLogout(sessionToken: string): Promise<void> {
   if (error) {
     throw adminError(error, "로그아웃 처리 중 오류가 발생했습니다.");
   }
-}
-
-export async function adminGetToolUsageSummary(
-  sessionToken: string
-): Promise<AdminUsageSummary | null> {
-  const supabase = requireSupabase();
-  const { data, error } = await supabase.rpc("admin_get_tool_usage_summary", {
-    p_session_token: sessionToken,
-  });
-
-  if (error) {
-    throw adminError(error, "통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
-  }
-
-  const summary = Array.isArray(data) ? data[0] : data;
-  return (summary as AdminUsageSummary | null) ?? null;
 }
 
 export async function adminGetIdleGameRankings(

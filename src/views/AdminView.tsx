@@ -1,8 +1,5 @@
 import type {
-  AdminAdBreakdown,
   AdminIdleGameRankingEntry,
-  AdminPageBreakdown,
-  AdminUsageSummary,
 } from "../lib/admin";
 
 type AdminViewProps = {
@@ -11,9 +8,6 @@ type AdminViewProps = {
   usernameInput: string;
   passwordInput: string;
   passwordError: string | null;
-  stats: AdminUsageSummary | null;
-  statsLoading: boolean;
-  statsError: string | null;
   homeChangeMessage: string;
   homeChangeSaving: boolean;
   homeChangeStatus: "idle" | "saved" | "error";
@@ -41,24 +35,6 @@ type AdminViewProps = {
   ) => void;
 };
 
-const toolLabels: Record<string, string> = {
-  home: "홈",
-  calculator: "스킬 점수 계산기",
-  simulator: "고스변 시뮬",
-  impactChange: "임팩트 변경 시뮬",
-  skillMarble: "스킬 마블",
-  majorSkillMarble: "메이저 마블",
-  ranking: "고스변 랭킹챌린지",
-  notice: "공지사항",
-  skillCompareBeta: "고스변 점수 비교",
-  lineupSkillOcr: "라인업 스킬 인식",
-  trainingRedistribution: "훈재분 확률",
-};
-
-function formatNumber(value: number | null | undefined) {
-  return value == null ? "-" : value.toLocaleString("ko-KR");
-}
-
 function formatDateTime(value: string | null | undefined) {
   if (!value) {
     return "-";
@@ -70,18 +46,6 @@ function formatDateTime(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
-function getToolLabel(pageView: string) {
-  return toolLabels[pageView] ?? pageView;
-}
-
-function formatPercent(value: number, total: number) {
-  if (total <= 0) {
-    return "-";
-  }
-
-  return `${((value / total) * 100).toFixed(1)}%`;
-}
-
 function getIdleRankingStatusLabel(status: AdminIdleGameRankingEntry["moderation_status"]) {
   if (status === "hidden") return "닉네임 숨김";
   if (status === "excluded") return "랭킹 제외";
@@ -91,98 +55,6 @@ function getIdleRankingStatusLabel(status: AdminIdleGameRankingEntry["moderation
 function formatSeconds(value: number | null | undefined) {
   if (value == null) return "-";
   return `${Math.round(value).toLocaleString("ko-KR")}초`;
-}
-
-function renderAdRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
-  if (statsLoading) {
-    return (
-      <tr>
-        <td colSpan={5}>광고 통계를 불러오는 중입니다.</td>
-      </tr>
-    );
-  }
-
-  if (!stats?.ad_breakdown?.length) {
-    return (
-      <tr>
-        <td colSpan={5}>아직 광고 로그가 없습니다.</td>
-      </tr>
-    );
-  }
-
-  return stats.ad_breakdown.map((item: AdminAdBreakdown) => (
-    <tr key={`${item.ad_slot}:${item.ad_unit ?? ""}`}>
-      <td>{item.ad_slot}</td>
-      <td>{item.ad_unit ?? "-"}</td>
-      <td>{formatNumber(item.viewable_count)}</td>
-      <td>{formatNumber(item.unique_sessions)}</td>
-      <td>{formatDateTime(item.last_seen_at)}</td>
-    </tr>
-  ));
-}
-
-function renderPageRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
-  if (statsLoading) {
-    return (
-      <tr>
-        <td colSpan={6}>통계를 불러오는 중입니다.</td>
-      </tr>
-    );
-  }
-
-  if (!stats?.page_breakdown?.length) {
-    return (
-      <tr>
-        <td colSpan={6}>아직 페이지 진입 기록이 없습니다.</td>
-      </tr>
-    );
-  }
-
-  return stats.page_breakdown.map((item: AdminPageBreakdown) => (
-    <tr key={`${item.page_view}:${item.page_path ?? ""}`}>
-      <td>{getToolLabel(item.page_view)}</td>
-      <td>{item.page_path ?? "-"}</td>
-      <td>{formatNumber(item.view_count)}</td>
-      <td>{formatPercent(item.view_count, stats.page_views)}</td>
-      <td>{formatNumber(item.unique_sessions)}</td>
-      <td>{formatDateTime(item.last_seen_at)}</td>
-    </tr>
-  ));
-}
-
-function renderInquiryRows(stats: AdminUsageSummary | null, statsLoading: boolean) {
-  if (statsLoading) {
-    return (
-      <tr>
-        <td colSpan={4}>문의를 불러오는 중입니다.</td>
-      </tr>
-    );
-  }
-
-  if (!stats?.recent_inquiries?.length) {
-    return (
-      <tr>
-        <td colSpan={4}>최근 문의가 없습니다.</td>
-      </tr>
-    );
-  }
-
-  return stats.recent_inquiries.map((inquiry) => (
-    <tr key={inquiry.id}>
-      <td>{formatDateTime(inquiry.created_at)}</td>
-      <td>{inquiry.contact || "-"}</td>
-      <td className="admin-message-cell">{inquiry.message}</td>
-      <td>
-        {inquiry.page_url ? (
-          <a href={inquiry.page_url} target="_blank" rel="noreferrer">
-            열기
-          </a>
-        ) : (
-          "-"
-        )}
-      </td>
-    </tr>
-  ));
 }
 
 function renderIdleRankingRows({
@@ -262,9 +134,6 @@ export default function AdminView({
   usernameInput,
   passwordInput,
   passwordError,
-  stats,
-  statsLoading,
-  statsError,
   homeChangeMessage,
   homeChangeSaving,
   homeChangeStatus,
@@ -307,8 +176,8 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Access</p>
           <h1>관리자 페이지</h1>
           <p className="admin-copy">
-            이 페이지는 운영용입니다. 비밀번호를 입력하면 사용량, 자동 롤 성과, 문의 내역을
-            확인할 수 있는 관리자 대시보드로 들어갑니다.
+            이 페이지는 운영용입니다. 비밀번호를 입력하면 메인 공지와 타자 키우기 운영 상태를
+            관리할 수 있습니다.
           </p>
 
           <label className="admin-field">
@@ -360,7 +229,7 @@ export default function AdminView({
           <p className="admin-eyebrow">Admin Dashboard</p>
           <h1>운영 대시보드</h1>
           <p className="admin-copy">
-            광고 수익 분석에 필요한 페이지뷰, 화면 진입 광고, 기기 비중을 확인합니다.
+            메인 공지와 타자 키우기 노출 상태, 공식 랭킹 표시 상태를 관리합니다.
           </p>
         </div>
 
@@ -478,117 +347,6 @@ export default function AdminView({
         {idleGameRankingsError && <p className="modal-error">{idleGameRankingsError}</p>}
       </section>
 
-      <div className="admin-grid admin-metric-grid admin-core-metrics">
-        <section className="admin-panel">
-          <h2>오늘 페이지뷰</h2>
-          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.page_views)}</p>
-          <p>한국시간 오늘 0시 이후 사용자 화면 진입 수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>고유 세션</h2>
-          <p className="admin-metric">{statsLoading ? "-" : formatNumber(stats?.unique_sessions)}</p>
-          <p>한국시간 오늘 기준으로 중복을 제거한 방문 세션 수입니다.</p>
-        </section>
-
-        <section className="admin-panel">
-          <h2>광고 화면 진입</h2>
-          <p className="admin-metric">
-            {statsLoading ? "-" : formatNumber(stats?.ad_viewable_events)}
-          </p>
-          <p>광고 슬롯이 실제 화면에 50% 이상 들어온 횟수입니다.</p>
-        </section>
-      </div>
-
-      <section className="admin-panel admin-table-panel admin-ocr-panel">
-        <div className="admin-section-head">
-          <div>
-            <p className="admin-eyebrow">Ad Slots</p>
-            <h2>오늘 광고 슬롯별 로그</h2>
-          </div>
-          <p>사용자 화면에 실제로 들어온 광고 위치를 기준으로 봅니다.</p>
-        </div>
-
-        <div className="admin-grid admin-grid-compact">
-          <section className="admin-subpanel">
-            <span>모바일 이벤트</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.mobile_events)}</strong>
-            <p>오늘 모바일 기기에서 발생한 수익 분석 이벤트입니다.</p>
-          </section>
-          <section className="admin-subpanel">
-            <span>데스크톱 이벤트</span>
-            <strong>{statsLoading ? "-" : formatNumber(stats?.desktop_events)}</strong>
-            <p>오늘 데스크톱 기기에서 발생한 수익 분석 이벤트입니다.</p>
-          </section>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>광고 위치</th>
-                <th>광고 단위</th>
-                <th>화면 진입</th>
-                <th>세션</th>
-                <th>최근</th>
-              </tr>
-            </thead>
-            <tbody>{renderAdRows(stats, statsLoading)}</tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="admin-panel admin-table-panel admin-tool-ratio-panel">
-        <div className="admin-section-head">
-          <div>
-            <p className="admin-eyebrow">Pages</p>
-            <h2>오늘 페이지별 진입 비율</h2>
-          </div>
-          <p>광고 수익 기여 후보가 큰 콘텐츠를 페이지 진입 기준으로 봅니다.</p>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>페이지</th>
-                <th>경로</th>
-                <th>진입</th>
-                <th>비율</th>
-                <th>세션</th>
-                <th>최근 진입</th>
-              </tr>
-            </thead>
-            <tbody>{renderPageRows(stats, statsLoading)}</tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="admin-panel admin-table-panel admin-inquiry-panel">
-        <div className="admin-section-head">
-          <div>
-            <p className="admin-eyebrow">Inbox</p>
-            <h2>최근 문의</h2>
-          </div>
-          <p>공지/문의 창으로 들어온 최신 메시지입니다.</p>
-        </div>
-
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>등록일</th>
-                <th>연락처</th>
-                <th>내용</th>
-                <th>페이지</th>
-              </tr>
-            </thead>
-            <tbody>{renderInquiryRows(stats, statsLoading)}</tbody>
-          </table>
-        </div>
-      </section>
-
-      {statsError && <p className="modal-error">{statsError}</p>}
     </div>
   );
 }
