@@ -1,5 +1,5 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="v26-lab app icon">
-  <rect width="64" height="64" rx="15" fill="#2f80ed"/>
+  <rect width="64" height="64" fill="#2f80ed"/>
   <g transform="translate(8 8)" color="white">
     <circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="2.5"/>
     <path d="M35 9 C 29.5 15.5, 29.5 32.5, 35 39" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
