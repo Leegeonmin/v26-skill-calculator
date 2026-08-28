@@ -188,12 +188,12 @@ export default function SiteHeader({
             </div>
           </div>
           <div className="site-nav-group">
-            <button type="button" className="site-nav-link" onClick={() => onSelectView("lineupSkillOcr")}>
+            <button type="button" className="site-nav-link" onClick={() => onSelectView("lineupSkill")}>
               <HeaderIcon name="scan" />
               <span>라인업 스킬</span>
             </button>
             <div className="site-nav-dropdown">
-              <button type="button" onClick={() => onSelectView("lineupSkillOcr")}>
+              <button type="button" onClick={() => onSelectView("lineupSkill")}>
                 라인업 스킬
               </button>
               <button type="button" onClick={() => onSelectView("skillCompareBeta")}>
@@ -263,7 +263,7 @@ export default function SiteHeader({
                   role="menuitem"
                   onClick={() => {
                     setAccountMenuOpen(false);
-                    onSelectView("lineupSkillOcr");
+                    onSelectView("lineupSkill");
                   }}
                 >
                   라인업 스킬
@@ -298,7 +298,7 @@ export default function SiteHeader({
           메이저 마블
           <em className="site-mobile-nav-new">NEW</em>
         </button>
-        <button type="button" className={currentView === "lineupSkillOcr" ? "is-active" : undefined} onClick={() => onSelectView("lineupSkillOcr")}>
+        <button type="button" className={currentView === "lineupSkill" ? "is-active" : undefined} onClick={() => onSelectView("lineupSkill")}>
           라인업 스킬
         </button>
         <button type="button" className={currentView === "skillCompareBeta" ? "is-active" : undefined} onClick={() => onSelectView("skillCompareBeta")}>

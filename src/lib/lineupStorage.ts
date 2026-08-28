@@ -1,10 +1,10 @@
 import { getSupabaseClient } from "./supabase";
 import type {
-  SkillOcrApiResponse,
-  SkillOcrRole,
-  SkillOcrSavedUpload,
-  SkillOcrSelectedPlayer,
-} from "../types/ocr";
+  LineupSkillApiResponse,
+  LineupSkillRole,
+  LineupSkillSavedUpload,
+  LineupSkillSelectedPlayer,
+} from "../types/lineup";
 
 function requireSupabase() {
   const supabase = getSupabaseClient();
@@ -16,7 +16,7 @@ function requireSupabase() {
 }
 
 function normalizeRpcError(error: { message?: string } | null, fallback: string): Error {
-  if (error?.message?.includes("PUBLIC_SKILL_OCR_WEEKLY_LIMIT_REACHED")) {
+  if (error?.message?.includes("PUBLIC_SKILL_LINEUP_WEEKLY_LIMIT_REACHED")) {
     return new Error("이번 주 사용 횟수를 모두 사용했습니다.");
   }
 
@@ -27,12 +27,12 @@ function normalizeRpcError(error: { message?: string } | null, fallback: string)
   return new Error(error?.message || fallback);
 }
 
-type PublicUploadRow = Omit<SkillOcrSavedUpload, "role"> & {
-  upload_role?: SkillOcrRole;
-  role?: SkillOcrRole;
+type PublicUploadRow = Omit<LineupSkillSavedUpload, "role"> & {
+  upload_role?: LineupSkillRole;
+  role?: LineupSkillRole;
 };
 
-function mapPublicUploadRows(data: unknown): SkillOcrSavedUpload[] {
+function mapPublicUploadRows(data: unknown): LineupSkillSavedUpload[] {
   return ((data ?? []) as PublicUploadRow[]).map((row) => ({
     ...row,
     role: row.role ?? row.upload_role ?? "hitter",
@@ -40,17 +40,17 @@ function mapPublicUploadRows(data: unknown): SkillOcrSavedUpload[] {
   }));
 }
 
-export async function skillOcrSavePublicUpload(input: {
-  role: SkillOcrRole;
+export async function saveLineupSkillUpload(input: {
+  role: LineupSkillRole;
   imageName: string | null;
   requestId: string | null;
-  rawResponse: SkillOcrApiResponse;
-  selectedPlayers: SkillOcrSelectedPlayer[];
+  rawResponse: LineupSkillApiResponse;
+  selectedPlayers: LineupSkillSelectedPlayer[];
   totalScore: number;
   averageScore: number;
-}): Promise<SkillOcrSavedUpload> {
+}): Promise<LineupSkillSavedUpload> {
   const supabase = requireSupabase();
-  const { data, error } = await supabase.rpc("skill_ocr_save_public_upload", {
+  const { data, error } = await supabase.rpc("lineup_skill_save_upload", {
     p_role: input.role,
     p_image_name: input.imageName,
     p_request_id: input.requestId,
@@ -72,18 +72,18 @@ export async function skillOcrSavePublicUpload(input: {
   return upload;
 }
 
-export async function skillOcrFinalizePublicUpload(input: {
+export async function finalizeLineupSkillUpload(input: {
   uploadId: string;
-  role: SkillOcrRole;
+  role: LineupSkillRole;
   imageName: string | null;
   requestId: string | null;
-  rawResponse: SkillOcrApiResponse;
-  selectedPlayers: SkillOcrSelectedPlayer[];
+  rawResponse: LineupSkillApiResponse;
+  selectedPlayers: LineupSkillSelectedPlayer[];
   totalScore: number;
   averageScore: number;
-}): Promise<SkillOcrSavedUpload> {
+}): Promise<LineupSkillSavedUpload> {
   const supabase = requireSupabase();
-  const { data, error } = await supabase.rpc("skill_ocr_finalize_public_upload", {
+  const { data, error } = await supabase.rpc("lineup_skill_finalize_upload", {
     p_upload_id: input.uploadId,
     p_role: input.role,
     p_image_name: input.imageName,
@@ -106,9 +106,9 @@ export async function skillOcrFinalizePublicUpload(input: {
   return upload;
 }
 
-export async function skillOcrListPublicUploads(limit = 20): Promise<SkillOcrSavedUpload[]> {
+export async function listLineupSkillUploads(limit = 20): Promise<LineupSkillSavedUpload[]> {
   const supabase = requireSupabase();
-  const { data, error } = await supabase.rpc("skill_ocr_list_public_uploads", {
+  const { data, error } = await supabase.rpc("lineup_skill_list_uploads", {
     p_limit: limit,
   });
 
@@ -119,9 +119,9 @@ export async function skillOcrListPublicUploads(limit = 20): Promise<SkillOcrSav
   return mapPublicUploadRows(data);
 }
 
-export async function skillOcrDeletePublicUpload(uploadId: string): Promise<void> {
+export async function deleteLineupSkillUpload(uploadId: string): Promise<void> {
   const supabase = requireSupabase();
-  const { error } = await supabase.rpc("skill_ocr_delete_public_upload", {
+  const { error } = await supabase.rpc("lineup_skill_delete_upload", {
     p_upload_id: uploadId,
   });
 

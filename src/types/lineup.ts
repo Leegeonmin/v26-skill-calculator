@@ -1,8 +1,8 @@
 import type { CalculatorMode, CardType, SkillGrade, SkillLevel, StarterHand } from ".";
 
-export type SkillOcrRole = "hitter" | "pitcher";
+export type LineupSkillRole = "hitter" | "pitcher";
 
-export type SkillOcrApiSkill = {
+export type LineupSkillApiSkill = {
   slot: number;
   name: string | null;
   level: number | null;
@@ -27,13 +27,13 @@ export type SkillOcrApiSkill = {
   };
 };
 
-export type SkillOcrApiLineupRow = {
+export type LineupSkillApiLineupRow = {
   row: number;
   player: string;
   team: string | null;
   position: string | null;
   card_type: string | null;
-  skills: SkillOcrApiSkill[];
+  skills: LineupSkillApiSkill[];
   player_raw_text?: string;
   player_roi?: [number, number, number, number];
   team_raw_text?: string;
@@ -43,7 +43,7 @@ export type SkillOcrApiLineupRow = {
   base_team?: string | null;
 };
 
-export type SkillOcrApiResponse = {
+export type LineupSkillApiResponse = {
   ok: boolean;
   request_id: string | null;
   image: {
@@ -58,13 +58,13 @@ export type SkillOcrApiResponse = {
     unmatched_skills: number;
     unresolved_saved: number;
   };
-  role: "all" | SkillOcrRole;
+  role: "all" | LineupSkillRole;
   base_team: string | null;
-  lineup: SkillOcrApiLineupRow[];
+  lineup: LineupSkillApiLineupRow[];
   warnings: string[];
 };
 
-export type SkillOcrSelectedSkill = {
+export type LineupSkillSelectedSkill = {
   slot: number;
   rawName: string | null;
   skillId: string | null;
@@ -79,7 +79,7 @@ export type SkillOcrSelectedSkill = {
   }>;
 };
 
-export type SkillOcrSelectedPlayer = {
+export type LineupSkillSelectedPlayer = {
   sourceRow: number;
   selected: boolean;
   playerName: string;
@@ -88,7 +88,7 @@ export type SkillOcrSelectedPlayer = {
   starterHand?: StarterHand;
   cardType: CardType;
   calculatorMode: CalculatorMode;
-  skills: SkillOcrSelectedSkill[];
+  skills: LineupSkillSelectedSkill[];
   totalScore: number;
   pitcherScores?: {
     starterRight: number;
@@ -98,38 +98,17 @@ export type SkillOcrSelectedPlayer = {
   };
 };
 
-export type SkillOcrSavedUpload = {
+export type LineupSkillSavedUpload = {
   id: string;
-  role: SkillOcrRole;
+  role: LineupSkillRole;
   is_saved: boolean;
   image_name: string | null;
   request_id: string | null;
-  raw_response?: SkillOcrApiResponse;
-  selected_players: SkillOcrSelectedPlayer[];
+  raw_response?: LineupSkillApiResponse;
+  selected_players: LineupSkillSelectedPlayer[];
   player_count: number;
   total_score: number;
   average_score: number;
   created_at: string;
   updated_at: string;
-};
-
-export type SkillChangeSkill = {
-  slot: number;
-  name: string | null;
-  level: number | null;
-};
-
-export type SkillChangeResponse = {
-  ok: boolean;
-  request_id: string | null;
-  image: {
-    path: string;
-    width: number;
-    height: number;
-  };
-  left: SkillChangeSkill[];
-  right: SkillChangeSkill[];
-  debug_artifacts?: {
-    overview_image?: string;
-  };
 };

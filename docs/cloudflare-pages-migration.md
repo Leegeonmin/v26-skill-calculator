@@ -23,7 +23,6 @@ Values that Vercel marked sensitive and must be copied manually from Vercel or t
 - `VITE_ADSENSE_CLIENT`
 - `VITE_GROW_SITE_ID`
 - `VITE_MEDIAVINE_SCRIPT_SRC`
-- `VITE_OCR_API_BASE_URL`
 
 Optional:
 
@@ -63,7 +62,7 @@ The handlers use Cloudflare `context.env` first and also support local `process.
 5. Verify:
    - `/calculator/`
    - `/ranking/`
-   - `/lineup-skill-ocr/`
+   - `/lineup-skill/`
    - `/idle-dev-game/index.html`
    - `/api/idle-dev-game/config`
    - `/api/idle-dev-game/stats`

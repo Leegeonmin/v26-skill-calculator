@@ -11,7 +11,7 @@ import type {
   SkillMeta,
   StarterHand,
 } from "../types";
-import type { SkillChangeResponse, SkillChangeSkill } from "../types/ocr";
+import type { SkillChangeResponse, SkillChangeSkill } from "../types/skillChange";
 import { calculateAdvancedSkillOdds, type SkillOddsResult } from "../utils/advancedSkillOdds";
 import { calculateSkillTotal } from "../utils/calculate";
 import { formatTopPercent } from "../utils/formatOdds";
@@ -363,7 +363,7 @@ function SearchableSkillSelect({
     <div className="skill-compare-search-select">
       <input
         type="text"
-        className={selectedOption ? `ocr-skill-grade-${selectedOption.grade}` : undefined}
+        className={selectedOption ? `lineup-skill-grade-${selectedOption.grade}` : undefined}
         aria-label={ariaLabel}
         value={query}
         placeholder="스킬 검색"
@@ -547,7 +547,7 @@ export default function SkillCompareBetaView({
         <div className="page-title-block">
           <span className="page-kicker">Beta</span>
           <h1 id="skill-compare-title">고급 스킬 변경권 점수 비교</h1>
-          <p>화면 인식 대신 스킬과 레벨을 직접 입력해서 기존 스킬과 변경 후보를 비교합니다.</p>
+          <p>스킬과 레벨을 직접 입력해서 기존 스킬과 변경 후보를 비교합니다.</p>
         </div>
         <div className="page-toolbar-actions">
           {themeAction}
@@ -624,8 +624,8 @@ export default function SkillCompareBetaView({
       </section>
 
       <section className="skill-compare-manual-panel">
-        <strong>자동 화면 인식 기능은 종료됐습니다.</strong>
-        <p>인식 오류 없이 바로 비교할 수 있도록 현재 스킬과 변경 후보 스킬, 레벨을 직접 입력하는 방식으로 전환했습니다.</p>
+        <strong>직접 입력 방식으로 전환됐습니다.</strong>
+        <p>현재 스킬과 변경 후보 스킬, 레벨을 직접 입력해 바로 비교합니다.</p>
       </section>
 
       {result && (

@@ -1,4 +1,4 @@
-﻿export type PlayerType = "hitter" | "pitcher";
+export type PlayerType = "hitter" | "pitcher";
 
 export type PitcherRole = "starter" | "middle" | "closer";
 export type StarterHand = "right" | "left";
@@ -16,7 +16,7 @@ export type ToolView =
   | "skillQuiz"
   | "notice"
   | "skillCompareBeta"
-  | "lineupSkillOcr"
+  | "lineupSkill"
   | "trainingRedistribution";
 export type HitterPositionGroup = "fielder" | "catcher";
 

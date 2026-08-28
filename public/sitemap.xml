@@ -51,7 +51,7 @@
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://www.cpbv-lab.com/lineup-skill-ocr</loc>
+    <loc>https://www.cpbv-lab.com/lineup-skill</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -76,7 +76,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.cpbv-lab.com/ocr-guide</loc>
+    <loc>https://www.cpbv-lab.com/lineup-guide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

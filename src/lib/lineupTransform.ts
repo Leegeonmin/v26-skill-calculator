@@ -1,16 +1,16 @@
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import type { CalculatorMode, CardType, SkillLevel, SkillMeta, StarterHand } from "../types";
 import type {
-  SkillOcrApiLineupRow,
-  SkillOcrApiResponse,
-  SkillOcrRole,
-  SkillOcrSelectedPlayer,
-  SkillOcrSelectedSkill,
-} from "../types/ocr";
+  LineupSkillApiLineupRow,
+  LineupSkillApiResponse,
+  LineupSkillRole,
+  LineupSkillSelectedPlayer,
+  LineupSkillSelectedSkill,
+} from "../types/lineup";
 import { getDefaultLevels } from "./toolboxHelpers";
 
 const MAX_SELECTED_PLAYERS = 9;
-const OCR_CARD_TYPE_MAP: Record<string, CardType> = {
+const LINEUP_CARD_TYPE_MAP: Record<string, CardType> = {
   impact: "impact",
   signature: "signature",
   golden_glove: "goldenGlove",
@@ -24,8 +24,8 @@ type SkillCandidate = {
   order: number;
 };
 
-export type SkillOcrTransformResult = {
-  players: SkillOcrSelectedPlayer[];
+export type LineupSkillTransformResult = {
+  players: LineupSkillSelectedPlayer[];
   totalScore: number;
   averageScore: number;
 };
@@ -42,9 +42,9 @@ function getBaseSkillName(value: string | null | undefined): string {
   return normalizeText(value).replace(/\([^)]*\)/g, "");
 }
 
-export function normalizeOcrCardType(value: string | null | undefined): CardType {
+export function normalizeLineupCardType(value: string | null | undefined): CardType {
   const normalized = normalizeText(value);
-  return OCR_CARD_TYPE_MAP[normalized] ?? "signature";
+  return LINEUP_CARD_TYPE_MAP[normalized] ?? "signature";
 }
 
 function normalizeSkillLevel(value: number | null | undefined, fallback: SkillLevel): SkillLevel {
@@ -73,7 +73,7 @@ export function getPitcherModeFromPosition(position: string | null | undefined):
   return "starter";
 }
 
-function getModeForRow(role: SkillOcrRole, row: SkillOcrApiLineupRow): CalculatorMode {
+function getModeForRow(role: LineupSkillRole, row: LineupSkillApiLineupRow): CalculatorMode {
   if (role === "hitter") {
     return "hitter";
   }
@@ -95,7 +95,7 @@ function getDataSetForMode(mode: CalculatorMode, starterHand: StarterHand = "rig
 }
 
 function findBestSkillCandidate(input: {
-  skill: SkillOcrSelectedSkill;
+  skill: LineupSkillSelectedSkill;
   cardType: CardType;
   dataSet: GameDataSet;
 }): SkillCandidate | null {
@@ -129,7 +129,7 @@ function findBestSkillCandidate(input: {
 }
 
 function calculatePlayerTotalForDataSet(
-  player: SkillOcrSelectedPlayer,
+  player: LineupSkillSelectedPlayer,
   dataSet: GameDataSet
 ): number {
   return Number(
@@ -147,7 +147,7 @@ function calculatePlayerTotalForDataSet(
   );
 }
 
-function calculatePitcherScores(player: SkillOcrSelectedPlayer): SkillOcrSelectedPlayer["pitcherScores"] {
+function calculatePitcherScores(player: LineupSkillSelectedPlayer): LineupSkillSelectedPlayer["pitcherScores"] {
   if (player.calculatorMode === "hitter") {
     return undefined;
   }
@@ -160,7 +160,7 @@ function calculatePitcherScores(player: SkillOcrSelectedPlayer): SkillOcrSelecte
   };
 }
 
-export function getSkillOcrSkillOptions(player: SkillOcrSelectedPlayer): Array<{
+export function getLineupSkillSkillOptions(player: LineupSkillSelectedPlayer): Array<{
   skillId: string;
   skillName: string;
   grade: SkillMeta["grade"];
@@ -239,7 +239,7 @@ function findSkillCandidates(input: {
   );
 }
 
-function buildEmptySkill(slot: number, fallbackLevel: SkillLevel): SkillOcrSelectedSkill {
+function buildEmptySkill(slot: number, fallbackLevel: SkillLevel): LineupSkillSelectedSkill {
   return {
     slot,
     rawName: null,
@@ -253,12 +253,12 @@ function buildEmptySkill(slot: number, fallbackLevel: SkillLevel): SkillOcrSelec
 }
 
 function buildSelectedSkill(input: {
-  rowSkill: SkillOcrApiLineupRow["skills"][number] | undefined;
+  rowSkill: LineupSkillApiLineupRow["skills"][number] | undefined;
   slot: number;
   fallbackLevel: SkillLevel;
   cardType: CardType;
   dataSet: GameDataSet;
-}): SkillOcrSelectedSkill {
+}): LineupSkillSelectedSkill {
   if (!input.rowSkill) {
     return buildEmptySkill(input.slot, input.fallbackLevel);
   }
@@ -289,11 +289,11 @@ function buildSelectedSkill(input: {
   };
 }
 
-function getSkillBySlot(row: SkillOcrApiLineupRow, slot: number) {
+function getSkillBySlot(row: LineupSkillApiLineupRow, slot: number) {
   return row.skills.find((skill) => skill.slot === slot) ?? row.skills[slot - 1];
 }
 
-export function recalculateSkillOcrPlayer(player: SkillOcrSelectedPlayer): SkillOcrSelectedPlayer {
+export function recalculateLineupSkillPlayer(player: LineupSkillSelectedPlayer): LineupSkillSelectedPlayer {
   const dataSet = getDataSetForMode(player.calculatorMode, player.starterHand ?? "right");
   const skills = player.skills.map((skill) => {
     const candidate = findBestSkillCandidate({
@@ -337,7 +337,7 @@ export function recalculateSkillOcrPlayer(player: SkillOcrSelectedPlayer): Skill
   };
 }
 
-export function calculateSkillOcrSummary(players: SkillOcrSelectedPlayer[]): {
+export function calculateLineupSkillSummary(players: LineupSkillSelectedPlayer[]): {
   totalScore: number;
   averageScore: number;
 } {
@@ -353,14 +353,14 @@ export function calculateSkillOcrSummary(players: SkillOcrSelectedPlayer[]): {
   return { totalScore, averageScore };
 }
 
-export function transformSkillOcrResponse(
-  response: SkillOcrApiResponse,
-  role: SkillOcrRole = response.role === "all" ? "hitter" : response.role
-): SkillOcrTransformResult {
+export function transformLineupSkillResponse(
+  response: LineupSkillApiResponse,
+  role: LineupSkillRole = response.role === "all" ? "hitter" : response.role
+): LineupSkillTransformResult {
   const players = response.lineup.map((row, index) => {
     const calculatorMode = getModeForRow(role, row);
     const dataSet = getDataSetForMode(calculatorMode);
-    const cardType = normalizeOcrCardType(row.card_type);
+    const cardType = normalizeLineupCardType(row.card_type);
     const defaultLevels = getDefaultLevels(cardType);
     const skills = [1, 2, 3].map((slot) =>
       buildSelectedSkill({
@@ -371,7 +371,7 @@ export function transformSkillOcrResponse(
         dataSet,
       })
     );
-    const player: SkillOcrSelectedPlayer = {
+    const player: LineupSkillSelectedPlayer = {
       sourceRow: row.row,
       selected: index < MAX_SELECTED_PLAYERS,
       playerName: row.player,
@@ -384,9 +384,9 @@ export function transformSkillOcrResponse(
       totalScore: 0,
     };
 
-    return recalculateSkillOcrPlayer(player);
+    return recalculateLineupSkillPlayer(player);
   });
-  const summary = calculateSkillOcrSummary(players);
+  const summary = calculateLineupSkillSummary(players);
 
   return {
     players,

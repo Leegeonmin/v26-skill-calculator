@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 import { CARD_TYPE_LABELS } from "./data/cardTypes";
@@ -16,16 +16,16 @@ import {
   adminValidateSession,
 } from "./lib/admin";
 import {
-  skillOcrDeletePublicUpload,
-  skillOcrFinalizePublicUpload,
-  skillOcrListPublicUploads,
-  skillOcrSavePublicUpload,
-} from "./lib/skillOcr";
+  deleteLineupSkillUpload,
+  finalizeLineupSkillUpload,
+  listLineupSkillUploads,
+  saveLineupSkillUpload,
+} from "./lib/lineupStorage";
 import {
-  calculateSkillOcrSummary,
+  calculateLineupSkillSummary,
   getPitcherModeFromPosition,
-  recalculateSkillOcrPlayer,
-} from "./lib/skillOcrTransform";
+  recalculateLineupSkillPlayer,
+} from "./lib/lineupTransform";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import {
   getDefaultLevels,
@@ -52,11 +52,11 @@ import type {
   ToolView,
 } from "./types";
 import type {
-  SkillOcrApiResponse,
-  SkillOcrRole,
-  SkillOcrSavedUpload,
-  SkillOcrSelectedPlayer,
-} from "./types/ocr";
+  LineupSkillApiResponse,
+  LineupSkillRole,
+  LineupSkillSavedUpload,
+  LineupSkillSelectedPlayer,
+} from "./types/lineup";
 import { calculateSkillTotal } from "./utils/calculate";
 import { calculateAdvancedSkillOdds } from "./utils/advancedSkillOdds";
 import {
@@ -79,14 +79,14 @@ const SkillCompareBetaView = lazy(() => import("./views/SkillCompareBetaView"));
 const RankingView = lazy(() => import("./views/RankingView"));
 const SkillQuizView = lazy(() => import("./views/SkillQuizView"));
 const AdminView = lazy(() => import("./views/AdminView"));
-const PublicSkillOcrView = lazy(() => import("./views/PublicSkillOcrView"));
+const LineupSkillView = lazy(() => import("./views/LineupSkillView"));
 const TrainingRedistributionView = lazy(() => import("./views/TrainingRedistributionView"));
 const ToolboxStage = lazy(() => import("./views/ToolboxStage"));
 
 function ViewFallback() {
   return (
     <main className="main-stage" aria-busy="true">
-      <p className="ocr-copy">로딩 중...</p>
+      <p className="lineup-copy">로딩 중...</p>
     </main>
   );
 }
@@ -115,7 +115,7 @@ const INFO_PAGE_PATHS: Record<string, InfoPageKey> = {
   "/skill-score-method": "skillScoreMethod",
   "/calculator-guide": "skillScoreMethod",
   "/simulator-guide": "simulatorGuide",
-  "/ocr-guide": "ocrGuide",
+  "/lineup-guide": "lineupGuide",
   "/beginner-guides": "beginnerGuides",
   "/beginner-guides/skill-score-stop": "beginnerSkillScoreStop",
   "/beginner-guides/skill-reroll-stop": "beginnerSkillRerollStop",
@@ -142,7 +142,7 @@ const TOOL_VIEW_PATHS: Partial<Record<string, ToolView>> = {
   "/skill-quiz": "skillQuiz",
   "/notice": "notice",
   "/skill-compare": "skillCompareBeta",
-  "/lineup-skill-ocr": "lineupSkillOcr",
+  "/lineup-skill": "lineupSkill",
   "/training-redistribution": "trainingRedistribution",
 };
 const TOOL_VIEW_URLS: Partial<Record<ToolView, string>> = {
@@ -156,7 +156,7 @@ const TOOL_VIEW_URLS: Partial<Record<ToolView, string>> = {
   skillQuiz: "/skill-quiz/",
   notice: "/notice/",
   skillCompareBeta: "/skill-compare/",
-  lineupSkillOcr: "/lineup-skill-ocr/",
+  lineupSkill: "/lineup-skill/",
   trainingRedistribution: "/training-redistribution/",
 };
 const VALID_TOOL_VIEWS: ToolView[] = [
@@ -170,7 +170,7 @@ const VALID_TOOL_VIEWS: ToolView[] = [
   "skillQuiz",
   "notice",
   "skillCompareBeta",
-  "lineupSkillOcr",
+  "lineupSkill",
   "trainingRedistribution",
 ];
 type ThemePreference = "light" | "dark";
@@ -200,8 +200,8 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
   })
 );
 
-function keepLatestLineupUploads(uploads: SkillOcrSavedUpload[]): SkillOcrSavedUpload[] {
-  const latestByRole = new Map<SkillOcrRole, SkillOcrSavedUpload>();
+function keepLatestLineupUploads(uploads: LineupSkillSavedUpload[]): LineupSkillSavedUpload[] {
+  const latestByRole = new Map<LineupSkillRole, LineupSkillSavedUpload>();
 
   uploads
     .filter((upload) => upload.is_saved)
@@ -213,11 +213,11 @@ function keepLatestLineupUploads(uploads: SkillOcrSavedUpload[]): SkillOcrSavedU
     });
 
   return ["pitcher", "hitter"]
-    .map((role) => latestByRole.get(role as SkillOcrRole))
-    .filter((upload): upload is SkillOcrSavedUpload => Boolean(upload));
+    .map((role) => latestByRole.get(role as LineupSkillRole))
+    .filter((upload): upload is LineupSkillSavedUpload => Boolean(upload));
 }
 
-function loadLocalLineupUploads(): SkillOcrSavedUpload[] {
+function loadLocalLineupUploads(): LineupSkillSavedUpload[] {
   try {
     const rawValue = window.localStorage.getItem(LINEUP_SKILL_LOCAL_STORAGE_KEY);
     if (!rawValue) {
@@ -229,13 +229,13 @@ function loadLocalLineupUploads(): SkillOcrSavedUpload[] {
       return [];
     }
 
-    return keepLatestLineupUploads(parsedValue as SkillOcrSavedUpload[]);
+    return keepLatestLineupUploads(parsedValue as LineupSkillSavedUpload[]);
   } catch {
     return [];
   }
 }
 
-function saveLocalLineupUploads(uploads: SkillOcrSavedUpload[]) {
+function saveLocalLineupUploads(uploads: LineupSkillSavedUpload[]) {
   window.localStorage.setItem(
     LINEUP_SKILL_LOCAL_STORAGE_KEY,
     JSON.stringify(keepLatestLineupUploads(uploads))
@@ -244,14 +244,14 @@ function saveLocalLineupUploads(uploads: SkillOcrSavedUpload[]) {
 
 function createLocalLineupUpload(input: {
   uploadId: string | null;
-  role: SkillOcrRole;
+  role: LineupSkillRole;
   imageName: string | null;
   requestId: string | null;
-  rawResponse: SkillOcrApiResponse;
-  selectedPlayers: SkillOcrSelectedPlayer[];
+  rawResponse: LineupSkillApiResponse;
+  selectedPlayers: LineupSkillSelectedPlayer[];
   totalScore: number;
   averageScore: number;
-}): SkillOcrSavedUpload {
+}): LineupSkillSavedUpload {
   const now = new Date().toISOString();
   return {
     id: input.uploadId ?? `local-${input.role}`,
@@ -340,19 +340,19 @@ function App() {
   });
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
   const [idleDevGameEnabled, setIdleDevGameEnabled] = useState(false);
-  const [ocrUploads, setOcrUploads] = useState<SkillOcrSavedUpload[]>([]);
-  const [ocrUploadsLoading, setOcrUploadsLoading] = useState(false);
-  const [ocrUploadsError, setOcrUploadsError] = useState<string | null>(null);
-  const [ocrUploadError, setOcrUploadError] = useState<string | null>(null);
-  const [ocrDraftPlayers, setOcrDraftPlayers] = useState<SkillOcrSelectedPlayer[]>([]);
-  const [ocrDraftImageName, setOcrDraftImageName] = useState<string | null>(null);
-  const [ocrDraftRole, setOcrDraftRole] = useState<SkillOcrRole | null>(null);
-  const [ocrDraftRawResponse, setOcrDraftRawResponse] = useState<SkillOcrApiResponse | null>(null);
-  const [ocrDraftTotalScore, setOcrDraftTotalScore] = useState(0);
-  const [ocrDraftAverageScore, setOcrDraftAverageScore] = useState(0);
-  const [ocrDraftPublicUploadId, setOcrDraftPublicUploadId] = useState<string | null>(null);
-  const [ocrSaving, setOcrSaving] = useState(false);
-  const [ocrSavedUpload, setOcrSavedUpload] = useState<SkillOcrSavedUpload | null>(null);
+  const [lineupUploads, setlineupUploads] = useState<LineupSkillSavedUpload[]>([]);
+  const [lineupUploadsLoading, setlineupUploadsLoading] = useState(false);
+  const [lineupUploadsError, setlineupUploadsError] = useState<string | null>(null);
+  const [lineupUploadError, setlineupUploadError] = useState<string | null>(null);
+  const [lineupDraftPlayers, setlineupDraftPlayers] = useState<LineupSkillSelectedPlayer[]>([]);
+  const [lineupDraftImageName, setlineupDraftImageName] = useState<string | null>(null);
+  const [lineupDraftRole, setlineupDraftRole] = useState<LineupSkillRole | null>(null);
+  const [lineupDraftRawResponse, setlineupDraftRawResponse] = useState<LineupSkillApiResponse | null>(null);
+  const [lineupDraftTotalScore, setlineupDraftTotalScore] = useState(0);
+  const [lineupDraftAverageScore, setlineupDraftAverageScore] = useState(0);
+  const [lineupDraftPublicUploadId, setlineupDraftPublicUploadId] = useState<string | null>(null);
+  const [lineupSaving, setlineupSaving] = useState(false);
+  const [lineupSavedUpload, setlineupSavedUpload] = useState<LineupSkillSavedUpload | null>(null);
   const [revenueSessionId] = useState(() => getOrCreateRevenueSessionId());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
   const applyingPopStateRef = useRef(false);
@@ -481,7 +481,7 @@ function App() {
     toolView === "skillQuiz" ||
     toolView === "notice" ||
     toolView === "skillCompareBeta" ||
-    toolView === "lineupSkillOcr" ||
+    toolView === "lineupSkill" ||
     toolView === "trainingRedistribution"
       ? "calculator"
       : toolView;
@@ -555,23 +555,23 @@ function App() {
   }, [isAdminRoute]);
 
   useEffect(() => {
-    if (toolView !== "lineupSkillOcr") {
+    if (toolView !== "lineupSkill") {
       return;
     }
 
     if (!authSession) {
-      setOcrUploads(loadLocalLineupUploads());
-      setOcrDraftPublicUploadId(null);
-      setOcrUploadsLoading(false);
-      setOcrUploadsError(null);
+      setlineupUploads(loadLocalLineupUploads());
+      setlineupDraftPublicUploadId(null);
+      setlineupUploadsLoading(false);
+      setlineupUploadsError(null);
       return;
     }
 
     void (async () => {
       try {
-        setOcrUploadsLoading(true);
-        setOcrUploadsError(null);
-        const uploads = await skillOcrListPublicUploads(20);
+        setlineupUploadsLoading(true);
+        setlineupUploadsError(null);
+        const uploads = await listLineupSkillUploads(20);
         const latestUploads = keepLatestLineupUploads(uploads);
         const staleSavedUploads = uploads.filter(
           (upload) =>
@@ -579,16 +579,16 @@ function App() {
             latestUploads.some((latestUpload) => latestUpload.role === upload.role) &&
             !latestUploads.some((latestUpload) => latestUpload.id === upload.id)
         );
-        setOcrUploads(latestUploads);
+        setlineupUploads(latestUploads);
         void Promise.all(
-          staleSavedUploads.map((upload) => skillOcrDeletePublicUpload(upload.id).catch(() => {}))
+          staleSavedUploads.map((upload) => deleteLineupSkillUpload(upload.id).catch(() => {}))
         );
       } catch (error) {
-        setOcrUploadsError(
+        setlineupUploadsError(
           error instanceof Error ? error.message : "라인업 기록을 불러오지 못했습니다."
         );
       } finally {
-        setOcrUploadsLoading(false);
+        setlineupUploadsLoading(false);
       }
     })();
   }, [authSession, toolView]);
@@ -1014,15 +1014,15 @@ function App() {
     try {
       await signOut();
       setAuthError(null);
-      setOcrUploads(loadLocalLineupUploads());
-      setOcrDraftPublicUploadId(null);
+      setlineupUploads(loadLocalLineupUploads());
+      setlineupDraftPublicUploadId(null);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "로그아웃에 실패했습니다.");
     }
   };
 
-  const getManualOcrPlayerDefaults = (
-    role: SkillOcrRole,
+  const getManuallineupPlayerDefaults = (
+    role: LineupSkillRole,
     sourceRow: number
   ): {
     playerName: string;
@@ -1047,12 +1047,12 @@ function App() {
     };
   };
 
-  const createManualOcrPlayer = (role: SkillOcrRole, sourceRow: number): SkillOcrSelectedPlayer => {
+  const createManuallineupPlayer = (role: LineupSkillRole, sourceRow: number): LineupSkillSelectedPlayer => {
     const cardType: CardType = "signature";
-    const defaults = getManualOcrPlayerDefaults(role, sourceRow);
+    const defaults = getManuallineupPlayerDefaults(role, sourceRow);
     const defaultLevels = getDefaultLevels(cardType);
 
-    return recalculateSkillOcrPlayer({
+    return recalculateLineupSkillPlayer({
       sourceRow,
       selected: true,
       playerName: defaults.playerName,
@@ -1075,10 +1075,10 @@ function App() {
     });
   };
 
-  const buildManualOcrResponse = (
-    role: SkillOcrRole,
-    players: SkillOcrSelectedPlayer[]
-  ): SkillOcrApiResponse => {
+  const buildManualLineupResponse = (
+    role: LineupSkillRole,
+    players: LineupSkillSelectedPlayer[]
+  ): LineupSkillApiResponse => {
     const selectedPlayers = players.filter((player) => player.selected);
     const matchedSkills = selectedPlayers.reduce(
       (sum, player) => sum + player.skills.filter((skill) => skill.skillId).length,
@@ -1108,90 +1108,90 @@ function App() {
     };
   };
 
-  const handleAddManualOcrPlayer = (role: SkillOcrRole) => {
-    const currentPlayers = ocrDraftRole === role ? ocrDraftPlayers : [];
+  const handleAddManuallineupPlayer = (role: LineupSkillRole) => {
+    const currentPlayers = lineupDraftRole === role ? lineupDraftPlayers : [];
     if (currentPlayers.length >= 9) {
-      setOcrUploadError("라인업 기록은 최대 9명까지 등록할 수 있습니다.");
+      setlineupUploadError("라인업 기록은 최대 9명까지 등록할 수 있습니다.");
       return;
     }
 
-    setOcrUploadError(null);
-    if (ocrDraftRole !== role) {
-      setOcrDraftPublicUploadId(null);
-      setOcrSavedUpload(null);
-      setOcrDraftRawResponse(null);
+    setlineupUploadError(null);
+    if (lineupDraftRole !== role) {
+      setlineupDraftPublicUploadId(null);
+      setlineupSavedUpload(null);
+      setlineupDraftRawResponse(null);
     }
-    setOcrDraftImageName("manual-entry");
+    setlineupDraftImageName("manual-entry");
     const nextSourceRow =
       currentPlayers.reduce((maxRow, player) => Math.max(maxRow, player.sourceRow), 0) + 1;
-    const nextPlayers = [...currentPlayers, createManualOcrPlayer(role, nextSourceRow)];
-    const summary = calculateSkillOcrSummary(nextPlayers);
-    setOcrDraftRole(role);
-    setOcrDraftPlayers(nextPlayers);
-    setOcrDraftTotalScore(summary.totalScore);
-    setOcrDraftAverageScore(summary.averageScore);
+    const nextPlayers = [...currentPlayers, createManuallineupPlayer(role, nextSourceRow)];
+    const summary = calculateLineupSkillSummary(nextPlayers);
+    setlineupDraftRole(role);
+    setlineupDraftPlayers(nextPlayers);
+    setlineupDraftTotalScore(summary.totalScore);
+    setlineupDraftAverageScore(summary.averageScore);
   };
 
-  const handleCreateManualOcrDeck = (role: SkillOcrRole) => {
-    setOcrUploadError(null);
-    setOcrDraftPublicUploadId(null);
-    setOcrSavedUpload(null);
-    setOcrDraftImageName("manual-entry");
-    setOcrDraftRawResponse(null);
+  const handleCreateManualLineupDeck = (role: LineupSkillRole) => {
+    setlineupUploadError(null);
+    setlineupDraftPublicUploadId(null);
+    setlineupSavedUpload(null);
+    setlineupDraftImageName("manual-entry");
+    setlineupDraftRawResponse(null);
 
     const nextPlayers = Array.from({ length: 9 }, (_, index) =>
-      createManualOcrPlayer(role, index + 1)
+      createManuallineupPlayer(role, index + 1)
     );
-    const summary = calculateSkillOcrSummary(nextPlayers);
+    const summary = calculateLineupSkillSummary(nextPlayers);
 
-    setOcrDraftRole(role);
-    setOcrDraftPlayers(nextPlayers);
-    setOcrDraftTotalScore(summary.totalScore);
-    setOcrDraftAverageScore(summary.averageScore);
+    setlineupDraftRole(role);
+    setlineupDraftPlayers(nextPlayers);
+    setlineupDraftTotalScore(summary.totalScore);
+    setlineupDraftAverageScore(summary.averageScore);
   };
 
-  const handleOcrSaveDraft = async () => {
-    if (!ocrDraftRole) {
-      setOcrUploadError("저장할 라인업 기록이 없습니다.");
+  const handlelineupSavedraft = async () => {
+    if (!lineupDraftRole) {
+      setlineupUploadError("저장할 라인업 기록이 없습니다.");
       return;
     }
 
-    const selectedPlayers = ocrDraftPlayers.filter((player) => player.selected);
+    const selectedPlayers = lineupDraftPlayers.filter((player) => player.selected);
 
     if (selectedPlayers.length !== 9) {
-      setOcrUploadError("라인업은 무조건 9명을 모두 선택해야 저장할 수 있습니다.");
+      setlineupUploadError("라인업은 무조건 9명을 모두 선택해야 저장할 수 있습니다.");
       return;
     }
 
     try {
-      setOcrSaving(true);
-      setOcrUploadError(null);
-      const rawResponse = ocrDraftRawResponse ?? buildManualOcrResponse(ocrDraftRole, ocrDraftPlayers);
+      setlineupSaving(true);
+      setlineupUploadError(null);
+      const rawResponse = lineupDraftRawResponse ?? buildManualLineupResponse(lineupDraftRole, lineupDraftPlayers);
       const saveInput = {
-        role: ocrDraftRole,
-        imageName: ocrDraftImageName,
+        role: lineupDraftRole,
+        imageName: lineupDraftImageName,
         requestId: rawResponse.request_id,
         rawResponse,
         selectedPlayers,
-        totalScore: ocrDraftTotalScore,
-        averageScore: ocrDraftAverageScore,
+        totalScore: lineupDraftTotalScore,
+        averageScore: lineupDraftAverageScore,
       };
       const savedUpload = authSession
-        ? ocrDraftPublicUploadId && !ocrDraftPublicUploadId.startsWith("local-")
-          ? await skillOcrFinalizePublicUpload({
-              uploadId: ocrDraftPublicUploadId,
+        ? lineupDraftPublicUploadId && !lineupDraftPublicUploadId.startsWith("local-")
+          ? await finalizeLineupSkillUpload({
+              uploadId: lineupDraftPublicUploadId,
               ...saveInput,
             })
-          : await skillOcrSavePublicUpload(saveInput)
+          : await saveLineupSkillUpload(saveInput)
         : createLocalLineupUpload({
-            uploadId: ocrDraftPublicUploadId,
+            uploadId: lineupDraftPublicUploadId,
             ...saveInput,
           });
-      const fetchedUploads = authSession ? await skillOcrListPublicUploads(20) : [];
+      const fetchedUploads = authSession ? await listLineupSkillUploads(20) : [];
       const uploads = authSession
         ? keepLatestLineupUploads(fetchedUploads)
         : keepLatestLineupUploads([
-            ...ocrUploads.filter((upload) => upload.role !== savedUpload.role),
+            ...lineupUploads.filter((upload) => upload.role !== savedUpload.role),
             savedUpload,
           ]);
       if (!authSession) {
@@ -1200,117 +1200,117 @@ function App() {
         void Promise.all(
           fetchedUploads
             .filter((upload) => upload.role === savedUpload.role && upload.id !== savedUpload.id)
-            .map((upload) => skillOcrDeletePublicUpload(upload.id).catch(() => {}))
+            .map((upload) => deleteLineupSkillUpload(upload.id).catch(() => {}))
         );
       }
 
-      setOcrSavedUpload(savedUpload);
-      setOcrUploads(uploads);
-      setOcrDraftPlayers([]);
-      setOcrDraftImageName(null);
-      setOcrDraftRole(null);
-      setOcrDraftRawResponse(null);
-      setOcrDraftTotalScore(0);
-      setOcrDraftAverageScore(0);
-      setOcrDraftPublicUploadId(null);
+      setlineupSavedUpload(savedUpload);
+      setlineupUploads(uploads);
+      setlineupDraftPlayers([]);
+      setlineupDraftImageName(null);
+      setlineupDraftRole(null);
+      setlineupDraftRawResponse(null);
+      setlineupDraftTotalScore(0);
+      setlineupDraftAverageScore(0);
+      setlineupDraftPublicUploadId(null);
     } catch (error) {
-      setOcrUploadError(error instanceof Error ? error.message : "라인업 기록 저장에 실패했습니다.");
+      setlineupUploadError(error instanceof Error ? error.message : "라인업 기록 저장에 실패했습니다.");
     } finally {
-      setOcrSaving(false);
+      setlineupSaving(false);
     }
   };
 
-  const handleOpenPublicOcrSnapshot = (upload: SkillOcrSavedUpload) => {
-    const summary = calculateSkillOcrSummary(upload.selected_players);
-    setOcrUploadError(null);
-    setOcrSavedUpload(upload);
-    setOcrDraftPublicUploadId(upload.id);
-    setOcrDraftPlayers(upload.selected_players);
-    setOcrDraftImageName(upload.image_name);
-    setOcrDraftRole(upload.role);
-    setOcrDraftRawResponse(upload.raw_response ?? null);
-    setOcrDraftTotalScore(summary.totalScore);
-    setOcrDraftAverageScore(summary.averageScore);
+  const handleOpenPublicLineupSnapshot = (upload: LineupSkillSavedUpload) => {
+    const summary = calculateLineupSkillSummary(upload.selected_players);
+    setlineupUploadError(null);
+    setlineupSavedUpload(upload);
+    setlineupDraftPublicUploadId(upload.id);
+    setlineupDraftPlayers(upload.selected_players);
+    setlineupDraftImageName(upload.image_name);
+    setlineupDraftRole(upload.role);
+    setlineupDraftRawResponse(upload.raw_response ?? null);
+    setlineupDraftTotalScore(summary.totalScore);
+    setlineupDraftAverageScore(summary.averageScore);
   };
 
-  const handleDeletePublicOcrSnapshot = async (uploadId: string) => {
+  const handleDeletePublicLineupSnapshot = async (uploadId: string) => {
     try {
-      setOcrUploadError(null);
+      setlineupUploadError(null);
       if (authSession && !uploadId.startsWith("local-")) {
-        await skillOcrDeletePublicUpload(uploadId);
-        setOcrUploads(keepLatestLineupUploads(await skillOcrListPublicUploads(20)));
+        await deleteLineupSkillUpload(uploadId);
+        setlineupUploads(keepLatestLineupUploads(await listLineupSkillUploads(20)));
       } else {
-        const nextUploads = ocrUploads.filter((upload) => upload.id !== uploadId);
+        const nextUploads = lineupUploads.filter((upload) => upload.id !== uploadId);
         saveLocalLineupUploads(nextUploads);
-        setOcrUploads(nextUploads);
+        setlineupUploads(nextUploads);
       }
 
-      if (ocrDraftPublicUploadId === uploadId || ocrSavedUpload?.id === uploadId) {
-        setOcrSavedUpload(null);
-        setOcrDraftPublicUploadId(null);
-        setOcrDraftPlayers([]);
-        setOcrDraftImageName(null);
-        setOcrDraftRole(null);
-        setOcrDraftRawResponse(null);
-        setOcrDraftTotalScore(0);
-        setOcrDraftAverageScore(0);
+      if (lineupDraftPublicUploadId === uploadId || lineupSavedUpload?.id === uploadId) {
+        setlineupSavedUpload(null);
+        setlineupDraftPublicUploadId(null);
+        setlineupDraftPlayers([]);
+        setlineupDraftImageName(null);
+        setlineupDraftRole(null);
+        setlineupDraftRawResponse(null);
+        setlineupDraftTotalScore(0);
+        setlineupDraftAverageScore(0);
       }
     } catch (error) {
-      setOcrUploadError(error instanceof Error ? error.message : "덱 임시 기록을 삭제하지 못했습니다.");
+      setlineupUploadError(error instanceof Error ? error.message : "덱 임시 기록을 삭제하지 못했습니다.");
     }
   };
 
-  const updateOcrDraftPlayers = (
-    updater: (players: SkillOcrSelectedPlayer[]) => SkillOcrSelectedPlayer[]
+  const updatelineupDraftPlayers = (
+    updater: (players: LineupSkillSelectedPlayer[]) => LineupSkillSelectedPlayer[]
   ) => {
-    setOcrDraftPlayers((currentPlayers) => {
+    setlineupDraftPlayers((currentPlayers) => {
       const nextPlayers = updater(currentPlayers);
-      const summary = calculateSkillOcrSummary(nextPlayers);
-      setOcrDraftTotalScore(summary.totalScore);
-      setOcrDraftAverageScore(summary.averageScore);
+      const summary = calculateLineupSkillSummary(nextPlayers);
+      setlineupDraftTotalScore(summary.totalScore);
+      setlineupDraftAverageScore(summary.averageScore);
       return nextPlayers;
     });
   };
 
-  const handleOcrPlayerSelectedChange = (playerIndex: number, selected: boolean) => {
-    updateOcrDraftPlayers((players) => {
+  const handlelineupPlayerSelectedChange = (playerIndex: number, selected: boolean) => {
+    updatelineupDraftPlayers((players) => {
       const selectedCount = players.filter((player) => player.selected).length;
 
       if (selected && selectedCount >= 9 && !players[playerIndex]?.selected) {
-        setOcrUploadError("최대 9명까지만 선택할 수 있습니다.");
+        setlineupUploadError("최대 9명까지만 선택할 수 있습니다.");
         return players;
       }
 
-      setOcrUploadError(null);
+      setlineupUploadError(null);
       return players.map((player, index) =>
         index === playerIndex ? { ...player, selected } : player
       );
     });
   };
 
-  const handleOcrPlayerNameChange = (playerIndex: number, playerName: string) => {
-    updateOcrDraftPlayers((players) =>
+  const handlelineupPlayerNameChange = (playerIndex: number, playerName: string) => {
+    updatelineupDraftPlayers((players) =>
       players.map((player, index) =>
         index === playerIndex ? { ...player, playerName } : player
       )
     );
   };
 
-  const handleOcrPlayerCardTypeChange = (playerIndex: number, nextCardType: CardType) => {
-    updateOcrDraftPlayers((players) =>
+  const handlelineupPlayerCardTypeChange = (playerIndex: number, nextCardType: CardType) => {
+    updatelineupDraftPlayers((players) =>
       players.map((player, index) =>
         index === playerIndex
-          ? recalculateSkillOcrPlayer({ ...player, cardType: nextCardType })
+          ? recalculateLineupSkillPlayer({ ...player, cardType: nextCardType })
           : player
       )
     );
   };
 
-  const handleOcrPlayerPositionChange = (playerIndex: number, nextPosition: string) => {
-    updateOcrDraftPlayers((players) =>
+  const handlelineupPlayerPositionChange = (playerIndex: number, nextPosition: string) => {
+    updatelineupDraftPlayers((players) =>
       players.map((player, index) =>
         index === playerIndex
-          ? recalculateSkillOcrPlayer({
+          ? recalculateLineupSkillPlayer({
               ...player,
               position: nextPosition,
               calculatorMode: getPitcherModeFromPosition(nextPosition),
@@ -1320,27 +1320,27 @@ function App() {
     );
   };
 
-  const handleOcrPlayerStarterHandChange = (playerIndex: number, starterHand: StarterHand) => {
-    updateOcrDraftPlayers((players) =>
+  const handlelineupPlayerStarterHandChange = (playerIndex: number, starterHand: StarterHand) => {
+    updatelineupDraftPlayers((players) =>
       players.map((player, index) =>
-        index === playerIndex ? recalculateSkillOcrPlayer({ ...player, starterHand }) : player
+        index === playerIndex ? recalculateLineupSkillPlayer({ ...player, starterHand }) : player
       )
     );
   };
 
-  const handleOcrSkillChange = (
+  const handleLineupSkillChange = (
     playerIndex: number,
     slot: number,
     skillId: string,
     skillName: string
   ) => {
-    updateOcrDraftPlayers((players) =>
+    updatelineupDraftPlayers((players) =>
       players.map((player, index) => {
         if (index !== playerIndex) {
           return player;
         }
 
-        return recalculateSkillOcrPlayer({
+        return recalculateLineupSkillPlayer({
           ...player,
           skills: player.skills.map((skill) =>
             skill.slot === slot
@@ -1357,18 +1357,18 @@ function App() {
     );
   };
 
-  const handleOcrSkillLevelChange = (
+  const handleLineupSkillLevelChange = (
     playerIndex: number,
     slot: number,
     level: SkillLevel
   ) => {
-    updateOcrDraftPlayers((players) =>
+    updatelineupDraftPlayers((players) =>
       players.map((player, index) => {
         if (index !== playerIndex) {
           return player;
         }
 
-        return recalculateSkillOcrPlayer({
+        return recalculateLineupSkillPlayer({
           ...player,
           skills: player.skills.map((skill) =>
             skill.slot === slot ? { ...skill, level } : skill
@@ -1513,34 +1513,34 @@ function App() {
               themeAction={themeToggle}
               onGoHome={handleGoHome}
             />
-          ) : toolView === "lineupSkillOcr" ? (
-            <PublicSkillOcrView
+          ) : toolView === "lineupSkill" ? (
+            <LineupSkillView
               authenticated={Boolean(authSession)}
               displayName={authDisplayName}
-              uploads={ocrUploads}
-              uploadsLoading={ocrUploadsLoading}
-              uploadsError={ocrUploadsError}
-              uploadError={ocrUploadError}
-              savedUpload={ocrSavedUpload}
-              draftPlayers={ocrDraftPlayers}
-              draftTotalScore={ocrDraftTotalScore}
-              draftAverageScore={ocrDraftAverageScore}
-              saving={ocrSaving}
+              uploads={lineupUploads}
+              uploadsLoading={lineupUploadsLoading}
+              uploadsError={lineupUploadsError}
+              uploadError={lineupUploadError}
+              savedUpload={lineupSavedUpload}
+              draftPlayers={lineupDraftPlayers}
+              draftTotalScore={lineupDraftTotalScore}
+              draftAverageScore={lineupDraftAverageScore}
+              saving={lineupSaving}
               themeAction={themeToggle}
-              onGoogleLogin={() => void handleGoogleLogin("lineupSkillOcr")}
+              onGoogleLogin={() => void handleGoogleLogin("lineupSkill")}
               onGoogleLogout={() => void handleGoogleLogout()}
-              onAddManualPlayer={handleAddManualOcrPlayer}
-              onCreateManualDeck={handleCreateManualOcrDeck}
-              onPlayerSelectedChange={handleOcrPlayerSelectedChange}
-              onPlayerNameChange={handleOcrPlayerNameChange}
-              onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
-              onPlayerPositionChange={handleOcrPlayerPositionChange}
-              onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}
-              onSkillChange={handleOcrSkillChange}
-              onSkillLevelChange={handleOcrSkillLevelChange}
-              onSaveDraft={() => void handleOcrSaveDraft()}
-              onSelectSnapshot={handleOpenPublicOcrSnapshot}
-              onDeleteSnapshot={(uploadId) => void handleDeletePublicOcrSnapshot(uploadId)}
+              onAddManualPlayer={handleAddManuallineupPlayer}
+              onCreateManualDeck={handleCreateManualLineupDeck}
+              onPlayerSelectedChange={handlelineupPlayerSelectedChange}
+              onPlayerNameChange={handlelineupPlayerNameChange}
+              onPlayerCardTypeChange={handlelineupPlayerCardTypeChange}
+              onPlayerPositionChange={handlelineupPlayerPositionChange}
+              onPlayerStarterHandChange={handlelineupPlayerStarterHandChange}
+              onSkillChange={handleLineupSkillChange}
+              onSkillLevelChange={handleLineupSkillLevelChange}
+              onSaveDraft={() => void handlelineupSavedraft()}
+              onSelectSnapshot={handleOpenPublicLineupSnapshot}
+              onDeleteSnapshot={(uploadId) => void handleDeletePublicLineupSnapshot(uploadId)}
               onGoHome={handleGoHome}
             />
           ) : toolView === "trainingRedistribution" ? (

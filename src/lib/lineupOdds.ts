@@ -1,12 +1,12 @@
 import { getGameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
 import type { HitterPositionGroup } from "../types";
-import type { SkillOcrSelectedPlayer } from "../types/ocr";
+import type { LineupSkillSelectedPlayer } from "../types/lineup";
 import { calculateAdvancedSkillOdds } from "../utils/advancedSkillOdds";
 import { formatTopPercent } from "../utils/formatOdds";
 import { judgeSkillResultByProbability } from "../utils/judge";
 
-export type SkillOcrPlayerOdds = {
+export type LineupSkillPlayerOdds = {
   grade: string;
   gradeColor: string;
   scoreAtLeastProbability: number | null;
@@ -21,7 +21,7 @@ function getHitterPositionGroup(position: string | null | undefined): HitterPosi
     : "fielder";
 }
 
-export function getSkillOcrPlayerOdds(player: SkillOcrSelectedPlayer): SkillOcrPlayerOdds | null {
+export function getLineupSkillPlayerOdds(player: LineupSkillSelectedPlayer): LineupSkillPlayerOdds | null {
   if (player.skills.length < 3 || player.skills.some((skill) => !skill.skillId)) {
     return null;
   }

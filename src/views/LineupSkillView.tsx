@@ -1,33 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
-import { getSkillOcrPlayerOdds } from "../lib/skillOcrOdds";
-import { getSkillOcrSkillOptions } from "../lib/skillOcrTransform";
-import { useSkillOcrPlayerOdds } from "../lib/useSkillOcrPlayerOdds";
+import { getLineupSkillPlayerOdds } from "../lib/lineupOdds";
+import { getLineupSkillSkillOptions } from "../lib/lineupTransform";
+import { useLineupPlayerOdds } from "../lib/useLineupPlayerOdds";
 import type { CardType, SkillLevel, StarterHand } from "../types";
 import type {
-  SkillOcrRole,
-  SkillOcrSavedUpload,
-  SkillOcrSelectedPlayer,
-} from "../types/ocr";
+  LineupSkillRole,
+  LineupSkillSavedUpload,
+  LineupSkillSelectedPlayer,
+} from "../types/lineup";
 import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
-type PublicSkillOcrViewProps = {
+type LineupSkillViewProps = {
   authenticated: boolean;
   displayName: string | null;
-  uploads: SkillOcrSavedUpload[];
+  uploads: LineupSkillSavedUpload[];
   uploadsLoading: boolean;
   uploadsError: string | null;
   uploadError: string | null;
-  savedUpload: SkillOcrSavedUpload | null;
-  draftPlayers: SkillOcrSelectedPlayer[];
+  savedUpload: LineupSkillSavedUpload | null;
+  draftPlayers: LineupSkillSelectedPlayer[];
   draftTotalScore: number;
   draftAverageScore: number;
   saving: boolean;
   themeAction?: React.ReactNode;
   onGoogleLogin: () => void;
   onGoogleLogout: () => void;
-  onAddManualPlayer: (role: SkillOcrRole) => void;
-  onCreateManualDeck: (role: SkillOcrRole) => void;
+  onAddManualPlayer: (role: LineupSkillRole) => void;
+  onCreateManualDeck: (role: LineupSkillRole) => void;
   onPlayerSelectedChange: (playerIndex: number, selected: boolean) => void;
   onPlayerNameChange: (playerIndex: number, playerName: string) => void;
   onPlayerCardTypeChange: (playerIndex: number, cardType: CardType) => void;
@@ -41,7 +41,7 @@ type PublicSkillOcrViewProps = {
   ) => void;
   onSkillLevelChange: (playerIndex: number, slot: number, level: SkillLevel) => void;
   onSaveDraft: () => void;
-  onSelectSnapshot: (upload: SkillOcrSavedUpload) => void;
+  onSelectSnapshot: (upload: LineupSkillSavedUpload) => void;
   onDeleteSnapshot: (uploadId: string) => void;
   onGoHome: () => void;
 };
@@ -71,18 +71,18 @@ const SKILL_LEVEL_OPTIONS: SkillLevel[] = [5, 6, 7, 8];
 type SkillSearchOption = {
   skillId: string;
   skillName: string;
-  grade: SkillOcrSelectedPlayer["skills"][number]["grade"];
+  grade: LineupSkillSelectedPlayer["skills"][number]["grade"];
 };
 
-function formatRole(role: SkillOcrRole): string {
+function formatRole(role: LineupSkillRole): string {
   return role === "hitter" ? "타자" : "투수";
 }
 
-function formatDeckName(role: SkillOcrRole): string {
+function formatDeckName(role: LineupSkillRole): string {
   return `${formatRole(role)} 라인업`;
 }
 
-function formatPlayerPosition(player: SkillOcrSelectedPlayer, role: SkillOcrRole): string {
+function formatPlayerPosition(player: LineupSkillSelectedPlayer, role: LineupSkillRole): string {
   if (role === "hitter") {
     return player.position?.trim() || "타자";
   }
@@ -100,8 +100,8 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-function getSkillToneClass(skill: SkillOcrSelectedPlayer["skills"][number]): string {
-  return skill.grade ? `ocr-skill-grade-${skill.grade}` : `ocr-skill-level-${skill.level}`;
+function getSkillToneClass(skill: LineupSkillSelectedPlayer["skills"][number]): string {
+  return skill.grade ? `lineup-skill-grade-${skill.grade}` : `lineup-skill-level-${skill.level}`;
 }
 
 function normalizeSkillSearchText(value: string | null | undefined): string {
@@ -111,7 +111,7 @@ function normalizeSkillSearchText(value: string | null | undefined): string {
     .toLowerCase();
 }
 
-function getDuplicateSkillFamilies(player: SkillOcrSelectedPlayer): string[] {
+function getDuplicateSkillFamilies(player: LineupSkillSelectedPlayer): string[] {
   const familyCounts = new Map<string, number>();
 
   player.skills.forEach((skill) => {
@@ -215,8 +215,8 @@ function fillRoundRect(
 }
 
 async function createDeckSharePngBlob(
-  upload: SkillOcrSavedUpload,
-  players: SkillOcrSelectedPlayer[]
+  upload: LineupSkillSavedUpload,
+  players: LineupSkillSelectedPlayer[]
 ): Promise<Blob> {
   await document.fonts?.ready;
 
@@ -280,7 +280,7 @@ async function createDeckSharePngBlob(
     const x = padding + column * (cardWidth + gap);
     const y = padding + headerHeight + row * (cardHeight + gap);
     const colors = CARD_SHARE_COLORS[player.cardType] ?? CARD_SHARE_COLORS.signature;
-    const odds = getSkillOcrPlayerOdds(player);
+    const odds = getLineupSkillPlayerOdds(player);
     const progressPercent = Number.parseFloat(getTopPercentProgressWidth(odds?.scoreAtLeastProbability));
 
     fillRoundRect(context, x, y, cardWidth, cardHeight, 16, "#fffefa", colors.border);
@@ -372,8 +372,8 @@ async function createDeckSharePngBlob(
 }
 
 async function copyDeckShareImageToClipboard(
-  upload: SkillOcrSavedUpload,
-  players: SkillOcrSelectedPlayer[]
+  upload: LineupSkillSavedUpload,
+  players: LineupSkillSelectedPlayer[]
 ): Promise<void> {
   if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
     throw new Error("이 브라우저에서는 이미지 클립보드 복사를 지원하지 않습니다.");
@@ -389,7 +389,7 @@ async function copyDeckShareImageToClipboard(
 }
 
 function getSkillOptionsForSlot(
-  player: SkillOcrSelectedPlayer,
+  player: LineupSkillSelectedPlayer,
   slot: number,
   options: SkillSearchOption[]
 ): SkillSearchOption[] {
@@ -409,7 +409,7 @@ function getSkillOptionsForSlot(
   });
 }
 
-function getPitcherScoreItems(player: SkillOcrSelectedPlayer): Array<{
+function getPitcherScoreItems(player: LineupSkillSelectedPlayer): Array<{
   key: string;
   label: string;
   value: number;
@@ -451,13 +451,13 @@ function getPitcherScoreItems(player: SkillOcrSelectedPlayer): Array<{
   ];
 }
 
-function PublicSkillOcrOddsBadge({ player }: { player: SkillOcrSelectedPlayer }) {
-  const { odds, loading } = useSkillOcrPlayerOdds(player);
+function PublicLineupSkillOddsBadge({ player }: { player: LineupSkillSelectedPlayer }) {
+  const { odds, loading } = useLineupPlayerOdds(player);
 
   if (loading) {
     return (
       <div
-        className="ocr-player-odds-badge public-ocr-player-odds-badge ocr-player-odds-badge-loading"
+        className="lineup-player-odds-badge public-lineup-player-odds-badge lineup-player-odds-badge-loading"
         aria-label="확률 계산 중"
       >
         <span />
@@ -471,7 +471,7 @@ function PublicSkillOcrOddsBadge({ player }: { player: SkillOcrSelectedPlayer })
   }
 
   return (
-    <div className="ocr-player-odds-badge public-ocr-player-odds-badge">
+    <div className="lineup-player-odds-badge public-lineup-player-odds-badge">
       <span>
         등급 <strong style={{ color: odds.gradeColor }}>{odds.grade}</strong>
       </span>
@@ -484,14 +484,14 @@ function PublicSkillOcrOddsBadge({ player }: { player: SkillOcrSelectedPlayer })
 
 function buildCopyText(params: {
   username: string;
-  role: SkillOcrRole | null;
+  role: LineupSkillRole | null;
   averageScore: number;
-  players: SkillOcrSelectedPlayer[];
+  players: LineupSkillSelectedPlayer[];
 }) {
   const roleLabel = params.role ? formatDeckName(params.role) : "라인업";
   const includePosition = params.role === "pitcher";
   const lines = params.players.map((player) => {
-    const odds = getSkillOcrPlayerOdds(player);
+    const odds = getLineupSkillPlayerOdds(player);
     const position = player.position?.trim();
     const handLabel = player.starterHand === "left" ? "좌투" : "우투";
     const name =
@@ -510,7 +510,7 @@ function buildCopyText(params: {
   ].join("\n");
 }
 
-function PublicOcrIcon({ name }: { name: "add" | "upload" | "check" | "clipboard" | "close" | "login" }) {
+function PublicLineupIcon({ name }: { name: "add" | "upload" | "check" | "clipboard" | "close" | "login" }) {
   const paths = {
     add: "M12 5v14M5 12h14",
     upload: "M12 16V4m0 0 5 5m-5-5-5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3",
@@ -521,50 +521,50 @@ function PublicOcrIcon({ name }: { name: "add" | "upload" | "check" | "clipboard
   };
 
   return (
-    <svg className="ocr-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="lineup-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d={paths[name]} />
     </svg>
   );
 }
 
-function PublicOcrRosterCard({
+function PublicLineupRosterCard({
   player,
   index,
 }: {
-  player: SkillOcrSelectedPlayer;
+  player: LineupSkillSelectedPlayer;
   index: number;
 }) {
-  const odds = getSkillOcrPlayerOdds(player);
+  const odds = getLineupSkillPlayerOdds(player);
   const progressWidth = getTopPercentProgressWidth(odds?.scoreAtLeastProbability);
 
   return (
-    <article className={`public-ocr-roster-card public-ocr-card-row-${player.cardType}`}>
-      <div className="public-ocr-roster-card-top">
-        <span className="public-ocr-roster-number">{String(index + 1).padStart(2, "0")}</span>
-        <div className="public-ocr-roster-identity">
+    <article className={`public-lineup-roster-card public-lineup-card-row-${player.cardType}`}>
+      <div className="public-lineup-roster-card-top">
+        <span className="public-lineup-roster-number">{String(index + 1).padStart(2, "0")}</span>
+        <div className="public-lineup-roster-identity">
           <div>
             <strong>{player.playerName}</strong>
             <span>{CARD_TYPE_LABELS[player.cardType] ?? player.cardType}</span>
           </div>
         </div>
         {odds && (
-          <span className="public-ocr-roster-tier" style={{ color: odds.gradeColor }}>
+          <span className="public-lineup-roster-tier" style={{ color: odds.gradeColor }}>
             {odds.grade}
           </span>
         )}
       </div>
 
-      <div className="public-ocr-roster-score">
+      <div className="public-lineup-roster-score">
         <div>
           <strong>{player.totalScore.toFixed(2)}</strong>
           {odds && <small>{odds.topPercentLabel}</small>}
         </div>
-        <div className="public-ocr-roster-score-bar">
+        <div className="public-lineup-roster-score-bar">
           <i style={{ width: progressWidth }} />
         </div>
       </div>
 
-      <div className="public-ocr-roster-skills">
+      <div className="public-lineup-roster-skills">
         {player.skills.map((skill) => (
           <span key={`${player.sourceRow}-${skill.slot}`} className={getSkillToneClass(skill)}>
             {skill.skillName ?? "스킬 미선택"} Lv.{skill.level}
@@ -575,7 +575,7 @@ function PublicOcrRosterCard({
   );
 }
 
-function PublicOcrSkillSearchSelect({
+function PublicLineupSkillSearchSelect({
   ariaLabel,
   options,
   value,
@@ -629,10 +629,10 @@ function PublicOcrSkillSearchSelect({
   };
 
   return (
-    <div className="public-ocr-skill-search-select">
+    <div className="public-lineup-skill-search-select">
       <input
         type="text"
-        className={selectedOption?.grade ? `ocr-skill-grade-${selectedOption.grade}` : undefined}
+        className={selectedOption?.grade ? `lineup-skill-grade-${selectedOption.grade}` : undefined}
         aria-label={ariaLabel}
         value={query}
         placeholder="스킬 검색"
@@ -651,7 +651,7 @@ function PublicOcrSkillSearchSelect({
         }}
       />
       {open && (
-        <div className="public-ocr-skill-search-list" role="listbox">
+        <div className="public-lineup-skill-search-list" role="listbox">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => (
               <button
@@ -674,7 +674,7 @@ function PublicOcrSkillSearchSelect({
   );
 }
 
-export default function PublicSkillOcrView({
+export default function LineupSkillView({
   authenticated,
   displayName,
   uploads,
@@ -702,12 +702,12 @@ export default function PublicSkillOcrView({
   onSelectSnapshot,
   onDeleteSnapshot,
   onGoHome,
-}: PublicSkillOcrViewProps) {
+}: LineupSkillViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"summary" | "manual">("summary");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [deckFilter, setDeckFilter] = useState<SkillOcrRole>("pitcher");
+  const [deckFilter, setDeckFilter] = useState<LineupSkillRole>("pitcher");
   const [deckQuery, setDeckQuery] = useState("");
 
   useEffect(() => {
@@ -738,8 +738,8 @@ export default function PublicSkillOcrView({
     .filter(({ role, upload }) => upload && deckFilter === role)
     .map(({ role, upload }) => ({
       role,
-      upload: upload as SkillOcrSavedUpload,
-      players: (upload as SkillOcrSavedUpload).selected_players.filter((player) => {
+      upload: upload as LineupSkillSavedUpload,
+      players: (upload as LineupSkillSavedUpload).selected_players.filter((player) => {
         if (!normalizedDeckQuery) {
           return true;
         }
@@ -804,8 +804,8 @@ export default function PublicSkillOcrView({
   };
 
   const copyVisibleDeck = async (
-    upload: SkillOcrSavedUpload,
-    players: SkillOcrSelectedPlayer[]
+    upload: LineupSkillSavedUpload,
+    players: LineupSkillSelectedPlayer[]
   ) => {
     const averageScore =
       players.length > 0
@@ -825,8 +825,8 @@ export default function PublicSkillOcrView({
   };
 
   const copyVisibleDeckImage = async (
-    upload: SkillOcrSavedUpload,
-    players: SkillOcrSelectedPlayer[]
+    upload: LineupSkillSavedUpload,
+    players: LineupSkillSelectedPlayer[]
   ) => {
     try {
       await copyDeckShareImageToClipboard(upload, players);
@@ -840,19 +840,19 @@ export default function PublicSkillOcrView({
     }
   };
 
-  const editUpload = (upload: SkillOcrSavedUpload) => {
+  const editUpload = (upload: LineupSkillSavedUpload) => {
     onSelectSnapshot(upload);
     setActiveTab("manual");
   };
 
   return (
-    <main className="public-ocr-view">
-      <header className="public-ocr-header">
+    <main className="public-lineup-view">
+      <header className="public-lineup-header">
         <div>
-          <p className="ocr-eyebrow">Lineup Skill</p>
+          <p className="lineup-eyebrow">Lineup Skill</p>
           <h1>라인업 스킬</h1>
         </div>
-        <div className="public-ocr-top-actions">
+        <div className="public-lineup-top-actions">
           {themeAction}
           <button type="button" className="ghost-btn" onClick={onGoHome}>
             <span>홈으로</span>
@@ -872,13 +872,13 @@ export default function PublicSkillOcrView({
         </div>
       </header>
 
-      <nav className="ocr-tabs public-ocr-tabs" aria-label="라인업 스킬 화면">
+      <nav className="lineup-tabs public-lineup-tabs" aria-label="라인업 스킬 화면">
         <button
           type="button"
           className={activeTab === "summary" ? "active" : ""}
           onClick={() => setActiveTab("summary")}
         >
-          <PublicOcrIcon name="clipboard" />
+          <PublicLineupIcon name="clipboard" />
           라인업
         </button>
         <button
@@ -886,14 +886,14 @@ export default function PublicSkillOcrView({
           className={activeTab === "manual" ? "active" : ""}
           onClick={() => setActiveTab("manual")}
         >
-          <PublicOcrIcon name="upload" />
+          <PublicLineupIcon name="upload" />
           라인업 새로 추가
         </button>
       </nav>
 
       <KakaoAdFitMobileMidBanner enabled />
 
-      <p className="public-ocr-storage-note">
+      <p className="public-lineup-storage-note">
         {authenticated
           ? "Google 계정에 투수/타자 최신 라인업 1개씩 저장됩니다."
           : "로그인하지 않으면 이 브라우저에만 투수/타자 최신 라인업 1개씩 저장됩니다."}
@@ -904,22 +904,22 @@ export default function PublicSkillOcrView({
       {uploadError && <p className="modal-error">{uploadError}</p>}
       {validationMessage && activeTab === "summary" && <p className="modal-error">{validationMessage}</p>}
       {saveMessage && (
-        <p className="public-ocr-save-success" role="status">
-          <PublicOcrIcon name="check" />
+        <p className="public-lineup-save-success" role="status">
+          <PublicLineupIcon name="check" />
           {saveMessage}
         </p>
       )}
 
       {activeTab === "summary" ? (
         <>
-          <section className="public-ocr-roster-hero">
+          <section className="public-lineup-roster-hero">
             <div>
-              <p className="ocr-eyebrow">DECK SKILL RECORD</p>
+              <p className="lineup-eyebrow">DECK SKILL RECORD</p>
               <h2>
                 {activeDeckLabel}
               </h2>
             </div>
-            <div className="public-ocr-roster-hero-score">
+            <div className="public-lineup-roster-hero-score">
               <span>DECK SCORE</span>
               <strong>{activeDeckUpload ? activeDeckUpload.total_score.toFixed(2) : "-"}</strong>
               <small>
@@ -928,13 +928,13 @@ export default function PublicSkillOcrView({
             </div>
           </section>
 
-          <section className="public-ocr-summary-grid">
+          <section className="public-lineup-summary-grid">
             {[
               { role: "pitcher" as const, upload: latestPitcherUpload },
               { role: "hitter" as const, upload: latestHitterUpload },
             ].map(({ role, upload }) => (
-              <article key={role} className={`public-ocr-latest-card ${role}`}>
-                <div className="public-ocr-latest-head">
+              <article key={role} className={`public-lineup-latest-card ${role}`}>
+                <div className="public-lineup-latest-head">
                   <div>
                     <strong>{formatDeckName(role)} 기록</strong>
                     {upload ? <span>{formatDate(upload.updated_at)} 수정</span> : <span>처음 등록이 필요합니다</span>}
@@ -942,7 +942,7 @@ export default function PublicSkillOcrView({
                 </div>
                 {upload ? (
                   <>
-                    <div className="public-ocr-latest-stats">
+                    <div className="public-lineup-latest-stats">
                       <span>
                         전체점수 <strong>{upload.total_score.toFixed(2)}</strong>
                       </span>
@@ -959,7 +959,7 @@ export default function PublicSkillOcrView({
                     <p>{formatDeckName(role)} 9명을 먼저 등록한 뒤, 이후 필요한 선수만 수정해서 관리하세요.</p>
                     <button
                       type="button"
-                      className="primary-btn public-ocr-deck-edit-btn"
+                      className="primary-btn public-lineup-deck-edit-btn"
                       onClick={() => {
                         onCreateManualDeck(role);
                         setActiveTab("manual");
@@ -973,8 +973,8 @@ export default function PublicSkillOcrView({
             ))}
           </section>
           {savedUploads.length > 0 && (
-            <nav className="public-ocr-roster-nav" aria-label="덱 상세 필터">
-              <div className="public-ocr-roster-filters">
+            <nav className="public-lineup-roster-nav" aria-label="덱 상세 필터">
+              <div className="public-lineup-roster-filters">
                 {[
                   { value: "pitcher" as const, label: "투수", count: latestPitcherUpload?.player_count ?? 0 },
                   { value: "hitter" as const, label: "타자", count: latestHitterUpload?.player_count ?? 0 },
@@ -990,7 +990,7 @@ export default function PublicSkillOcrView({
                   </button>
                 ))}
               </div>
-              <label className="public-ocr-roster-search">
+              <label className="public-lineup-roster-search">
                 <span>⌕</span>
                 <input
                   type="search"
@@ -1001,54 +1001,54 @@ export default function PublicSkillOcrView({
               </label>
             </nav>
           )}
-          <div className="public-ocr-summary-results">
+          <div className="public-lineup-summary-results">
             {visibleDecks.map(({ role, upload, players }) => (
-              <section key={upload.id} className="public-ocr-panel">
-                <div className="ocr-section-head">
+              <section key={upload.id} className="public-lineup-panel">
+                <div className="lineup-section-head">
                   <div>
                     <h2>{formatDeckName(role)} 상세</h2>
                     <span>{formatDate(upload.updated_at)} 수정</span>
                   </div>
-                  <div className="public-ocr-detail-head-actions">
-                    <div className="ocr-review-totals">
+                  <div className="public-lineup-detail-head-actions">
+                    <div className="lineup-review-totals">
                       <strong>{upload.total_score.toFixed(2)}</strong>
                       <span>평균 {upload.average_score.toFixed(2)}</span>
                     </div>
                     <button
                       type="button"
-                      className="ghost-btn public-ocr-detail-action-btn"
+                      className="ghost-btn public-lineup-detail-action-btn"
                       onClick={() => editUpload(upload)}
                     >
                       기록 수정
                     </button>
-                    <div className="public-ocr-detail-share">
+                    <div className="public-lineup-detail-share">
                       <button
                         type="button"
-                        className="ghost-btn public-ocr-detail-action-btn"
+                        className="ghost-btn public-lineup-detail-action-btn"
                         disabled={players.length === 0}
                         onClick={() => void copyVisibleDeck(upload, players)}
                       >
-                        <PublicOcrIcon name={copiedId === `detail-${upload.id}` ? "check" : "clipboard"} />
+                        <PublicLineupIcon name={copiedId === `detail-${upload.id}` ? "check" : "clipboard"} />
                         점수 복사
                       </button>
                       {copiedId === `detail-${upload.id}` && (
-                        <span className="public-ocr-copy-toast" role="status">
+                        <span className="public-lineup-copy-toast" role="status">
                           복사되었습니다
                         </span>
                       )}
                     </div>
-                    <div className="public-ocr-detail-share">
+                    <div className="public-lineup-detail-share">
                       <button
                         type="button"
-                        className="primary-btn public-ocr-detail-action-btn"
+                        className="primary-btn public-lineup-detail-action-btn"
                         disabled={players.length === 0}
                         onClick={() => void copyVisibleDeckImage(upload, players)}
                       >
-                        <PublicOcrIcon name={copiedId === `image-${upload.id}` ? "check" : "clipboard"} />
+                        <PublicLineupIcon name={copiedId === `image-${upload.id}` ? "check" : "clipboard"} />
                         공유
                       </button>
                       {copiedId === `image-${upload.id}` && (
-                        <span className="public-ocr-copy-toast" role="status">
+                        <span className="public-lineup-copy-toast" role="status">
                           복사되었습니다
                         </span>
                       )}
@@ -1056,9 +1056,9 @@ export default function PublicSkillOcrView({
                   </div>
                 </div>
                 {players.length > 0 ? (
-                  <div className="public-ocr-roster-grid">
+                  <div className="public-lineup-roster-grid">
                     {players.map((player, index) => (
-                      <PublicOcrRosterCard
+                      <PublicLineupRosterCard
                         key={`${upload.id}-${player.sourceRow}`}
                         player={player}
                         index={index}
@@ -1066,7 +1066,7 @@ export default function PublicSkillOcrView({
                     ))}
                   </div>
                 ) : (
-                  <p className="public-ocr-roster-empty">검색 결과가 없습니다.</p>
+                  <p className="public-lineup-roster-empty">검색 결과가 없습니다.</p>
                 )}
               </section>
             ))}
@@ -1074,49 +1074,49 @@ export default function PublicSkillOcrView({
         </>
       ) : (
         <>
-          <section className="public-ocr-guide-card public-ocr-manual-notice">
-            <PublicOcrIcon name="clipboard" />
+          <section className="public-lineup-guide-card public-lineup-manual-notice">
+            <PublicLineupIcon name="clipboard" />
             <div>
               <strong>업로드 없이 직접 입력합니다.</strong>
               <span>처음에는 9명 라인업을 만들고, 이후에는 저장된 라인업을 열어 이름, 보직, 스킬, 레벨만 수정하세요.</span>
             </div>
           </section>
 
-          <section className="public-ocr-upload-panel public-ocr-manual-actions">
+          <section className="public-lineup-upload-panel public-lineup-manual-actions">
             <button
               type="button"
-              className="public-ocr-upload-btn"
+              className="public-lineup-upload-btn"
               onClick={() => onCreateManualDeck("pitcher")}
             >
-              <PublicOcrIcon name="add" />
+              <PublicLineupIcon name="add" />
               <strong>투수 라인업 9명 만들기</strong>
               <small>SP 5명, RP 3명, CP 1명 순서로 생성됩니다</small>
             </button>
             <button
               type="button"
-              className="public-ocr-upload-btn"
+              className="public-lineup-upload-btn"
               onClick={() => onCreateManualDeck("hitter")}
             >
-              <PublicOcrIcon name="add" />
+              <PublicLineupIcon name="add" />
               <strong>타자 라인업 9명 만들기</strong>
               <small>1번부터 9번까지 순서대로 생성됩니다</small>
             </button>
           </section>
 
           {pendingUploads.length > 0 && (
-            <section className="public-ocr-panel">
-              <div className="ocr-section-head">
+            <section className="public-lineup-panel">
+              <div className="lineup-section-head">
                 <div>
                   <h2>저장되지 않은 라인업 기록</h2>
-                  <span>기존 OCR에서 넘어온 임시 기록입니다. 열어서 라인업 기록으로 저장하세요.</span>
+                  <span>기존 라인업에서 넘어온 임시 기록입니다. 열어서 라인업 기록으로 저장하세요.</span>
                 </div>
               </div>
-              <div className="public-ocr-saved-list">
+              <div className="public-lineup-saved-list">
                 {pendingUploads.map((upload) => (
-                  <div key={upload.id} className="public-ocr-snapshot-row">
+                  <div key={upload.id} className="public-lineup-snapshot-row">
                     <button
                       type="button"
-                      className="public-ocr-saved-row public-ocr-review-row"
+                      className="public-lineup-saved-row public-lineup-review-row"
                       onClick={() => {
                         onSelectSnapshot(upload);
                         setActiveTab("manual");
@@ -1128,7 +1128,7 @@ export default function PublicSkillOcrView({
                     </button>
                     <button
                       type="button"
-                      className="public-ocr-snapshot-delete"
+                      className="public-lineup-snapshot-delete"
                       aria-label={`${formatRole(upload.role)} 스냅샷 삭제`}
                       onClick={() => {
                         if (window.confirm("이 임시 기록을 삭제할까요?")) {
@@ -1145,21 +1145,21 @@ export default function PublicSkillOcrView({
           )}
 
           {draftPlayers.length > 0 && (
-            <section className="public-ocr-panel">
-              <div className="ocr-section-head">
+            <section className="public-lineup-panel">
+              <div className="lineup-section-head">
                 <div>
                   <h2>{draftRole ? `${formatDeckName(draftRole)} 편집` : "라인업 편집"}</h2>
                   <span>선수 이름, 카드 타입, 보직, 스킬, 레벨을 수정하세요.</span>
                 </div>
-                <div className="ocr-review-head-actions">
+                <div className="lineup-review-head-actions">
                   {draftRole && draftPlayers.length < 9 && (
                     <button type="button" className="ghost-btn" onClick={() => onAddManualPlayer(draftRole)}>
-                      <PublicOcrIcon name="add" />
+                      <PublicLineupIcon name="add" />
                       1명 추가
                     </button>
                   )}
                   <button type="button" className="ghost-btn" onClick={() => void copyDraft()}>
-                    <PublicOcrIcon name={copiedId === "draft" ? "check" : "clipboard"} />
+                    <PublicLineupIcon name={copiedId === "draft" ? "check" : "clipboard"} />
                     {copiedId === "draft" ? "복사됨" : "복사"}
                   </button>
                   <button
@@ -1173,33 +1173,33 @@ export default function PublicSkillOcrView({
                     {saving ? "저장 중" : "저장"}
                   </button>
                 </div>
-                <div className="ocr-review-totals">
+                <div className="lineup-review-totals">
                   <strong>{draftTotalScore.toFixed(2)}</strong>
                   <span>평균 {draftAverageScore.toFixed(2)}</span>
                 </div>
               </div>
 
-              <div className="public-ocr-player-list">
+              <div className="public-lineup-player-list">
                 {draftPlayers.map((player, playerIndex) => {
-                  const skillOptions = getSkillOcrSkillOptions(player);
+                  const skillOptions = getLineupSkillSkillOptions(player);
                   const duplicateFamilies = getDuplicateSkillFamilies(player);
 
                   return (
                     <article
                       key={`${player.sourceRow}-${player.playerName}`}
-                      className={`public-ocr-player-row public-ocr-card-row-${player.cardType}${
+                      className={`public-lineup-player-row public-lineup-card-row-${player.cardType}${
                         player.selected ? "" : " muted"
                       }`}
                     >
-                      <div className="public-ocr-player-main">
-                        <label className="public-ocr-player-check">
+                      <div className="public-lineup-player-main">
+                        <label className="public-lineup-player-check">
                           <input
                             type="checkbox"
                             checked={player.selected}
                             onChange={(event) => onPlayerSelectedChange(playerIndex, event.target.checked)}
                           />
                           <input
-                            className="public-ocr-player-name-input"
+                            className="public-lineup-player-name-input"
                             type="text"
                             value={player.playerName}
                             onChange={(event) => onPlayerNameChange(playerIndex, event.target.value)}
@@ -1207,11 +1207,11 @@ export default function PublicSkillOcrView({
                           />
                         </label>
                         <div
-                          className={`public-ocr-player-controls public-ocr-player-controls-${
+                          className={`public-lineup-player-controls public-lineup-player-controls-${
                             player.calculatorMode === "hitter" ? "hitter" : "pitcher"
                           }`}
                         >
-                        <label className={`public-ocr-card-control public-ocr-card-control-${player.cardType}`}>
+                        <label className={`public-lineup-card-control public-lineup-card-control-${player.cardType}`}>
                           <span>카드</span>
                           <select
                             value={player.cardType}
@@ -1259,17 +1259,17 @@ export default function PublicSkillOcrView({
                           </>
                         )}
                         </div>
-                        <strong className="public-ocr-player-score">{player.totalScore.toFixed(2)}</strong>
-                        <PublicSkillOcrOddsBadge player={player} />
+                        <strong className="public-lineup-player-score">{player.totalScore.toFixed(2)}</strong>
+                        <PublicLineupSkillOddsBadge player={player} />
                       </div>
 
                       {player.calculatorMode !== "hitter" && (
-                        <div className="public-ocr-pitcher-score-grid">
+                        <div className="public-lineup-pitcher-score-grid">
                           {getPitcherScoreItems(player).map((item) => (
                             <button
                               key={item.key}
                               type="button"
-                              className={`public-ocr-pitcher-score-chip${item.active ? " active" : ""}`}
+                              className={`public-lineup-pitcher-score-chip${item.active ? " active" : ""}`}
                               onClick={() => {
                                 if (item.key === "starterRight" || item.key === "starterLeft") {
                                   onPlayerPositionChange(playerIndex, "SP");
@@ -1290,16 +1290,16 @@ export default function PublicSkillOcrView({
                         </div>
                       )}
 
-                      <div className="public-ocr-player-skills">
+                      <div className="public-lineup-player-skills">
                         {player.skills.map((skill) => (
                           <div
                             key={`${player.sourceRow}-${skill.slot}`}
-                            className={`public-ocr-skill-edit-row ${getSkillToneClass(skill)} ${
-                              skill.skillId ? "" : "public-ocr-skill-edit-row-unmatched"
+                            className={`public-lineup-skill-edit-row ${getSkillToneClass(skill)} ${
+                              skill.skillId ? "" : "public-lineup-skill-edit-row-unmatched"
                             }`}
                           >
-                            {!skill.skillId && <span className="public-ocr-match-fail-badge">스킬 선택</span>}
-                            <PublicOcrSkillSearchSelect
+                            {!skill.skillId && <span className="public-lineup-match-fail-badge">스킬 선택</span>}
+                            <PublicLineupSkillSearchSelect
                               ariaLabel={`${player.playerName} ${skill.slot}번 스킬 선택`}
                               options={getSkillOptionsForSlot(player, skill.slot, skillOptions)}
                               value={skill.skillId ?? ""}
@@ -1313,7 +1313,7 @@ export default function PublicSkillOcrView({
                               }}
                             />
                             <select
-                              className={`public-ocr-skill-level-select ${getSkillToneClass(skill)}`}
+                              className={`public-lineup-skill-level-select ${getSkillToneClass(skill)}`}
                               value={skill.level}
                               onChange={(event) =>
                                 onSkillLevelChange(
@@ -1333,7 +1333,7 @@ export default function PublicSkillOcrView({
                         ))}
                       </div>
                       {duplicateFamilies.length > 0 && (
-                        <p className="public-ocr-skill-family-warning">
+                        <p className="public-lineup-skill-family-warning">
                           {duplicateFamilies.join(", ")} 계열 스킬은 한 선수에게 같이 등록할 수 없습니다.
                         </p>
                       )}
