@@ -34,13 +34,6 @@ const pages = [
         body: "총점뿐 아니라 상위 확률, 기대 시도 횟수, 등급 기준을 함께 보여줘 조합의 희귀도를 읽기 쉽게 합니다.",
       },
     ],
-    callout: {
-      eyebrow: "Beginner Guide",
-      title: "뉴비라면 여기부터",
-      body: "처음부터 완벽한 조합만 노리면 변경권을 너무 빨리 씁니다. 스킬 점수, 보직, 카드 타입별로 어느 정도에서 타협할지 정리합니다.",
-      href: "/beginner-guides",
-      label: "뉴비 가이드 보기",
-    },
   },
   {
     path: "/about",
@@ -1183,9 +1176,6 @@ function renderPageContent(page) {
     ["/about", "소개"],
     ["/training-redistribution", "훈재분 확률"],
     ["/skill-score-method", "스킬 점수 기준"],
-    ["/simulator-guide", "시뮬레이터 안내"],
-    ["/ocr-guide", "라인업 인식 안내"],
-    ["/beginner-guides", "뉴비 가이드"],
     ["/faq", "FAQ"],
     ["/privacy", "개인정보처리방침"],
     ["/terms", "이용약관"],

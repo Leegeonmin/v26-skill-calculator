@@ -499,9 +499,6 @@ export default function HomeView({
       <nav className="home-site-links" aria-label="사이트 정보">
         <a href="/about">소개</a>
         <a href="/skill-score-method">스킬 점수 기준</a>
-        <a href="/simulator-guide">시뮬레이터 안내</a>
-        <a href="/ocr-guide">라인업 인식 안내</a>
-        <a href="/beginner-guides">뉴비 가이드</a>
         <a href="/faq">FAQ</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/terms">이용약관</a>
