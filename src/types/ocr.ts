@@ -113,13 +113,6 @@ export type SkillOcrSavedUpload = {
   updated_at: string;
 };
 
-export type SkillOcrPublicQuota = {
-  role: SkillOcrRole;
-  used: boolean;
-  used_at: string | null;
-  week_start_date: string;
-};
-
 export type SkillChangeSkill = {
   slot: number;
   name: string | null;

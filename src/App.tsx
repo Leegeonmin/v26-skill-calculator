@@ -16,12 +16,8 @@ import {
   adminValidateSession,
 } from "./lib/admin";
 import {
-  recognizeSkillImage,
-  skillOcrClaimPublicWeeklyUsage,
-  skillOcrCreatePublicSnapshot,
   skillOcrDeletePublicUpload,
   skillOcrFinalizePublicUpload,
-  skillOcrGetPublicWeeklyQuota,
   skillOcrListPublicUploads,
   skillOcrSavePublicUpload,
 } from "./lib/skillOcr";
@@ -29,7 +25,6 @@ import {
   calculateSkillOcrSummary,
   getPitcherModeFromPosition,
   recalculateSkillOcrPlayer,
-  transformSkillOcrResponse,
 } from "./lib/skillOcrTransform";
 import { getSupabaseClient, isSupabaseConfigured } from "./lib/supabase";
 import {
@@ -58,7 +53,6 @@ import type {
 } from "./types";
 import type {
   SkillOcrApiResponse,
-  SkillOcrPublicQuota,
   SkillOcrRole,
   SkillOcrSavedUpload,
   SkillOcrSelectedPlayer,
@@ -108,6 +102,7 @@ const AUTO_ROLL_LIMIT = 5000;
 const IMPACT_CHANGE_LIMIT = 100000;
 const ADMIN_PATH = "/admin";
 const ADMIN_SESSION_KEY = "v26-admin-session";
+const LINEUP_SKILL_LOCAL_STORAGE_KEY = "cpbv-lineup-skill-records:v1";
 function isAdminPath(pathname: string) {
   const normalizedPath = pathname.replace(/\/+$/, "") || "/";
   return normalizedPath === ADMIN_PATH || normalizedPath.startsWith(`${ADMIN_PATH}/`);
@@ -205,6 +200,75 @@ const CARD_TYPE_OPTIONS = (Object.entries(CARD_TYPE_LABELS) as Array<[CardType, 
   })
 );
 
+function keepLatestLineupUploads(uploads: SkillOcrSavedUpload[]): SkillOcrSavedUpload[] {
+  const latestByRole = new Map<SkillOcrRole, SkillOcrSavedUpload>();
+
+  uploads
+    .filter((upload) => upload.is_saved)
+    .forEach((upload) => {
+      const current = latestByRole.get(upload.role);
+      if (!current || new Date(upload.updated_at).getTime() > new Date(current.updated_at).getTime()) {
+        latestByRole.set(upload.role, upload);
+      }
+    });
+
+  return ["pitcher", "hitter"]
+    .map((role) => latestByRole.get(role as SkillOcrRole))
+    .filter((upload): upload is SkillOcrSavedUpload => Boolean(upload));
+}
+
+function loadLocalLineupUploads(): SkillOcrSavedUpload[] {
+  try {
+    const rawValue = window.localStorage.getItem(LINEUP_SKILL_LOCAL_STORAGE_KEY);
+    if (!rawValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(rawValue) as unknown;
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return keepLatestLineupUploads(parsedValue as SkillOcrSavedUpload[]);
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalLineupUploads(uploads: SkillOcrSavedUpload[]) {
+  window.localStorage.setItem(
+    LINEUP_SKILL_LOCAL_STORAGE_KEY,
+    JSON.stringify(keepLatestLineupUploads(uploads))
+  );
+}
+
+function createLocalLineupUpload(input: {
+  uploadId: string | null;
+  role: SkillOcrRole;
+  imageName: string | null;
+  requestId: string | null;
+  rawResponse: SkillOcrApiResponse;
+  selectedPlayers: SkillOcrSelectedPlayer[];
+  totalScore: number;
+  averageScore: number;
+}): SkillOcrSavedUpload {
+  const now = new Date().toISOString();
+  return {
+    id: input.uploadId ?? `local-${input.role}`,
+    role: input.role,
+    is_saved: true,
+    image_name: input.imageName,
+    request_id: input.requestId,
+    raw_response: input.rawResponse,
+    selected_players: input.selectedPlayers,
+    player_count: input.selectedPlayers.length,
+    total_score: input.totalScore,
+    average_score: input.averageScore,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
 function App() {
   const isAdminRoute = typeof window !== "undefined" && isAdminPath(window.location.pathname);
   const infoPageKey =
@@ -277,10 +341,8 @@ function App() {
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
   const [idleDevGameEnabled, setIdleDevGameEnabled] = useState(false);
   const [ocrUploads, setOcrUploads] = useState<SkillOcrSavedUpload[]>([]);
-  const [ocrPublicQuota, setOcrPublicQuota] = useState<SkillOcrPublicQuota[]>([]);
   const [ocrUploadsLoading, setOcrUploadsLoading] = useState(false);
   const [ocrUploadsError, setOcrUploadsError] = useState<string | null>(null);
-  const [ocrUploadBusyRole, setOcrUploadBusyRole] = useState<SkillOcrRole | null>(null);
   const [ocrUploadError, setOcrUploadError] = useState<string | null>(null);
   const [ocrDraftPlayers, setOcrDraftPlayers] = useState<SkillOcrSelectedPlayer[]>([]);
   const [ocrDraftImageName, setOcrDraftImageName] = useState<string | null>(null);
@@ -498,9 +560,10 @@ function App() {
     }
 
     if (!authSession) {
-      setOcrUploads([]);
-      setOcrPublicQuota([]);
+      setOcrUploads(loadLocalLineupUploads());
       setOcrDraftPublicUploadId(null);
+      setOcrUploadsLoading(false);
+      setOcrUploadsError(null);
       return;
     }
 
@@ -508,15 +571,21 @@ function App() {
       try {
         setOcrUploadsLoading(true);
         setOcrUploadsError(null);
-        const [uploads, quota] = await Promise.all([
-          skillOcrListPublicUploads(20),
-          skillOcrGetPublicWeeklyQuota(),
-        ]);
-        setOcrUploads(uploads);
-        setOcrPublicQuota(quota);
+        const uploads = await skillOcrListPublicUploads(20);
+        const latestUploads = keepLatestLineupUploads(uploads);
+        const staleSavedUploads = uploads.filter(
+          (upload) =>
+            upload.is_saved &&
+            latestUploads.some((latestUpload) => latestUpload.role === upload.role) &&
+            !latestUploads.some((latestUpload) => latestUpload.id === upload.id)
+        );
+        setOcrUploads(latestUploads);
+        void Promise.all(
+          staleSavedUploads.map((upload) => skillOcrDeletePublicUpload(upload.id).catch(() => {}))
+        );
       } catch (error) {
         setOcrUploadsError(
-          error instanceof Error ? error.message : "이미지 인식 정보를 불러오지 못했습니다."
+          error instanceof Error ? error.message : "라인업 기록을 불러오지 못했습니다."
         );
       } finally {
         setOcrUploadsLoading(false);
@@ -945,101 +1014,195 @@ function App() {
     try {
       await signOut();
       setAuthError(null);
-      setOcrUploads([]);
-      setOcrPublicQuota([]);
+      setOcrUploads(loadLocalLineupUploads());
       setOcrDraftPublicUploadId(null);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "로그아웃에 실패했습니다.");
     }
   };
 
-  const handleOcrUploadImage = async (role: SkillOcrRole, file: File) => {
-    if (!authSession) {
-      setOcrUploadError("Google 로그인 후 사용할 수 있습니다.");
+  const getManualOcrPlayerDefaults = (
+    role: SkillOcrRole,
+    sourceRow: number
+  ): {
+    playerName: string;
+    position: string | null;
+    calculatorMode: CalculatorMode;
+  } => {
+    if (role === "hitter") {
+      return {
+        playerName: `${sourceRow}번 타자`,
+        position: null,
+        calculatorMode: "hitter",
+      };
+    }
+
+    const position = sourceRow <= 5 ? "SP" : sourceRow <= 8 ? "RP" : "CP";
+    const roleOrder = position === "SP" ? sourceRow : position === "RP" ? sourceRow - 5 : 1;
+
+    return {
+      playerName: `${position} ${roleOrder}`,
+      position,
+      calculatorMode: getPitcherModeFromPosition(position),
+    };
+  };
+
+  const createManualOcrPlayer = (role: SkillOcrRole, sourceRow: number): SkillOcrSelectedPlayer => {
+    const cardType: CardType = "signature";
+    const defaults = getManualOcrPlayerDefaults(role, sourceRow);
+    const defaultLevels = getDefaultLevels(cardType);
+
+    return recalculateSkillOcrPlayer({
+      sourceRow,
+      selected: true,
+      playerName: defaults.playerName,
+      team: null,
+      position: defaults.position,
+      starterHand: role === "pitcher" ? "right" : undefined,
+      cardType,
+      calculatorMode: defaults.calculatorMode,
+      skills: [1, 2, 3].map((slot) => ({
+        slot,
+        rawName: null,
+        skillId: null,
+        skillName: null,
+        level: defaultLevels[slot - 1],
+        score: 0,
+        matched: false,
+        alternatives: [],
+      })),
+      totalScore: 0,
+    });
+  };
+
+  const buildManualOcrResponse = (
+    role: SkillOcrRole,
+    players: SkillOcrSelectedPlayer[]
+  ): SkillOcrApiResponse => {
+    const selectedPlayers = players.filter((player) => player.selected);
+    const matchedSkills = selectedPlayers.reduce(
+      (sum, player) => sum + player.skills.filter((skill) => skill.skillId).length,
+      0
+    );
+    const skillCount = selectedPlayers.length * 3;
+
+    return {
+      ok: true,
+      request_id: null,
+      image: {
+        path: "manual-entry",
+        width: null,
+        height: null,
+      },
+      summary: {
+        players: selectedPlayers.length,
+        skills: skillCount,
+        matched_skills: matchedSkills,
+        unmatched_skills: skillCount - matchedSkills,
+        unresolved_saved: 0,
+      },
+      role,
+      base_team: null,
+      lineup: [],
+      warnings: ["manual-entry"],
+    };
+  };
+
+  const handleAddManualOcrPlayer = (role: SkillOcrRole) => {
+    const currentPlayers = ocrDraftRole === role ? ocrDraftPlayers : [];
+    if (currentPlayers.length >= 9) {
+      setOcrUploadError("라인업 기록은 최대 9명까지 등록할 수 있습니다.");
       return;
     }
 
-    setOcrUploadBusyRole(role);
     setOcrUploadError(null);
-    setOcrDraftPlayers([]);
-    setOcrDraftImageName(file.name);
+    if (ocrDraftRole !== role) {
+      setOcrDraftPublicUploadId(null);
+      setOcrSavedUpload(null);
+      setOcrDraftRawResponse(null);
+    }
+    setOcrDraftImageName("manual-entry");
+    const nextSourceRow =
+      currentPlayers.reduce((maxRow, player) => Math.max(maxRow, player.sourceRow), 0) + 1;
+    const nextPlayers = [...currentPlayers, createManualOcrPlayer(role, nextSourceRow)];
+    const summary = calculateSkillOcrSummary(nextPlayers);
     setOcrDraftRole(role);
-    setOcrDraftRawResponse(null);
-    setOcrDraftTotalScore(0);
-    setOcrDraftAverageScore(0);
+    setOcrDraftPlayers(nextPlayers);
+    setOcrDraftTotalScore(summary.totalScore);
+    setOcrDraftAverageScore(summary.averageScore);
+  };
+
+  const handleCreateManualOcrDeck = (role: SkillOcrRole) => {
+    setOcrUploadError(null);
     setOcrDraftPublicUploadId(null);
     setOcrSavedUpload(null);
+    setOcrDraftImageName("manual-entry");
+    setOcrDraftRawResponse(null);
 
-    try {
-      const quota = await skillOcrClaimPublicWeeklyUsage(role);
-      setOcrPublicQuota(quota);
+    const nextPlayers = Array.from({ length: 9 }, (_, index) =>
+      createManualOcrPlayer(role, index + 1)
+    );
+    const summary = calculateSkillOcrSummary(nextPlayers);
 
-      const response = await recognizeSkillImage({ role, file });
-      const transformed = transformSkillOcrResponse(response, role);
-
-      setOcrDraftRawResponse(response);
-      setOcrDraftPlayers(transformed.players);
-      setOcrDraftTotalScore(transformed.totalScore);
-      setOcrDraftAverageScore(transformed.averageScore);
-
-      const snapshot = await skillOcrCreatePublicSnapshot({
-        role,
-        imageName: file.name,
-        requestId: response.request_id,
-        rawResponse: response,
-        selectedPlayers: transformed.players,
-        totalScore: transformed.totalScore,
-        averageScore: transformed.averageScore,
-      });
-      setOcrDraftPublicUploadId(snapshot.id);
-      setOcrSavedUpload(snapshot);
-      setOcrUploads(await skillOcrListPublicUploads(20));
-    } catch (error) {
-      setOcrUploadError(
-        error instanceof Error ? error.message : "이미지를 인식하지 못했습니다."
-      );
-    } finally {
-      setOcrUploadBusyRole(null);
-    }
+    setOcrDraftRole(role);
+    setOcrDraftPlayers(nextPlayers);
+    setOcrDraftTotalScore(summary.totalScore);
+    setOcrDraftAverageScore(summary.averageScore);
   };
 
   const handleOcrSaveDraft = async () => {
-    if (!ocrDraftRole || !ocrDraftRawResponse) {
-      setOcrUploadError("저장할 이미지 인식 결과가 없습니다.");
-      return;
-    }
-
-    if (!authSession) {
-      setOcrUploadError("Google 로그인 후 저장할 수 있습니다.");
+    if (!ocrDraftRole) {
+      setOcrUploadError("저장할 라인업 기록이 없습니다.");
       return;
     }
 
     const selectedPlayers = ocrDraftPlayers.filter((player) => player.selected);
 
-    if (selectedPlayers.length === 0) {
-      setOcrUploadError("최소 1명 이상 선택해야 저장할 수 있습니다.");
+    if (selectedPlayers.length !== 9) {
+      setOcrUploadError("라인업은 무조건 9명을 모두 선택해야 저장할 수 있습니다.");
       return;
     }
 
     try {
       setOcrSaving(true);
       setOcrUploadError(null);
+      const rawResponse = ocrDraftRawResponse ?? buildManualOcrResponse(ocrDraftRole, ocrDraftPlayers);
       const saveInput = {
         role: ocrDraftRole,
         imageName: ocrDraftImageName,
-        requestId: ocrDraftRawResponse.request_id,
-        rawResponse: ocrDraftRawResponse,
+        requestId: rawResponse.request_id,
+        rawResponse,
         selectedPlayers,
         totalScore: ocrDraftTotalScore,
         averageScore: ocrDraftAverageScore,
       };
-      const savedUpload = ocrDraftPublicUploadId
-        ? await skillOcrFinalizePublicUpload({
+      const savedUpload = authSession
+        ? ocrDraftPublicUploadId && !ocrDraftPublicUploadId.startsWith("local-")
+          ? await skillOcrFinalizePublicUpload({
+              uploadId: ocrDraftPublicUploadId,
+              ...saveInput,
+            })
+          : await skillOcrSavePublicUpload(saveInput)
+        : createLocalLineupUpload({
             uploadId: ocrDraftPublicUploadId,
             ...saveInput,
-          })
-        : await skillOcrSavePublicUpload(saveInput);
-      const uploads = await skillOcrListPublicUploads(20);
+          });
+      const fetchedUploads = authSession ? await skillOcrListPublicUploads(20) : [];
+      const uploads = authSession
+        ? keepLatestLineupUploads(fetchedUploads)
+        : keepLatestLineupUploads([
+            ...ocrUploads.filter((upload) => upload.role !== savedUpload.role),
+            savedUpload,
+          ]);
+      if (!authSession) {
+        saveLocalLineupUploads(uploads);
+      } else {
+        void Promise.all(
+          fetchedUploads
+            .filter((upload) => upload.role === savedUpload.role && upload.id !== savedUpload.id)
+            .map((upload) => skillOcrDeletePublicUpload(upload.id).catch(() => {}))
+        );
+      }
 
       setOcrSavedUpload(savedUpload);
       setOcrUploads(uploads);
@@ -1051,7 +1214,7 @@ function App() {
       setOcrDraftAverageScore(0);
       setOcrDraftPublicUploadId(null);
     } catch (error) {
-      setOcrUploadError(error instanceof Error ? error.message : "이미지 인식 결과 저장에 실패했습니다.");
+      setOcrUploadError(error instanceof Error ? error.message : "라인업 기록 저장에 실패했습니다.");
     } finally {
       setOcrSaving(false);
     }
@@ -1073,8 +1236,14 @@ function App() {
   const handleDeletePublicOcrSnapshot = async (uploadId: string) => {
     try {
       setOcrUploadError(null);
-      await skillOcrDeletePublicUpload(uploadId);
-      setOcrUploads(await skillOcrListPublicUploads(20));
+      if (authSession && !uploadId.startsWith("local-")) {
+        await skillOcrDeletePublicUpload(uploadId);
+        setOcrUploads(keepLatestLineupUploads(await skillOcrListPublicUploads(20)));
+      } else {
+        const nextUploads = ocrUploads.filter((upload) => upload.id !== uploadId);
+        saveLocalLineupUploads(nextUploads);
+        setOcrUploads(nextUploads);
+      }
 
       if (ocrDraftPublicUploadId === uploadId || ocrSavedUpload?.id === uploadId) {
         setOcrSavedUpload(null);
@@ -1087,7 +1256,7 @@ function App() {
         setOcrDraftAverageScore(0);
       }
     } catch (error) {
-      setOcrUploadError(error instanceof Error ? error.message : "이미지 인식 스냅샷을 삭제하지 못했습니다.");
+      setOcrUploadError(error instanceof Error ? error.message : "덱 임시 기록을 삭제하지 못했습니다.");
     }
   };
 
@@ -1117,6 +1286,14 @@ function App() {
         index === playerIndex ? { ...player, selected } : player
       );
     });
+  };
+
+  const handleOcrPlayerNameChange = (playerIndex: number, playerName: string) => {
+    updateOcrDraftPlayers((players) =>
+      players.map((player, index) =>
+        index === playerIndex ? { ...player, playerName } : player
+      )
+    );
   };
 
   const handleOcrPlayerCardTypeChange = (playerIndex: number, nextCardType: CardType) => {
@@ -1343,18 +1520,19 @@ function App() {
               uploads={ocrUploads}
               uploadsLoading={ocrUploadsLoading}
               uploadsError={ocrUploadsError}
-              uploadBusyRole={ocrUploadBusyRole}
               uploadError={ocrUploadError}
+              savedUpload={ocrSavedUpload}
               draftPlayers={ocrDraftPlayers}
               draftTotalScore={ocrDraftTotalScore}
               draftAverageScore={ocrDraftAverageScore}
               saving={ocrSaving}
-              quota={ocrPublicQuota}
               themeAction={themeToggle}
               onGoogleLogin={() => void handleGoogleLogin("lineupSkillOcr")}
               onGoogleLogout={() => void handleGoogleLogout()}
-              onUploadImage={(role, file) => void handleOcrUploadImage(role, file)}
+              onAddManualPlayer={handleAddManualOcrPlayer}
+              onCreateManualDeck={handleCreateManualOcrDeck}
               onPlayerSelectedChange={handleOcrPlayerSelectedChange}
+              onPlayerNameChange={handleOcrPlayerNameChange}
               onPlayerCardTypeChange={handleOcrPlayerCardTypeChange}
               onPlayerPositionChange={handleOcrPlayerPositionChange}
               onPlayerStarterHandChange={handleOcrPlayerStarterHandChange}

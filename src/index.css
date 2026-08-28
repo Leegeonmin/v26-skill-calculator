@@ -2329,8 +2329,35 @@ select {
 .app-bg[data-theme="dark"] .skill-compare-card-select select,
 .app-bg[data-theme="dark"] .skill-compare-row,
 .app-bg[data-theme="dark"] .skill-compare-row select,
+.app-bg[data-theme="dark"] .skill-compare-search-select input,
+.app-bg[data-theme="dark"] .skill-compare-search-list,
 .app-bg[data-theme="dark"] .skill-compare-upload-label {
   background: rgba(148, 163, 184, 0.12);
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-select input,
+.app-bg[data-theme="dark"] .skill-compare-search-list {
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-select input:focus {
+  border-color: rgba(139, 164, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 164, 255, 0.14);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-list {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.34);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-list button,
+.app-bg[data-theme="dark"] .skill-compare-search-list > span {
+  color: var(--text);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-list button:hover,
+.app-bg[data-theme="dark"] .skill-compare-search-list button[aria-selected="true"] {
+  background: rgba(139, 164, 255, 0.18);
   color: var(--text);
 }
 
@@ -3780,6 +3807,87 @@ select {
   white-space: nowrap;
 }
 
+.public-ocr-skill-search-select {
+  position: relative;
+  min-width: 0;
+}
+
+.public-ocr-skill-search-select input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid #d8e0ee;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  outline: none;
+}
+
+.public-ocr-skill-search-select input:focus {
+  border-color: rgba(8, 124, 229, 0.5);
+  box-shadow: 0 0 0 3px rgba(8, 124, 229, 0.12);
+}
+
+.public-ocr-skill-search-select input.ocr-skill-grade-amateur {
+  color: #64748b;
+}
+
+.public-ocr-skill-search-select input.ocr-skill-grade-rookie {
+  color: #16a34a;
+}
+
+.public-ocr-skill-search-select input.ocr-skill-grade-minor {
+  color: #2563eb;
+}
+
+.public-ocr-skill-search-select input.ocr-skill-grade-major {
+  color: #7c3aed;
+}
+
+.public-ocr-skill-search-select input.ocr-skill-grade-nationalOnly {
+  color: #dc2626;
+}
+
+.public-ocr-skill-search-list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid rgba(194, 207, 231, 0.95);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(18, 40, 76, 0.16);
+}
+
+.public-ocr-skill-search-list button,
+.public-ocr-skill-search-list > span {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  padding: 7px 9px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-align: left;
+}
+
+.public-ocr-skill-search-list button:hover,
+.public-ocr-skill-search-list button[aria-selected="true"] {
+  background: rgba(8, 124, 229, 0.1);
+  color: #087ce5;
+}
+
 .public-ocr-player-controls select,
 .public-ocr-skill-edit-row select {
   width: 100%;
@@ -3949,10 +4057,10 @@ select {
 }
 
 .public-ocr-view {
-  width: min(100%, 880px);
+  width: min(100%, 1120px);
   margin: 24px auto 0;
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .public-ocr-auth,
@@ -4022,6 +4130,17 @@ select {
 .public-ocr-tabs {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   height: auto;
+}
+
+.public-ocr-storage-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(8, 124, 229, 0.16);
+  border-radius: 10px;
+  background: rgba(220, 238, 255, 0.42);
+  color: #315987;
+  font-size: 0.84rem;
+  font-weight: 800;
 }
 
 .public-ocr-quota {
@@ -4110,8 +4229,8 @@ select {
 
 .public-ocr-panel {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 20px;
+  padding: 20px;
 }
 
 .public-ocr-player-list,
@@ -4123,14 +4242,83 @@ select {
 
 .public-ocr-summary-results {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 18px;
 }
 
 .public-ocr-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.public-ocr-roster-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 180px;
+  padding: 36px 4px 30px;
+  border-top: 1px solid rgba(203, 213, 225, 0.72);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.72);
+}
+
+.public-ocr-roster-hero h2 {
+  margin: 12px 0 0;
+  color: #182331;
+  font-size: clamp(2.4rem, 5.6vw, 4.4rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.public-ocr-roster-hero h2 em {
+  color: #d97861;
+  font-style: normal;
+}
+
+.public-ocr-roster-hero p:not(.ocr-eyebrow) {
+  max-width: 520px;
+  margin: 0;
+  color: #737c7b;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.public-ocr-roster-hero-score {
+  flex: 0 0 210px;
+  border-left: 1px solid #d2d4d0;
+  padding-left: 30px;
+}
+
+.public-ocr-roster-hero-score span {
+  display: block;
+  color: #8b928e;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.public-ocr-roster-hero-score strong {
+  display: block;
+  margin: 10px 0 8px;
+  color: #182331;
+  font-size: 2.9rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.public-ocr-roster-hero-score small {
+  color: #7e8783;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.public-ocr-roster-hero-score b {
+  color: #298b70;
 }
 
 .public-ocr-guide-card {
@@ -4987,6 +5175,346 @@ select {
 .public-ocr-latest-stats strong {
   color: #031426;
   font-size: 1rem;
+}
+
+.public-ocr-roster-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(203, 213, 225, 0.88);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.88);
+}
+
+.public-ocr-roster-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.public-ocr-roster-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 850;
+  padding: 10px 16px;
+}
+
+.public-ocr-roster-filters button.selected {
+  background: #182331;
+  color: #ffffff;
+}
+
+.public-ocr-roster-filters small {
+  opacity: 0.6;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.public-ocr-roster-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: min(260px, 100%);
+  border-bottom: 1px solid #aeb6b1;
+  color: #64748b;
+  padding: 7px 2px;
+}
+
+.public-ocr-roster-search input {
+  width: 100%;
+  min-height: 30px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  outline: none;
+}
+
+.public-ocr-detail-head-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.public-ocr-detail-action-btn {
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.public-ocr-detail-action-btn .ocr-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.public-ocr-detail-share {
+  position: relative;
+  display: inline-flex;
+}
+
+.public-ocr-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.public-ocr-roster-card {
+  --deck-card-accent: #7c8580;
+  --deck-card-accent-soft: rgba(124, 133, 128, 0.12);
+  --deck-card-accent-border: rgba(124, 133, 128, 0.26);
+  --deck-card-accent-strong: #59635d;
+  position: relative;
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--deck-card-accent-border);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, var(--deck-card-accent-soft), rgba(255, 254, 250, 0.94) 48%),
+    rgba(255, 254, 250, 0.92);
+  color: #182331;
+  box-shadow: 0 12px 28px rgba(48, 59, 70, 0.08);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.public-ocr-roster-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--deck-card-accent);
+}
+
+.public-ocr-roster-card.public-ocr-card-row-impact {
+  --deck-card-accent: #0f5138;
+  --deck-card-accent-soft: rgba(15, 81, 56, 0.1);
+  --deck-card-accent-border: rgba(15, 81, 56, 0.26);
+  --deck-card-accent-strong: #0f5138;
+}
+
+.public-ocr-roster-card.public-ocr-card-row-signature {
+  --deck-card-accent: #ec70a0;
+  --deck-card-accent-soft: rgba(236, 112, 160, 0.13);
+  --deck-card-accent-border: rgba(180, 35, 99, 0.24);
+  --deck-card-accent-strong: #b42363;
+}
+
+.public-ocr-roster-card.public-ocr-card-row-goldenGlove {
+  --deck-card-accent: #ca8a04;
+  --deck-card-accent-soft: rgba(202, 138, 4, 0.13);
+  --deck-card-accent-border: rgba(202, 138, 4, 0.28);
+  --deck-card-accent-strong: #9a6700;
+}
+
+.public-ocr-roster-card.public-ocr-card-row-national {
+  --deck-card-accent: #3872dc;
+  --deck-card-accent-soft: rgba(56, 114, 220, 0.13);
+  --deck-card-accent-border: rgba(56, 114, 220, 0.25);
+  --deck-card-accent-strong: #2456b8;
+}
+
+.public-ocr-roster-card:hover {
+  border-color: var(--deck-card-accent);
+  box-shadow: 0 18px 35px rgba(48, 59, 70, 0.13), 0 0 0 1px var(--deck-card-accent-soft);
+  transform: translateY(-4px);
+}
+
+.public-ocr-roster-card-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+.public-ocr-roster-number {
+  color: #a1a6a2;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding-top: 3px;
+}
+
+.public-ocr-roster-identity {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.public-ocr-roster-identity > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.public-ocr-roster-identity strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #182331;
+  font-size: 1.28rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-ocr-roster-identity span {
+  flex-shrink: 0;
+  border: 1px solid var(--deck-card-accent-border);
+  border-radius: 999px;
+  background: var(--deck-card-accent-soft);
+  color: var(--deck-card-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 4px 7px;
+}
+
+.public-ocr-roster-identity p {
+  margin: 1px 0 0;
+  color: #89918d;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.public-ocr-roster-tier {
+  border: 1px solid var(--deck-card-accent-border);
+  border-radius: 8px;
+  background: var(--deck-card-accent-soft);
+  font-size: 0.82rem;
+  font-weight: 950;
+  padding: 6px 8px;
+}
+
+.public-ocr-roster-score {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 18px;
+}
+
+.public-ocr-roster-score span {
+  display: block;
+  color: #8b928e;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.public-ocr-roster-score strong {
+  display: block;
+  margin-top: 4px;
+  color: #182331;
+  font-size: 2.25rem;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.public-ocr-roster-score small {
+  display: block;
+  margin-top: 5px;
+  color: var(--deck-card-accent-strong);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.public-ocr-roster-score-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7e8e4;
+  margin-top: 27px;
+}
+
+.public-ocr-roster-score-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--deck-card-accent);
+}
+
+.public-ocr-roster-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.public-ocr-roster-skills span {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 31px;
+  overflow: hidden;
+  border: 1px solid rgba(101, 112, 107, 0.14);
+  border-radius: 7px;
+  background: #f0f1ed;
+  color: #65706b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 6px 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-ocr-roster-skills span.ocr-skill-grade-amateur {
+  border-color: rgba(100, 116, 139, 0.22);
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+}
+
+.public-ocr-roster-skills span.ocr-skill-grade-rookie {
+  border-color: rgba(22, 163, 74, 0.22);
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+}
+
+.public-ocr-roster-skills span.ocr-skill-grade-minor {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+}
+
+.public-ocr-roster-skills span.ocr-skill-grade-major {
+  border-color: rgba(124, 58, 237, 0.24);
+  background: rgba(124, 58, 237, 0.11);
+  color: #6d28d9;
+}
+
+.public-ocr-roster-skills span.ocr-skill-grade-nationalOnly {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.public-ocr-roster-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .ocr-latest-card .ocr-row-link:disabled {
@@ -9918,6 +10446,131 @@ input {
   background: rgba(96, 165, 250, 0.12);
 }
 
+.app-bg[data-theme="dark"] .public-ocr-roster-hero {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-hero h2,
+.app-bg[data-theme="dark"] .public-ocr-roster-hero-score strong {
+  color: #f8fafc;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-hero p:not(.ocr-eyebrow),
+.app-bg[data-theme="dark"] .public-ocr-roster-hero-score span,
+.app-bg[data-theme="dark"] .public-ocr-roster-hero-score small {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-hero-score {
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-nav {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-filters button {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-filters button.selected {
+  background: #e5edf8;
+  color: #0f172a;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-search {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-card {
+  border-color: rgba(148, 163, 184, 0.22);
+  background:
+    linear-gradient(145deg, var(--deck-card-accent-soft), rgba(15, 23, 42, 0.72) 52%),
+    rgba(15, 23, 42, 0.72);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-card.public-ocr-card-row-impact {
+  --deck-card-accent: #34d399;
+  --deck-card-accent-soft: rgba(52, 211, 153, 0.13);
+  --deck-card-accent-border: rgba(52, 211, 153, 0.26);
+  --deck-card-accent-strong: #6ee7b7;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-card.public-ocr-card-row-signature {
+  --deck-card-accent: #f472b6;
+  --deck-card-accent-soft: rgba(244, 114, 182, 0.14);
+  --deck-card-accent-border: rgba(244, 114, 182, 0.27);
+  --deck-card-accent-strong: #f9a8d4;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-card.public-ocr-card-row-goldenGlove {
+  --deck-card-accent: #fbbf24;
+  --deck-card-accent-soft: rgba(251, 191, 36, 0.14);
+  --deck-card-accent-border: rgba(251, 191, 36, 0.27);
+  --deck-card-accent-strong: #fde68a;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-card.public-ocr-card-row-national {
+  --deck-card-accent: #60a5fa;
+  --deck-card-accent-soft: rgba(96, 165, 250, 0.14);
+  --deck-card-accent-border: rgba(96, 165, 250, 0.27);
+  --deck-card-accent-strong: #bfdbfe;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-identity strong,
+.app-bg[data-theme="dark"] .public-ocr-roster-score strong {
+  color: #f8fafc;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-identity span,
+.app-bg[data-theme="dark"] .public-ocr-roster-identity p,
+.app-bg[data-theme="dark"] .public-ocr-roster-score span,
+.app-bg[data-theme="dark"] .public-ocr-roster-number {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-tier,
+.app-bg[data-theme="dark"] .public-ocr-roster-skills span {
+  border-color: var(--deck-card-accent-border);
+  background: var(--deck-card-accent-soft);
+  color: #dbe4f0;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-identity span {
+  color: var(--deck-card-accent-strong);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-skills span.ocr-skill-grade-amateur {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-skills span.ocr-skill-grade-rookie {
+  border-color: rgba(74, 222, 128, 0.28);
+  background: rgba(74, 222, 128, 0.13);
+  color: #86efac;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-skills span.ocr-skill-grade-minor {
+  border-color: rgba(96, 165, 250, 0.28);
+  background: rgba(96, 165, 250, 0.13);
+  color: #93c5fd;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-skills span.ocr-skill-grade-major {
+  border-color: rgba(167, 139, 250, 0.3);
+  background: rgba(167, 139, 250, 0.14);
+  color: #c4b5fd;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-roster-skills span.ocr-skill-grade-nationalOnly {
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.13);
+  color: #fca5a5;
+}
+
 .app-bg[data-theme="dark"] .public-ocr-auth h1,
 .app-bg[data-theme="dark"] .public-ocr-header h1,
 .app-bg[data-theme="dark"] .public-ocr-quota strong,
@@ -9950,9 +10603,37 @@ input {
 .app-bg[data-theme="dark"] .public-ocr-pitcher-score-chip,
 .app-bg[data-theme="dark"] .public-ocr-copy-icon,
 .app-bg[data-theme="dark"] .public-ocr-copy-toast,
+.app-bg[data-theme="dark"] .public-ocr-storage-note,
 .app-bg[data-theme="dark"] .public-ocr-skill-edit-row-unmatched {
   background: rgba(2, 6, 23, 0.34);
   border-color: rgba(148, 163, 184, 0.2);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-skill-search-select input,
+.app-bg[data-theme="dark"] .public-ocr-skill-search-list {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-skill-search-select input:focus {
+  border-color: rgba(96, 165, 250, 0.55);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.14);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-skill-search-list {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.34);
+}
+
+.app-bg[data-theme="dark"] .public-ocr-skill-search-list button,
+.app-bg[data-theme="dark"] .public-ocr-skill-search-list > span {
+  color: #dbe4f0;
+}
+
+.app-bg[data-theme="dark"] .public-ocr-skill-search-list button:hover,
+.app-bg[data-theme="dark"] .public-ocr-skill-search-list button[aria-selected="true"] {
+  background: rgba(96, 165, 250, 0.14);
+  color: #bfdbfe;
 }
 
 .app-bg[data-theme="dark"] .public-ocr-quota span.available {
@@ -10872,6 +11553,7 @@ input {
 
 .skill-compare-panel,
 .skill-compare-panel-next {
+  overflow: visible;
   min-height: auto;
   gap: 18px;
   padding: 18px;
@@ -10890,10 +11572,16 @@ input {
 }
 
 .skill-compare-row {
+  position: relative;
+  z-index: 0;
   min-height: 64px;
   padding: 10px 12px;
   border-color: rgba(216, 224, 238, 0.72);
   background: rgba(246, 248, 252, 0.82);
+}
+
+.skill-compare-row:focus-within {
+  z-index: 60;
 }
 
 .skill-compare-row:hover {
@@ -10918,6 +11606,92 @@ input {
 
 .skill-compare-row .skill-compare-skill-select {
   color: var(--text);
+}
+
+.skill-compare-search-select {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.skill-compare-search-select:focus-within {
+  z-index: 70;
+}
+
+.skill-compare-search-select input {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid rgba(216, 224, 238, 0.92);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 5px 11px;
+  font-size: 0.84rem;
+  font-weight: 850;
+  outline: none;
+}
+
+.skill-compare-search-select input:focus {
+  border-color: rgba(66, 95, 184, 0.5);
+  box-shadow: 0 0 0 3px rgba(66, 95, 184, 0.12);
+}
+
+.skill-compare-search-select input.ocr-skill-grade-amateur {
+  color: #64748b;
+}
+
+.skill-compare-search-select input.ocr-skill-grade-rookie {
+  color: #16a34a;
+}
+
+.skill-compare-search-select input.ocr-skill-grade-minor {
+  color: #2563eb;
+}
+
+.skill-compare-search-select input.ocr-skill-grade-major {
+  color: #7c3aed;
+}
+
+.skill-compare-search-select input.ocr-skill-grade-nationalOnly {
+  color: #dc2626;
+}
+
+.skill-compare-search-list {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid rgba(216, 224, 238, 0.95);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(18, 40, 76, 0.16);
+}
+
+.skill-compare-search-list button,
+.skill-compare-search-list > span {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.skill-compare-search-list button:hover,
+.skill-compare-search-list button[aria-selected="true"] {
+  background: rgba(66, 95, 184, 0.1);
+  color: var(--accent);
 }
 
 .skill-compare-skill-field small {
@@ -12309,6 +13083,69 @@ input {
     width: 100%;
     min-width: 0;
     border-radius: 12px;
+  }
+
+  .public-ocr-roster-hero {
+    display: block;
+    min-height: 0;
+    padding: 32px 0 26px;
+  }
+
+  .public-ocr-roster-hero h2 {
+    font-size: 2.75rem;
+  }
+
+  .public-ocr-roster-hero-score {
+    width: 100%;
+    margin-top: 28px;
+    border-top: 1px solid #d2d4d0;
+    border-left: 0;
+    padding: 18px 0 0;
+  }
+
+  .public-ocr-roster-hero-score strong {
+    font-size: 2.4rem;
+  }
+
+  .public-ocr-roster-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .public-ocr-roster-filters {
+    justify-content: space-between;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .public-ocr-roster-filters button {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding: 8px 10px;
+  }
+
+  .public-ocr-roster-search {
+    width: 100%;
+  }
+
+  .public-ocr-summary-results .ocr-section-head {
+    align-items: stretch;
+  }
+
+  .public-ocr-detail-head-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  .public-ocr-detail-action-btn {
+    flex: 1 1 auto;
+  }
+
+  .public-ocr-roster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .public-ocr-guide-card {
@@ -16068,6 +16905,10 @@ input {
 }
 
 @media (max-width: 480px) {
+  .public-ocr-roster-grid {
+    grid-template-columns: 1fr;
+  }
+
   .marble-stage-shell,
   .skill-marble-hero-card,
   .skill-marble-result-panel,

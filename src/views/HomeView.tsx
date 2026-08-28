@@ -53,9 +53,9 @@ const HOME_WIDGET_SECTIONS: HomeWidgetSection[] = [
       {
         view: "lineupSkillOcr",
         icon: "userScan",
-        title: "라인업 스킬 인식",
-        description: "Google 로그인 후 주 1회씩 타자/투수 라인업 스킬 점수를 인식합니다.",
-        meta: "LINEUP SKILL",
+        title: "라인업 스킬",
+        description: "타자/투수 라인업 9명의 스킬을 저장하고, 이후 필요한 선수만 열어서 수정합니다.",
+        meta: "DECK SKILL",
       },
       {
         view: "skillQuiz",

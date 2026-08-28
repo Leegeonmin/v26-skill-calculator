@@ -9,6 +9,7 @@ import { judgeSkillResultByProbability } from "../utils/judge";
 export type SkillOcrPlayerOdds = {
   grade: string;
   gradeColor: string;
+  scoreAtLeastProbability: number | null;
   topPercentLabel: string;
   basisLabel: string;
 };
@@ -63,6 +64,7 @@ export function getSkillOcrPlayerOdds(player: SkillOcrSelectedPlayer): SkillOcrP
   return {
     grade: judgeResult?.grade ?? "-",
     gradeColor: judgeResult ? RESULT_GRADE_COLORS[judgeResult.grade] : "#94a3b8",
+    scoreAtLeastProbability: odds?.scoreAtLeastProbability ?? null,
     topPercentLabel: formatTopPercent(odds?.scoreAtLeastProbability, { maximumFractionDigits: 3 }),
     basisLabel: player.cardType === "impact" ? "상위(2,3)" : "상위",
   };

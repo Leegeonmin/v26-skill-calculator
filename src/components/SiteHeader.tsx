@@ -190,11 +190,11 @@ export default function SiteHeader({
           <div className="site-nav-group">
             <button type="button" className="site-nav-link" onClick={() => onSelectView("lineupSkillOcr")}>
               <HeaderIcon name="scan" />
-              <span>스킬 인식</span>
+              <span>라인업 스킬</span>
             </button>
             <div className="site-nav-dropdown">
               <button type="button" onClick={() => onSelectView("lineupSkillOcr")}>
-                라인업스킬인식
+                라인업 스킬
               </button>
               <button type="button" onClick={() => onSelectView("skillCompareBeta")}>
                 고스변 점수비교
@@ -266,7 +266,7 @@ export default function SiteHeader({
                     onSelectView("lineupSkillOcr");
                   }}
                 >
-                  라인업 스킬 인식
+                  라인업 스킬
                 </button>
                 <button
                   type="button"
@@ -299,7 +299,7 @@ export default function SiteHeader({
           <em className="site-mobile-nav-new">NEW</em>
         </button>
         <button type="button" className={currentView === "lineupSkillOcr" ? "is-active" : undefined} onClick={() => onSelectView("lineupSkillOcr")}>
-          라인업 인식
+          라인업 스킬
         </button>
         <button type="button" className={currentView === "skillCompareBeta" ? "is-active" : undefined} onClick={() => onSelectView("skillCompareBeta")}>
           고스변 점수 비교

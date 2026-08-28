@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
 import { getGameDataSet, type GameDataSet } from "../data/gameData";
 import { RESULT_GRADE_COLORS } from "../data/uiColors";
-import { recognizeSkillChangeImage } from "../lib/skillOcr";
 import { getDefaultLevels, getSkillLevelOptions } from "../lib/toolboxHelpers";
 import type {
   CalculatorMode,
@@ -17,6 +16,7 @@ import { calculateAdvancedSkillOdds, type SkillOddsResult } from "../utils/advan
 import { calculateSkillTotal } from "../utils/calculate";
 import { formatTopPercent } from "../utils/formatOdds";
 import { judgeSkillResultByProbability, type JudgeResult } from "../utils/judge";
+import { normalizeSkillBaseName } from "../utils/skillChangeRollCore";
 
 type SkillCompareBetaViewProps = {
   onGoHome: () => void;
@@ -55,7 +55,7 @@ const HITTER_POSITION_GROUP_OPTIONS: Array<{ value: HitterPositionGroup; label: 
   { value: "fielder", label: "야수" },
   { value: "catcher", label: "포수" },
 ];
-type CompareInputMode = "auto" | "manual";
+type CompareInputMode = "manual";
 
 function createBlankSkillChangeResponse(cardType: CardType = "signature"): SkillChangeResponse {
   const defaultLevels = getDefaultLevels(cardType);
@@ -168,7 +168,7 @@ function compareSkills(
       skills: skills.map((skill) => ({
         ...skill,
         skillId: "",
-        displayName: skill.name ?? "인식 실패",
+        displayName: skill.name ?? "미선택",
         score: 0,
         matched: false,
         candidateSkillIds: [],
@@ -187,7 +187,7 @@ function compareSkills(
       ...skill,
       level,
       skillId: meta?.id ?? "",
-      displayName: meta?.name ?? skill.name ?? "인식 실패",
+      displayName: meta?.name ?? skill.name ?? "미선택",
       score: meta ? dataSet.scoreTable[meta.id]?.[level] ?? 0 : 0,
       matched: Boolean(meta),
       candidateSkillIds: match.candidates.map((candidate) => candidate.id),
@@ -213,6 +213,10 @@ function calculateCompareOdds(
   hitterPositionGroup: HitterPositionGroup
 ): SkillOddsResult | null {
   if (!dataSet || compared.skills.length < 3 || compared.skills.some((skill) => !skill.skillId)) {
+    return null;
+  }
+
+  if (getDuplicateSkillFamilies(compared.skills, dataSet).length > 0) {
     return null;
   }
 
@@ -256,33 +260,165 @@ function getJudgeGradeColor(judgeResult: JudgeResult | null): string {
 }
 
 function formatRecognizedSkillName(skill: ComparedSkill): string {
-  return skill.name?.trim() ? skill.name : "매칭실패";
+  return skill.name?.trim() ? skill.name : "미선택";
 }
 
-function formatSkillOptionPlaceholder(skill: ComparedSkill, inputMode: CompareInputMode): string {
-  if (inputMode === "manual") {
-    return "스킬 선택";
+function getDuplicateSkillFamilies(
+  skills: ComparedSkill[],
+  dataSet: GameDataSet | null
+): string[] {
+  if (!dataSet) {
+    return [];
   }
 
-  const recognizedName = formatRecognizedSkillName(skill);
-  return skill.matched ? `${recognizedName} 선택됨` : `${recognizedName} - 스킬 선택`;
+  const familyCounts = new Map<string, number>();
+
+  skills.forEach((skill) => {
+    if (!skill.skillId) {
+      return;
+    }
+
+    const meta = dataSet.skills.find((candidate) => candidate.id === skill.skillId);
+    if (!meta) {
+      return;
+    }
+
+    const familyName = normalizeSkillBaseName(meta.name);
+    familyCounts.set(familyName, (familyCounts.get(familyName) ?? 0) + 1);
+  });
+
+  return [...familyCounts.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([familyName]) => familyName);
+}
+
+function formatCombinationStatus(
+  compared: { skills: ComparedSkill[]; total: number },
+  duplicateFamilies: string[]
+): string {
+  if (duplicateFamilies.length > 0) {
+    return `${duplicateFamilies.join(", ")} 계열은 한 번에 같이 나올 수 없습니다.`;
+  }
+
+  if (compared.skills.some((skill) => !skill.skillId)) {
+    return "스킬 3개를 모두 선택하면 확률이 표시됩니다.";
+  }
+
+  return "";
+}
+
+function SearchableSkillSelect({
+  ariaLabel,
+  options,
+  value,
+  onChange,
+}: {
+  ariaLabel: string;
+  options: SkillMeta[];
+  value: string;
+  onChange: (skillId: string) => void;
+}) {
+  const selectedOption = options.find((option) => option.id === value) ?? null;
+  const [query, setQuery] = useState(selectedOption?.name ?? "");
+  const [open, setOpen] = useState(false);
+  const lastValueRef = useRef(value);
+
+  useEffect(() => {
+    if (open || lastValueRef.current === value) {
+      return;
+    }
+
+    lastValueRef.current = value;
+    setQuery(selectedOption?.name ?? "");
+  }, [open, selectedOption?.name, value]);
+
+  const filteredOptions = useMemo(() => {
+    const normalizedQuery = normalizeName(query);
+    if (!normalizedQuery) {
+      return options.slice(0, 24);
+    }
+
+    return options
+      .filter((option) => normalizeName(option.name).includes(normalizedQuery))
+      .slice(0, 24);
+  }, [options, query]);
+
+  const handleQueryChange = (nextQuery: string) => {
+    setQuery(nextQuery);
+    setOpen(true);
+
+    const exactOption = options.find((option) => normalizeName(option.name) === normalizeName(nextQuery));
+    onChange(exactOption?.id ?? "");
+  };
+
+  const selectOption = (skillId: string) => {
+    const nextOption = options.find((option) => option.id === skillId) ?? null;
+    setQuery(nextOption?.name ?? "");
+    setOpen(false);
+    lastValueRef.current = skillId;
+    onChange(skillId);
+  };
+
+  return (
+    <div className="skill-compare-search-select">
+      <input
+        type="text"
+        className={selectedOption ? `ocr-skill-grade-${selectedOption.grade}` : undefined}
+        aria-label={ariaLabel}
+        value={query}
+        placeholder="스킬 검색"
+        autoComplete="off"
+        onChange={(event) => handleQueryChange(event.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && filteredOptions[0]) {
+            event.preventDefault();
+            selectOption(filteredOptions[0].id);
+          }
+          if (event.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+      />
+      {open && (
+        <div className="skill-compare-search-list" role="listbox">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                role="option"
+                aria-selected={option.id === value}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectOption(option.id)}
+              >
+                {option.name}
+              </button>
+            ))
+          ) : (
+            <span>검색 결과 없음</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function SkillCompareBetaView({
   onGoHome,
   themeAction,
 }: SkillCompareBetaViewProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<SkillChangeResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<SkillChangeResponse | null>(() =>
+    createBlankSkillChangeResponse()
+  );
   const [mode, setMode] = useState<CalculatorMode>("hitter");
   const [hitterPositionGroup, setHitterPositionGroup] =
     useState<HitterPositionGroup>("fielder");
   const [starterHand, setStarterHand] = useState<StarterHand>("right");
   const [cardType, setCardType] = useState<CardType>("signature");
   const [selectedSkillIds, setSelectedSkillIds] = useState<Record<string, string>>({});
-  const [compareInputMode, setCompareInputMode] = useState<CompareInputMode>("auto");
+  const compareInputMode: CompareInputMode = "manual";
   const skillLevelOptions = useMemo(() => getSkillLevelOptions(cardType), [cardType]);
 
   const dataSet = useMemo(() => getDataSet(mode, starterHand), [mode, starterHand]);
@@ -302,25 +438,23 @@ export default function SkillCompareBetaView({
     () => calculateCompareOdds(comparedRight, dataSet, mode, cardType, hitterPositionGroup),
     [cardType, comparedRight, dataSet, hitterPositionGroup, mode]
   );
+  const leftDuplicateFamilies = useMemo(
+    () => getDuplicateSkillFamilies(comparedLeft.skills, dataSet),
+    [comparedLeft.skills, dataSet]
+  );
+  const rightDuplicateFamilies = useMemo(
+    () => getDuplicateSkillFamilies(comparedRight.skills, dataSet),
+    [comparedRight.skills, dataSet]
+  );
+  const leftCombinationStatus = formatCombinationStatus(comparedLeft, leftDuplicateFamilies);
+  const rightCombinationStatus = formatCombinationStatus(comparedRight, rightDuplicateFamilies);
   const leftJudgeResult = judgeSkillResultByProbability(leftOdds?.scoreAtLeastProbability);
   const rightJudgeResult = judgeSkillResultByProbability(rightOdds?.scoreAtLeastProbability);
   const scoreDiff = Number((comparedRight.total - comparedLeft.total).toFixed(2));
 
   useEffect(() => {
-    if (compareInputMode !== "manual") {
-      return;
-    }
-
-    setError(null);
     setResult((currentResult) => currentResult ?? createBlankSkillChangeResponse(cardType));
-  }, [cardType, compareInputMode]);
-
-  function handleCompareInputModeChange(nextMode: CompareInputMode) {
-    setCompareInputMode(nextMode);
-    setSelectedSkillIds({});
-    setResult(nextMode === "manual" ? createBlankSkillChangeResponse(cardType) : null);
-    setError(null);
-  }
+  }, [cardType]);
 
   function handleCardTypeChange(nextCardType: CardType) {
     const nextLevelOptions = getSkillLevelOptions(nextCardType);
@@ -348,25 +482,6 @@ export default function SkillCompareBetaView({
         right: normalizeSkills(currentResult.right),
       };
     });
-  }
-
-  async function upload(file: File) {
-    try {
-      setBusy(true);
-      setResult(null);
-      setError(null);
-      setSelectedSkillIds({});
-      const response = await recognizeSkillChangeImage(file);
-      setResult(response);
-    } catch (uploadError) {
-      setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : "스킬 변경 화면을 분석하지 못했습니다."
-      );
-    } finally {
-      setBusy(false);
-    }
   }
 
   function updateSkillLevel(side: "left" | "right", slot: number, level: SkillLevel) {
@@ -401,6 +516,28 @@ export default function SkillCompareBetaView({
 
   const selectableSkillOptions = getSelectableSkillOptions();
 
+  function getSelectableSkillOptionsForSide(side: "left" | "right", slot: number) {
+    if (!dataSet) {
+      return [];
+    }
+
+    const selectedSameSideIds = [1, 2, 3]
+      .filter((targetSlot) => targetSlot !== slot)
+      .map((targetSlot) => selectedSkillIds[`${side}-${targetSlot}`])
+      .filter(Boolean);
+    const selectedFamilies = new Set(
+      selectedSameSideIds
+        .map((skillId) => dataSet.skills.find((candidate) => candidate.id === skillId))
+        .filter((skill): skill is SkillMeta => Boolean(skill))
+        .map((skill) => normalizeSkillBaseName(skill.name))
+    );
+
+    return selectableSkillOptions.filter((option) => {
+      const currentValue = selectedSkillIds[`${side}-${slot}`];
+      return option.id === currentValue || !selectedFamilies.has(normalizeSkillBaseName(option.name));
+    });
+  }
+
   return (
     <main
       className={`skill-compare-page skill-compare-page-${compareInputMode}`}
@@ -410,7 +547,7 @@ export default function SkillCompareBetaView({
         <div className="page-title-block">
           <span className="page-kicker">Beta</span>
           <h1 id="skill-compare-title">고급 스킬 변경권 점수 비교</h1>
-          <p>고스변 화면을 업로드하면 왼쪽 기존 스킬과 오른쪽 변경 후보의 점수를 비교합니다.</p>
+          <p>화면 인식 대신 스킬과 레벨을 직접 입력해서 기존 스킬과 변경 후보를 비교합니다.</p>
         </div>
         <div className="page-toolbar-actions">
           {themeAction}
@@ -486,65 +623,10 @@ export default function SkillCompareBetaView({
         </label>
       </section>
 
-      <section className="skill-compare-mode-tabs" aria-label="입력 방식">
-        <button
-          type="button"
-          className={compareInputMode === "auto" ? "active" : ""}
-          onClick={() => handleCompareInputModeChange("auto")}
-        >
-          자동 인식
-        </button>
-        <button
-          type="button"
-          className={compareInputMode === "manual" ? "active" : ""}
-          onClick={() => handleCompareInputModeChange("manual")}
-        >
-          수동 입력
-        </button>
+      <section className="skill-compare-manual-panel">
+        <strong>자동 화면 인식 기능은 종료됐습니다.</strong>
+        <p>인식 오류 없이 바로 비교할 수 있도록 현재 스킬과 변경 후보 스킬, 레벨을 직접 입력하는 방식으로 전환했습니다.</p>
       </section>
-
-
-      {compareInputMode === "auto" ? (
-      <section className="skill-compare-upload-panel">
-        <input
-          ref={inputRef}
-          type="file"
-          hidden
-          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void upload(file);
-            event.currentTarget.value = "";
-          }}
-        />
-        <button
-          type="button"
-          className="skill-compare-upload-card"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-        >
-          <span className="skill-compare-upload-copy">
-            <strong>{busy ? "분석 중" : "고스변 화면 업로드"}</strong>
-            <span>화면을 터치하거나 이미지를 끌어다 놓으세요</span>
-          </span>
-          <span className="skill-compare-upload-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 16V4m0 0 5 5m-5-5-5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
-            </svg>
-
-          </span>
-          <span className="skill-compare-upload-label">터치하여 업로드</span>
-        </button>
-      </section>
-      ) : (
-        <section className="skill-compare-manual-panel">
-          <strong>직접 스킬을 선택해서 비교합니다.</strong>
-          <p>아래 비교표에서 현재 스킬과 변경 후보 스킬, 레벨을 직접 입력하세요.</p>
-        </section>
-      )}
-
-      {error && <p className="modal-error">{error}</p>}
-      {busy && <p className="skill-compare-status">스킬 변경 화면을 분석하고 있습니다.</p>}
 
       {result && (
         <>
@@ -576,7 +658,7 @@ export default function SkillCompareBetaView({
               </div>
               <div className="skill-compare-odds-grid">
                 <div>
-                  <span>상위 확률</span>
+                <span>상위 확률</span>
                   <strong>{formatOddsPercent(leftOdds)}</strong>
                 </div>
                 <div>
@@ -584,6 +666,9 @@ export default function SkillCompareBetaView({
                   <strong>{formatExpectedRolls(leftOdds)}</strong>
                 </div>
               </div>
+              {leftCombinationStatus && (
+                <p className="skill-compare-combination-status">{leftCombinationStatus}</p>
+              )}
             </div>
 
             <div className="skill-compare-odds-card skill-compare-odds-card-next">
@@ -603,6 +688,9 @@ export default function SkillCompareBetaView({
                   <strong>{formatExpectedRolls(rightOdds)}</strong>
                 </div>
               </div>
+              {rightCombinationStatus && (
+                <p className="skill-compare-combination-status">{rightCombinationStatus}</p>
+              )}
             </div>
           </section>
 
@@ -616,28 +704,17 @@ export default function SkillCompareBetaView({
                 {comparedLeft.skills.map((skill) => (
                   <div
                     key={`left-${skill.slot}`}
-                    className={`skill-compare-row ${
-                      compareInputMode === "auto" && !skill.matched ? "unmatched" : ""
-                    }`}
+                    className="skill-compare-row"
                   >
                     <span>{skill.slot}</span>
                     <div className="skill-compare-skill-field">
-                      <select
-                        className="skill-compare-skill-select"
-                        aria-label={`${formatRecognizedSkillName(skill)} 스킬 선택`}
+                      <SearchableSkillSelect
+                        ariaLabel={`${formatRecognizedSkillName(skill)} 스킬 선택`}
                         value={skill.skillId}
-                        onChange={(event) => updateSkillMeta("left", skill.slot, event.target.value)}
-                      >
-                        <option value="">
-                          {formatSkillOptionPlaceholder(skill, compareInputMode)}
-                        </option>
-                        {selectableSkillOptions.map((candidate) => (
-                          <option key={candidate.id} value={candidate.id}>
-                            {candidate.name}
-                          </option>
-                        ))}
-                      </select>
-                      <small>인식: {formatRecognizedSkillName(skill)}</small>
+                        options={getSelectableSkillOptionsForSide("left", skill.slot)}
+                        onChange={(skillId) => updateSkillMeta("left", skill.slot, skillId)}
+                      />
+                      <small>같은 계열 스킬은 후보에서 제외됩니다.</small>
                     </div>
                     <select
                       aria-label={`${skill.displayName} 레벨`}
@@ -667,28 +744,17 @@ export default function SkillCompareBetaView({
                 {comparedRight.skills.map((skill) => (
                   <div
                     key={`right-${skill.slot}`}
-                    className={`skill-compare-row ${
-                      compareInputMode === "auto" && !skill.matched ? "unmatched" : ""
-                    }`}
+                    className="skill-compare-row"
                   >
                     <span>{skill.slot}</span>
                     <div className="skill-compare-skill-field">
-                      <select
-                        className="skill-compare-skill-select"
-                        aria-label={`${formatRecognizedSkillName(skill)} 스킬 선택`}
+                      <SearchableSkillSelect
+                        ariaLabel={`${formatRecognizedSkillName(skill)} 스킬 선택`}
                         value={skill.skillId}
-                        onChange={(event) => updateSkillMeta("right", skill.slot, event.target.value)}
-                      >
-                        <option value="">
-                          {formatSkillOptionPlaceholder(skill, compareInputMode)}
-                        </option>
-                        {selectableSkillOptions.map((candidate) => (
-                          <option key={candidate.id} value={candidate.id}>
-                            {candidate.name}
-                          </option>
-                        ))}
-                      </select>
-                      <small>인식: {formatRecognizedSkillName(skill)}</small>
+                        options={getSelectableSkillOptionsForSide("right", skill.slot)}
+                        onChange={(skillId) => updateSkillMeta("right", skill.slot, skillId)}
+                      />
+                      <small>같은 계열 스킬은 후보에서 제외됩니다.</small>
                     </div>
                     <select
                       aria-label={`${skill.displayName} 레벨`}
