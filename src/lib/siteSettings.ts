@@ -38,19 +38,6 @@ function normalizeSetting(data: unknown): HomeChangeMessageSetting {
   };
 }
 
-function normalizeIdleDevGameSetting(data: unknown): IdleDevGameSetting {
-  const row = Array.isArray(data) ? data[0] : data;
-  if (!row || typeof row !== "object") {
-    return { enabled: false, updated_at: null };
-  }
-
-  const value = row as { enabled?: unknown; updated_at?: unknown };
-  return {
-    enabled: value.enabled === true || value.enabled === "true",
-    updated_at: typeof value.updated_at === "string" ? value.updated_at : null,
-  };
-}
-
 function readHomeChangeMessageCache(): HomeChangeMessageSetting | null {
   if (typeof window === "undefined") {
     return null;
@@ -170,52 +157,6 @@ export async function getHomeChangeMessage(): Promise<HomeChangeMessageSetting> 
   return setting;
 }
 
-export async function adminGetHomeChangeMessage(
-  sessionToken: string
-): Promise<HomeChangeMessageSetting> {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    throw new Error("서비스 설정이 필요합니다.");
-  }
-
-  const { data, error } = await supabase.rpc("admin_get_home_change_message", {
-    p_session_token: sessionToken,
-  });
-
-  if (error) {
-    throw new Error(error.message || "메인 변경사항 메시지를 불러오지 못했습니다.");
-  }
-
-  const setting = normalizeSetting(data);
-  writeHomeChangeMessageCache(setting);
-  return setting;
-}
-
-export async function adminUpdateHomeChangeMessage(
-  sessionToken: string,
-  message: string
-): Promise<HomeChangeMessageSetting> {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    throw new Error("서비스 설정이 필요합니다.");
-  }
-
-  const { data, error } = await supabase.rpc("admin_update_home_change_message", {
-    p_session_token: sessionToken,
-    p_message: message,
-  });
-
-  if (error) {
-    throw new Error(error.message || "메인 변경사항 메시지를 저장하지 못했습니다.");
-  }
-
-  const setting = normalizeSetting(data);
-  writeHomeChangeMessageCache(setting);
-  return setting;
-}
-
 export async function getIdleDevGameSetting(): Promise<IdleDevGameSetting> {
   const cachedSetting = readIdleDevGameSettingCache();
   if (cachedSetting) {
@@ -242,48 +183,3 @@ export async function getIdleDevGameSetting(): Promise<IdleDevGameSetting> {
   }
 }
 
-export async function adminGetIdleDevGameSetting(
-  sessionToken: string
-): Promise<IdleDevGameSetting> {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    throw new Error("서버 설정이 필요합니다.");
-  }
-
-  const { data, error } = await supabase.rpc("admin_get_idle_dev_game_setting", {
-    p_session_token: sessionToken,
-  });
-
-  if (error) {
-    throw new Error(error.message || "타자 키우기 운영 상태를 불러오지 못했습니다.");
-  }
-
-  const setting = normalizeIdleDevGameSetting(data);
-  writeIdleDevGameSettingCache(setting);
-  return setting;
-}
-
-export async function adminUpdateIdleDevGameSetting(
-  sessionToken: string,
-  enabled: boolean
-): Promise<IdleDevGameSetting> {
-  const supabase = getSupabaseClient();
-
-  if (!supabase) {
-    throw new Error("서버 설정이 필요합니다.");
-  }
-
-  const { data, error } = await supabase.rpc("admin_update_idle_dev_game_setting", {
-    p_session_token: sessionToken,
-    p_enabled: enabled,
-  });
-
-  if (error) {
-    throw new Error(error.message || "타자 키우기 운영 상태를 저장하지 못했습니다.");
-  }
-
-  const setting = normalizeIdleDevGameSetting(data);
-  writeIdleDevGameSettingCache(setting);
-  return setting;
-}

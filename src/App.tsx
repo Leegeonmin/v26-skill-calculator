@@ -11,12 +11,9 @@ import {
   signOut,
 } from "./lib/auth";
 import {
-  adminGetIdleGameRankings,
   adminLogin,
   adminLogout,
-  adminUpdateIdleGameRankingEntry,
   adminValidateSession,
-  type AdminIdleGameRankingEntry,
 } from "./lib/admin";
 import {
   recognizeSkillImage,
@@ -77,10 +74,6 @@ import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpac
 import type { SkillMarbleMode } from "./utils/skillMarbleOdds";
 import { getOrCreateRevenueSessionId, logRevenueEvent } from "./lib/revenueAnalytics";
 import {
-  adminGetHomeChangeMessage,
-  adminGetIdleDevGameSetting,
-  adminUpdateHomeChangeMessage,
-  adminUpdateIdleDevGameSetting,
   getHomeChangeMessage,
   getIdleDevGameSetting,
 } from "./lib/siteSettings";
@@ -281,21 +274,8 @@ function App() {
 
     return Boolean(window.sessionStorage.getItem(ADMIN_SESSION_KEY));
   });
-  const [adminIdleRankings, setAdminIdleRankings] = useState<AdminIdleGameRankingEntry[]>([]);
-  const [adminIdleRankingsLoading, setAdminIdleRankingsLoading] = useState(false);
-  const [adminIdleRankingsError, setAdminIdleRankingsError] = useState<string | null>(null);
-  const [adminIdleRankingBusyId, setAdminIdleRankingBusyId] = useState<string | null>(null);
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
   const [idleDevGameEnabled, setIdleDevGameEnabled] = useState(false);
-
-  const [adminHomeChangeDraft, setAdminHomeChangeDraft] = useState("");
-  const [adminHomeChangeSaving, setAdminHomeChangeSaving] = useState(false);
-  const [adminHomeChangeStatus, setAdminHomeChangeStatus] = useState<"idle" | "saved" | "error">("idle");
-  const [adminHomeChangeError, setAdminHomeChangeError] = useState<string | null>(null);
-  const [adminIdleDevGameEnabled, setAdminIdleDevGameEnabled] = useState(false);
-  const [adminIdleDevGameSaving, setAdminIdleDevGameSaving] = useState(false);
-  const [adminIdleDevGameStatus, setAdminIdleDevGameStatus] = useState<"idle" | "saved" | "error">("idle");
-  const [adminIdleDevGameError, setAdminIdleDevGameError] = useState<string | null>(null);
   const [ocrUploads, setOcrUploads] = useState<SkillOcrSavedUpload[]>([]);
   const [ocrPublicQuota, setOcrPublicQuota] = useState<SkillOcrPublicQuota[]>([]);
   const [ocrUploadsLoading, setOcrUploadsLoading] = useState(false);
@@ -446,20 +426,6 @@ function App() {
   const shouldShowKakaoAdFit = !isAdminRoute;
   const authDisplayName = getDisplayNameFromSession(authSession);
 
-  const loadAdminIdleGameRankings = async (sessionToken: string) => {
-    try {
-      setAdminIdleRankingsLoading(true);
-      setAdminIdleRankingsError(null);
-      setAdminIdleRankings(await adminGetIdleGameRankings(sessionToken));
-    } catch (error) {
-      setAdminIdleRankingsError(
-        error instanceof Error ? error.message : "타자 키우기 랭킹을 불러오지 못했습니다."
-      );
-    } finally {
-      setAdminIdleRankingsLoading(false);
-    }
-  };
-
   useEffect(() => {
     window.localStorage.setItem("v26-theme", theme);
   }, [theme]);
@@ -557,67 +523,6 @@ function App() {
       }
     })();
   }, [authSession, toolView]);
-
-  useEffect(() => {
-    if (!isAdminRoute || !adminUnlocked) {
-      return;
-    }
-
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-    if (!sessionToken) {
-      return;
-    }
-
-    void loadAdminIdleGameRankings(sessionToken);
-  }, [adminUnlocked, isAdminRoute]);
-
-  useEffect(() => {
-    if (!isAdminRoute || !adminUnlocked) {
-      return;
-    }
-
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-    if (!sessionToken) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        setAdminIdleDevGameError(null);
-        const setting = await adminGetIdleDevGameSetting(sessionToken);
-        setAdminIdleDevGameEnabled(setting.enabled);
-        setIdleDevGameEnabled(setting.enabled);
-      } catch (error) {
-        setAdminIdleDevGameError(
-          error instanceof Error ? error.message : "타자 키우기 운영 상태를 불러오지 못했습니다."
-        );
-      }
-    })();
-  }, [adminUnlocked, isAdminRoute]);
-
-  useEffect(() => {
-    if (!isAdminRoute || !adminUnlocked) {
-      return;
-    }
-
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-    if (!sessionToken) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        setAdminHomeChangeError(null);
-        const setting = await adminGetHomeChangeMessage(sessionToken);
-        setAdminHomeChangeDraft(setting.message);
-        setHomeChangeMessage(setting.message);
-      } catch (error) {
-        setAdminHomeChangeError(
-          error instanceof Error ? error.message : "메인 변경사항 메시지를 불러오지 못했습니다."
-        );
-      }
-    })();
-  }, [adminUnlocked, isAdminRoute]);
 
   useEffect(() => {
     if (isAdminRoute || infoPageKey) {
@@ -913,99 +818,6 @@ function App() {
     }
 
     setToolView(nextToolView);
-  };
-
-  const handleSaveHomeChangeMessage = async () => {
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-
-    if (!sessionToken) {
-      setAdminHomeChangeStatus("error");
-      setAdminHomeChangeError("관리자 세션이 없습니다. 다시 로그인해주세요.");
-      return;
-    }
-
-    try {
-      setAdminHomeChangeSaving(true);
-      setAdminHomeChangeStatus("idle");
-      setAdminHomeChangeError(null);
-      const setting = await adminUpdateHomeChangeMessage(sessionToken, adminHomeChangeDraft);
-      setAdminHomeChangeDraft(setting.message);
-      setHomeChangeMessage(setting.message);
-      setAdminHomeChangeStatus("saved");
-    } catch (error) {
-      setAdminHomeChangeStatus("error");
-      setAdminHomeChangeError(
-        error instanceof Error ? error.message : "메인 변경사항 메시지를 저장하지 못했습니다."
-      );
-    } finally {
-      setAdminHomeChangeSaving(false);
-    }
-  };
-
-  const handleSaveIdleDevGameSetting = async () => {
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-
-    if (!sessionToken) {
-      setAdminIdleDevGameStatus("error");
-      setAdminIdleDevGameError("관리자 세션이 없습니다. 다시 로그인해주세요.");
-      return;
-    }
-
-    try {
-      setAdminIdleDevGameSaving(true);
-      setAdminIdleDevGameStatus("idle");
-      setAdminIdleDevGameError(null);
-      const setting = await adminUpdateIdleDevGameSetting(
-        sessionToken,
-        adminIdleDevGameEnabled
-      );
-      setAdminIdleDevGameEnabled(setting.enabled);
-      setIdleDevGameEnabled(setting.enabled);
-      setAdminIdleDevGameStatus("saved");
-    } catch (error) {
-      setAdminIdleDevGameStatus("error");
-      setAdminIdleDevGameError(
-        error instanceof Error ? error.message : "타자 키우기 운영 상태를 저장하지 못했습니다."
-      );
-    } finally {
-      setAdminIdleDevGameSaving(false);
-    }
-  };
-
-  const handleUpdateIdleGameRanking = async (
-    entry: AdminIdleGameRankingEntry,
-    moderationStatus: AdminIdleGameRankingEntry["moderation_status"]
-  ) => {
-    const sessionToken = window.sessionStorage.getItem(ADMIN_SESSION_KEY);
-
-    if (!sessionToken) {
-      setAdminIdleRankingsError("관리자 세션이 없습니다. 다시 로그인해주세요.");
-      return;
-    }
-
-    try {
-      setAdminIdleRankingBusyId(entry.entry_id);
-      setAdminIdleRankingsError(null);
-      await adminUpdateIdleGameRankingEntry({
-        sessionToken,
-        entryId: entry.entry_id,
-        moderationStatus,
-        displayName: moderationStatus === "hidden" ? "익명타자" : entry.display_name,
-        note:
-          moderationStatus === "visible"
-            ? null
-            : moderationStatus === "hidden"
-              ? "관리자 닉네임 숨김"
-              : "관리자 랭킹 제외",
-      });
-      await loadAdminIdleGameRankings(sessionToken);
-    } catch (error) {
-      setAdminIdleRankingsError(
-        error instanceof Error ? error.message : "타자 키우기 랭킹 상태를 저장하지 못했습니다."
-      );
-    } finally {
-      setAdminIdleRankingBusyId(null);
-    }
   };
 
   const handleModeChange = (nextMode: CalculatorMode) => {
@@ -1432,18 +1244,6 @@ function App() {
               usernameInput={adminUsernameInput}
               passwordInput={adminPasswordInput}
               passwordError={adminPasswordError}
-              homeChangeMessage={adminHomeChangeDraft}
-              homeChangeSaving={adminHomeChangeSaving}
-              homeChangeStatus={adminHomeChangeStatus}
-              homeChangeError={adminHomeChangeError}
-              idleDevGameEnabled={adminIdleDevGameEnabled}
-              idleDevGameSaving={adminIdleDevGameSaving}
-              idleDevGameStatus={adminIdleDevGameStatus}
-              idleDevGameError={adminIdleDevGameError}
-              idleGameRankings={adminIdleRankings}
-              idleGameRankingsLoading={adminIdleRankingsLoading}
-              idleGameRankingsError={adminIdleRankingsError}
-              idleGameRankingBusyId={adminIdleRankingBusyId}
               onUsernameChange={(value) => {
                 setAdminUsernameInput(value);
                 if (adminPasswordError) {
@@ -1459,21 +1259,6 @@ function App() {
               onUnlock={() => void handleAdminUnlock()}
               onLock={() => void handleAdminLock()}
               onGoHome={handleGoHome}
-              onHomeChangeMessageChange={(value) => {
-                setAdminHomeChangeDraft(value);
-                setAdminHomeChangeStatus("idle");
-                setAdminHomeChangeError(null);
-              }}
-              onSaveHomeChangeMessage={() => void handleSaveHomeChangeMessage()}
-              onIdleDevGameEnabledChange={(value) => {
-                setAdminIdleDevGameEnabled(value);
-                setAdminIdleDevGameStatus("idle");
-                setAdminIdleDevGameError(null);
-              }}
-              onSaveIdleDevGameSetting={() => void handleSaveIdleDevGameSetting()}
-              onUpdateIdleGameRanking={(entry, moderationStatus) =>
-                void handleUpdateIdleGameRanking(entry, moderationStatus)
-              }
             />
           </Suspense>
           <Analytics />
