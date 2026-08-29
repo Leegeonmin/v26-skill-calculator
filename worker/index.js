@@ -16,7 +16,8 @@ const REDIRECTS = new Map([
   ["/ranking", "/ranking/"],
   ["/notice", "/notice/"],
   ["/skill-compare", "/skill-compare/"],
-  ["/lineup-skill-ocr", "/lineup-skill-ocr/"],
+  ["/lineup-skill-ocr", "/lineup-skill/"],
+  ["/lineup-skill", "/lineup-skill/"],
   ["/training-redistribution", "/training-redistribution/"],
 ]);
 

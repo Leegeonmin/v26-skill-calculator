@@ -158,6 +158,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.08.28",
+    title: "라인업 스킬 수동 등록 전환",
+    body: "기존 화면 인식(OCR) 방식의 라인업 스킬 등록을 제거하고, 선수별 스킬을 직접 입력해 계산하는 수동 등록 방식으로 변경했습니다. 인식 오류 없이 타자/투수 라인업 스킬 점수와 확률을 같은 기준으로 확인할 수 있습니다.",
+  },
+  {
     date: "2026.08.24",
     title: "올스타 카드 스킬 점수 지원",
     body: "스킬 점수 계산기와 고스변 점수 비교에 올스타 카드 타입을 추가했습니다. 올스타 선택 시 기본 8/7/7 레벨과 9, 10레벨 점수 기준을 확인할 수 있습니다.",

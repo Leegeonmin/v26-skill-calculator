@@ -20,6 +20,7 @@
       "/notice",
       "/skill-compare",
       "/lineup-skill-ocr",
+      "/lineup-skill",
       "/training-redistribution",
       "/admin",
       "/admin/*"
