@@ -12,6 +12,24 @@ const NATIONAL_ONLY: CardType[] = ["national"];
 
 export const SKILLS: SkillMeta[] = [
   {
+    id: "hitter_gapless_lineup_on",
+    name: "빈틈없는타선(타순O)",
+    grade: "nationalOnly",
+    availableCardTypes: NATIONAL_ONLY,
+  },
+  {
+    id: "hitter_gapless_lineup_off",
+    name: "빈틈없는타선(타순X)",
+    grade: "nationalOnly",
+    availableCardTypes: NATIONAL_ONLY,
+  },
+  {
+    id: "hitter_national_table_setter",
+    name: "국대 테이블세터",
+    grade: "nationalOnly",
+    availableCardTypes: NATIONAL_ONLY,
+  },
+  {
     id: "hitter_national_ace",
     name: "국대에이스(버프o)",
     grade: "nationalOnly",

@@ -1,6 +1,9 @@
 import type { SkillScoreTable } from "../../types";
 
 export const SKILL_SCORES: SkillScoreTable = {
+  hitter_gapless_lineup_on: { 5: 17.93, 6: 23.83 },
+  hitter_gapless_lineup_off: { 5: 13.13, 6: 19.03 },
+  hitter_national_table_setter: { 5: 14.97, 6: 22.9 },
   hitter_national_ace: {
     5: 28.65,
     6: 47.7,
@@ -28,7 +31,7 @@ export const SKILL_SCORES: SkillScoreTable = {
   hitter_table_setter_captain_on_run_130_141: { 5: 13.38, 6: 15.99, 7: 21.99, 8: 26.13, 9: 28.45, 10: 31.98 },
   hitter_table_setter_captain_on_run_129: { 5: 10.27, 6: 13.4, 7: 18.75, 8: 22.24, 9: 25.28, 10: 28.37 },
   hitter_fighting_spirit: { 5: 13.32, 6: 16.38 },
-  hitter_contact_hitter_lineup_on: { 5: 12.92, 6: 16.81, 7: 20.7, 8: 24.59, 9: 28.48, 10: 32.37 },
+  hitter_contact_hitter_lineup_on: { 5: 12.2, 6: 15.85, 7: 18.25, 8: 21.9, 9: 24.3, 10: 27.95 },
   hitter_batting_machine: { 5: 13.5, 6: 15.75, 7: 18, 8: 20.25, 9: 22.5, 10: 24.75 },
   hitter_promise_of_8th: { 5: 12.48, 6: 15.12 },
   hitter_fall_man: { 5: 12.65, 6: 14.9, 7: 17.15, 8: 19.4, 9: 21.65, 10: 23.9 },
