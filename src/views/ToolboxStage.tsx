@@ -740,6 +740,8 @@ export default function ToolboxStage({
             </div>
           )}
 
+          <KakaoAdFitMobileMidBanner enabled />
+
           <div className="result-stat">
             <span>{toolView === "calculator" && activeCardType === "impact" ? "등급 · 1옵 제외" : "등급"}</span>
             <strong style={{ color: resultGradeColor }}>{judgeGrade}</strong>
