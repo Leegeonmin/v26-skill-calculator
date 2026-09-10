@@ -1186,7 +1186,7 @@ export default function LineupSkillView({
 
                   return (
                     <article
-                      key={`${player.sourceRow}-${player.playerName}`}
+                      key={player.sourceRow}
                       className={`public-lineup-player-row public-lineup-card-row-${player.cardType}${
                         player.selected ? "" : " muted"
                       }`}
