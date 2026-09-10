@@ -3743,11 +3743,19 @@ select {
   min-width: 0;
 }
 
-.public-lineup-player-check input {
+.public-lineup-player-check input[type="checkbox"] {
   width: 18px;
   height: 18px;
   min-height: 0;
   flex-shrink: 0;
+}
+
+.public-lineup-player-name-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  font: inherit;
 }
 
 .public-lineup-player-controls {

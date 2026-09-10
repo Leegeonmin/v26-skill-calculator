@@ -1192,10 +1192,11 @@ export default function LineupSkillView({
                       }`}
                     >
                       <div className="public-lineup-player-main">
-                        <label className="public-lineup-player-check">
+                        <div className="public-lineup-player-check">
                           <input
                             type="checkbox"
                             checked={player.selected}
+                            aria-label={`${playerIndex + 1}번 선수 포함`}
                             onChange={(event) => onPlayerSelectedChange(playerIndex, event.target.checked)}
                           />
                           <input
@@ -1205,7 +1206,7 @@ export default function LineupSkillView({
                             onChange={(event) => onPlayerNameChange(playerIndex, event.target.value)}
                             aria-label="선수 이름"
                           />
-                        </label>
+                        </div>
                         <div
                           className={`public-lineup-player-controls public-lineup-player-controls-${
                             player.calculatorMode === "hitter" ? "hitter" : "pitcher"
