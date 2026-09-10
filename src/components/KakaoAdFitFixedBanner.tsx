@@ -7,6 +7,7 @@ const KAKAO_ADFIT_PC_BOTTOM_UNIT = "DAN-txLtDHwa08Yk9jUg";
 const KAKAO_ADFIT_SIDE_UNIT = "DAN-QB9RMdZh1o49GHe6";
 const KAKAO_ADFIT_MOBILE_TOP_UNIT = "DAN-mzOAh4ii66DEoLwq";
 const KAKAO_ADFIT_MOBILE_MID_UNIT = "DAN-dEaKCISEB3UejEIK";
+const KAKAO_ADFIT_MOBILE_RESULT_UNIT = "DAN-ufyRY1ZyXA1FMu6d";
 const KAKAO_ADFIT_PC_TOP_UNITS = [
   "DAN-wgEEvq8xMIF8IePY",
   "DAN-vkuJvjZPyux3QQoh",
@@ -205,6 +206,22 @@ export function KakaoAdFitMobileMidBanner({ enabled }: KakaoAdFitFixedBannerProp
       width={320}
       height={50}
       slot="mobile_mid"
+    />
+  );
+}
+
+export function KakaoAdFitMobileResultBanner({ enabled }: KakaoAdFitFixedBannerProps) {
+  useKakaoAdFitScript(enabled);
+
+  if (!enabled) return null;
+
+  return (
+    <KakaoAdFitSlot
+      className="kakao-adfit-mobile-mid-banner"
+      adUnit={KAKAO_ADFIT_MOBILE_RESULT_UNIT}
+      width={320}
+      height={50}
+      slot="mobile_result"
     />
   );
 }

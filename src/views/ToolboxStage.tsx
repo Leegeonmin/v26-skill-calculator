@@ -2,6 +2,7 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import {
   KakaoAdFitMobileMidBanner,
+  KakaoAdFitMobileResultBanner,
   KakaoAdFitPcTopTripleBanner,
 } from "../components/KakaoAdFitFixedBanner";
 import CalculatorView from "./CalculatorView";
@@ -554,6 +555,7 @@ export default function ToolboxStage({
                   setLevel2={setLevel2}
                   setLevel3={setLevel3}
                   getSkillScoreLabel={getSkillScoreLabel}
+                  mobileMidAd={<KakaoAdFitMobileMidBanner enabled />}
                 />
               )}
             </>
@@ -564,12 +566,14 @@ export default function ToolboxStage({
                   {!simulatorSetupComplete ? (
                     <>
                       {simulatorSetupCard}
+                      <KakaoAdFitMobileMidBanner enabled />
                     </>
                   ) : null}
                 </div>
               ) : toolView === "impactChange" ? (
                 <div className="simulator-content-shell">
                   {impactControlCard}
+                  <KakaoAdFitMobileMidBanner enabled />
                 </div>
               ) : null}
 
@@ -737,7 +741,7 @@ export default function ToolboxStage({
             </div>
           )}
 
-          <KakaoAdFitMobileMidBanner enabled />
+          <KakaoAdFitMobileResultBanner enabled />
 
           <div className="result-stat">
             <span>{toolView === "calculator" && activeCardType === "impact" ? "등급 · 1옵 제외" : "등급"}</span>
