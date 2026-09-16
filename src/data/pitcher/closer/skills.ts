@@ -14,6 +14,7 @@ const CLOSER_SKILL_ROWS: CloserSkillRow[] = [
   { id: "closer_skill_004", rawName: "빅게임헌터", score: { 5: 18.75, 6: 20.1, 7: 23.85, 8: 25.2, 9: 27.95, 10: 29.3 } },
   { id: "closer_skill_005", rawName: "저니맨", score: { 5: 16.07, 6: 20.51, 7: 24.94, 8: 29.38, 9: 33.82, 10: 38.26 } },
   { id: "closer_skill_006", rawName: "파이어볼", score: { 5: 17, 6: 20.23, 7: 23.45, 8: 26.68, 9: 29.91, 10: 33.14 } },
+  { id: "closer_skill_068", rawName: "소방수", score: { 5: 22.91, 6: 25.31, 7: 32.14, 8: 38.98, 9: 45.81, 10: 52.65 } },
   { id: "closer_skill_007", rawName: "투쟁심", score: { 5: 15.26, 6: 19.3 } },
   { id: "closer_skill_008", rawName: "철완(지구력 120~133)", score: { 5: 16.8, 6: 19.2, 7: 19.2, 8: 19.2, 9: 19.2, 10: 19.2 } },
   { id: "closer_skill_009", rawName: "철완(지구력 117~119)", score: { 5: 14.4, 6: 19.2, 7: 19.2, 8: 19.2, 9: 19.2, 10: 19.2 } },
