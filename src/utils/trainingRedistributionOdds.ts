@@ -49,7 +49,7 @@ export const TRAINING_CARD_RULES: Record<TrainingCardType, TrainingCardRule> = {
   },
   national: {
     label: "국가대표",
-    trainingCount: 20,
+    trainingCount: 22,
     lowPickCount: 1,
   },
   signature: {
