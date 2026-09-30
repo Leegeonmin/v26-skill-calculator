@@ -276,6 +276,12 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
+    id: "hitter_slow_start",
+    name: "슬로우스타트",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
     id: "hitter_best_position",
     name: "베스트포지션",
     grade: "major",

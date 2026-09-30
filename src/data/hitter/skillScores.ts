@@ -53,6 +53,7 @@ export const SKILL_SCORES: SkillScoreTable = {
   hitter_hero_of_chaos: { 5: 7.2, 6: 10.56, 7: 11.52, 8: 14.88, 9: 15.84, 10: 19.2 },
   hitter_home_advantage: { 5: 10, 6: 12, 7: 14, 8: 16, 9: 18, 10: 20 },
   hitter_early_start: { 5: 9.4, 6: 12, 7: 14.6, 8: 17.2, 9: 19.8, 10: 22.4 },
+  hitter_slow_start: { 5: 10.9, 6: 11.6, 7: 14.85, 8: 16.25, 9: 19.5, 10: 20.9 },
   hitter_best_position: { 5: 9.6, 6: 12, 7: 16.8, 8: 21.6, 9: 26.4, 10: 31.2 },
   hitter_veteran: { 5: 9.41, 6: 11.88, 7: 13.62, 8: 15.35, 9: 17.08, 10: 18.81 },
   hitter_lefty_specialist_right: { 5: 11.66, 6: 11.66, 7: 13.51, 8: 13.51, 9: 15.36, 10: 15.36 },

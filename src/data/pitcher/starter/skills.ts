@@ -46,6 +46,7 @@ const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_039", name: "첫단추(선발)" },
   { id: "starter_skill_040", name: "승부사" },
   { id: "starter_skill_041", name: "얼리스타트(선발)" },
+  { id: "starter_skill_073", name: "슬로우스타트(선발)" },
   { id: "starter_skill_042", name: "아티스트" },
   { id: "starter_skill_043", name: "언터쳐블" },
   { id: "starter_skill_044", name: "패기(골글)" },
