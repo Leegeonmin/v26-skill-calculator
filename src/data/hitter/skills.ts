@@ -225,7 +225,7 @@ export const SKILLS: SkillMeta[] = [
     id: "hitter_challenge_spirit_5star",
     name: "도전정신(5성)",
     grade: "major",
-    availableCardTypes: ["signature", "goldenGlove", "national"],
+    availableCardTypes: ["signature", "goldenGlove", "allStar", "national"],
   },
   {
     id: "hitter_fearsome_bottom_lineup_on",
