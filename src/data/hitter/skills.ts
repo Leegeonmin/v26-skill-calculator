@@ -300,6 +300,36 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
+    id: "hitter_righty_specialist_right",
+    name: "우타해결사(우타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_righty_specialist_switch",
+    name: "우타해결사(양타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_righty_specialist_left",
+    name: "우타해결사(좌타)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_cleanup_trio_lineup",
+    name: "클린업 트리오(3·4·5번)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
+    id: "hitter_cleanup_trio_other",
+    name: "클린업 트리오(그 외 타순)",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
     id: "hitter_spirit_impact",
     name: "패기(임팩)",
     grade: "major",

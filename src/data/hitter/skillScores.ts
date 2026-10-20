@@ -57,6 +57,11 @@ export const SKILL_SCORES: SkillScoreTable = {
   hitter_best_position: { 5: 9.6, 6: 12, 7: 16.8, 8: 21.6, 9: 26.4, 10: 31.2 },
   hitter_veteran: { 5: 9.41, 6: 11.88, 7: 13.62, 8: 15.35, 9: 17.08, 10: 18.81 },
   hitter_lefty_specialist_right: { 5: 11.66, 6: 11.66, 7: 13.51, 8: 13.51, 9: 15.36, 10: 15.36 },
+  hitter_righty_specialist_right: { 5: 21.32, 6: 24.9, 7: 29.72, 8: 34.54, 9: 39.37, 10: 44.19 },
+  hitter_righty_specialist_switch: { 5: 15.63, 6: 18.4, 7: 21.59, 8: 24.79, 9: 27.99, 10: 31.19 },
+  hitter_righty_specialist_left: { 5: 12.57, 6: 14.9, 7: 17.22, 8: 19.54, 9: 21.87, 10: 24.19 },
+  hitter_cleanup_trio_lineup: { 5: 19.95, 6: 23.99, 7: 30.28, 8: 35.72, 9: 42.01, 10: 47.45 },
+  hitter_cleanup_trio_other: { 5: 6.75, 6: 8.15, 7: 11.8, 8: 14.6, 9: 18.25, 10: 21.05 },
   hitter_spirit_impact: { 5: 10.08, 6: 11.52, 7: 12.96, 8: 14.4 },
   hitter_defensive_stability_on: { 5: 8.4, 6: 11.2, 7: 14, 8: 16.8, 9: 19.6, 10: 22.4 },
   hitter_defensive_stability_off: {

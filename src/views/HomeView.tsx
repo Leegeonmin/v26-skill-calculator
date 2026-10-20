@@ -158,6 +158,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.10.20",
+    title: "신규 타자 스킬 추가: 우타해결사·클린업 트리오",
+    body: "타자 스킬에 우타해결사(우타·양타·좌타)와 클린업 트리오(3·4·5번·그 외 타순)를 추가했습니다. 각 스킬의 5~10레벨 점수를 반영해 스킬 점수 계산기와 관련 도구에서 확인할 수 있습니다.",
+  },
+  {
     date: "2026.09.30",
     title: "슬로우스타트 스킬 점수 추가",
     body: "타자, 선발, 불펜(중계·마무리)의 슬로우스타트 스킬 점수표를 추가했습니다. 이제 스킬 점수 계산기와 관련 도구에서 최신 기준으로 확인할 수 있습니다.",
