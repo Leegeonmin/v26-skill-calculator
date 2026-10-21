@@ -4,6 +4,8 @@ import { resolveAvailableCardTypes } from "../../cardAvailability";
 const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_001", name: "좌승사자(좌투)" },
   { id: "starter_skill_002", name: "황금세대" },
+  { id: "starter_skill_074", name: "위기탈출" },
+  { id: "starter_skill_075", name: "타순공략" },
   { id: "starter_skill_003", name: "철완(지구력 140~149)" },
   { id: "starter_skill_004", name: "철완(지구력 134~139)" },
   { id: "starter_skill_005", name: "빅게임헌터" },
@@ -28,6 +30,7 @@ const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
   { id: "starter_skill_023", name: "약속의8회" },
   { id: "starter_skill_024", name: "국대에이스(버프o)" },
   { id: "starter_skill_070", name: "국대에이스(버프x)" },
+  { id: "starter_skill_076", name: "국민계투" },
   { id: "starter_skill_025", name: "도전정신(5성)" },
   { id: "starter_skill_026", name: "홈어드밴티지" },
   { id: "starter_skill_027", name: "에이스" },
@@ -80,7 +83,7 @@ const STARTER_SKILL_ROWS: Array<{ id: string; name: string }> = [
 const AMATEUR_SKILLS = new Set(["속구선호", "변화구선호", "진검승부", "사고방지"]);
 const ROOKIE_SKILLS = new Set(["평정심", "이닝이터", "기선제압", "더러운볼끝", "자신감"]);
 const MINOR_SKILLS = new Set(["좌타킬러", "우타킬러", "위기관리", "완급조절"]);
-const NATIONAL_ONLY_SKILLS = new Set(["황금세대", "약속의8회", "투쟁심", "전승우승", "해결사", "국민계투", "국대에이스"]);
+const NATIONAL_ONLY_SKILLS = new Set(["황금세대", "약속의8회", "투쟁심", "전승우승", "해결사", "국민계투", "국대에이스", "위기탈출", "타순공략"]);
 
 function getBaseName(name: string): string {
   return name.split("(")[0].trim();
