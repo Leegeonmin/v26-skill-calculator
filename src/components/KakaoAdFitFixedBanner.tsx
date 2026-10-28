@@ -31,16 +31,17 @@ function useKakaoAdFitScript(enabled: boolean) {
   useEffect(() => {
     if (!enabled || typeof document === "undefined") return;
 
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src="${KAKAO_ADFIT_SCRIPT_SRC}"]`
+    );
+    if (existingScript) return;
+
     const script = document.createElement("script");
     script.async = true;
     script.type = "text/javascript";
     script.dataset.v26KakaoAdfit = "true";
     script.src = KAKAO_ADFIT_SCRIPT_SRC;
     document.body.appendChild(script);
-
-    return () => {
-      script.remove();
-    };
   }, [enabled]);
 }
 
@@ -237,8 +238,8 @@ export function KakaoAdFitPcTopTripleBanner({ enabled }: KakaoAdFitFixedBannerPr
         <KakaoAdFitIns
           key={adUnit}
           adUnit={adUnit}
-          width={300}
-          height={250}
+          width={320}
+          height={200}
           slot={`pc_top_${index + 1}`}
         />
       ))}

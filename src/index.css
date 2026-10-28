@@ -564,8 +564,8 @@ select {
 }
 
 .kakao-adfit-pc-top-row .kakao_ad_area {
-  width: 300px;
-  height: 250px;
+  width: 320px;
+  height: 200px;
 }
 
 @media (min-width: 1440px) {
@@ -587,11 +587,11 @@ select {
 @media (min-width: 1100px) {
   .kakao-adfit-pc-top-row {
     display: grid;
-    grid-template-columns: repeat(3, 300px);
-    justify-content: space-between;
-    gap: 32px;
+    grid-template-columns: repeat(3, minmax(0, 320px));
+    justify-content: center;
+    gap: clamp(16px, 2vw, 32px);
     width: 100%;
-    min-height: 250px;
+    min-height: 200px;
     margin: 0 0 18px;
   }
 }
