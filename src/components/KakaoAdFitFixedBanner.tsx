@@ -13,6 +13,7 @@ const KAKAO_ADFIT_PC_TOP_UNITS = [
   "DAN-vkuJvjZPyux3QQoh",
   "DAN-ephNLvlCbInhQxvW",
 ];
+let adFitScriptRefreshFrame: number | null = null;
 
 type KakaoAdFitFixedBannerProps = {
   enabled: boolean;
@@ -31,17 +32,25 @@ function useKakaoAdFitScript(enabled: boolean) {
   useEffect(() => {
     if (!enabled || typeof document === "undefined") return;
 
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      `script[src="${KAKAO_ADFIT_SCRIPT_SRC}"]`
-    );
-    if (existingScript) return;
+    // Batch slots mounted in the same React commit into one AdFit scan.
+    if (adFitScriptRefreshFrame !== null) return;
 
-    const script = document.createElement("script");
-    script.async = true;
-    script.type = "text/javascript";
-    script.dataset.v26KakaoAdfit = "true";
-    script.src = KAKAO_ADFIT_SCRIPT_SRC;
-    document.body.appendChild(script);
+    adFitScriptRefreshFrame = window.requestAnimationFrame(() => {
+      adFitScriptRefreshFrame = null;
+
+      // AdFit scans the page when its script runs. In this SPA, page-specific
+      // slots are mounted after the first run, so rerun it when a slot appears.
+      document
+        .querySelector<HTMLScriptElement>(`script[src="${KAKAO_ADFIT_SCRIPT_SRC}"]`)
+        ?.remove();
+
+      const script = document.createElement("script");
+      script.async = true;
+      script.type = "text/javascript";
+      script.dataset.v26KakaoAdfit = "true";
+      script.src = KAKAO_ADFIT_SCRIPT_SRC;
+      document.body.appendChild(script);
+    });
   }, [enabled]);
 }
 

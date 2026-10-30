@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { Analytics } from "@vercel/analytics/react";
 import { CARD_TYPE_LABELS } from "./data/cardTypes";
 import { getGameDataSet } from "./data/gameData";
 import { RESULT_GRADE_COLORS, SKILL_GRADE_COLORS } from "./data/uiColors";
@@ -183,23 +182,6 @@ const VALID_TOOL_VIEWS: ToolView[] = [
 
 function getToolViewUrl(view: ToolView) {
   return TOOL_VIEW_URLS[view] ?? "/";
-}
-
-function trackGoogleAnalyticsPageView(view: ToolView) {
-  if (typeof window === "undefined" || !window.gtag) {
-    return;
-  }
-
-  const pagePath = getToolViewUrl(view);
-  const pageUrl = new URL(window.location.href);
-  pageUrl.pathname = pagePath;
-  pageUrl.search = "";
-  window.gtag("event", "page_view", {
-    page_path: pagePath,
-    page_location: pageUrl.toString(),
-    page_title: document.title,
-    transport_type: "beacon",
-  });
 }
 
 function trackGoogleAnalyticsEvent(eventName: string, params: Record<string, string>) {
@@ -395,7 +377,6 @@ function App() {
   const [revenueSessionId] = useState(() => getOrCreateRevenueSessionId());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
   const applyingPopStateRef = useRef(false);
-  const lastGoogleAnalyticsPathRef = useRef<string | null>(null);
 
   const playerType: PlayerType = mode === "hitter" ? "hitter" : "pitcher";
   const pitcherRole: PitcherRole = mode === "hitter" ? "starter" : mode;
@@ -705,25 +686,6 @@ function App() {
       },
     }).catch(() => {});
   }, [infoPageKey, isAdminRoute, revenueSessionId, toolView]);
-
-  useEffect(() => {
-    if (isAdminRoute || infoPageKey) {
-      return;
-    }
-
-    const pagePath = getToolViewUrl(toolView);
-    if (lastGoogleAnalyticsPathRef.current === null) {
-      lastGoogleAnalyticsPathRef.current = pagePath;
-      return;
-    }
-
-    if (lastGoogleAnalyticsPathRef.current === pagePath) {
-      return;
-    }
-
-    lastGoogleAnalyticsPathRef.current = pagePath;
-    trackGoogleAnalyticsPageView(toolView);
-  }, [infoPageKey, isAdminRoute, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -1505,7 +1467,6 @@ function App() {
               onGoHome={handleGoHome}
             />
           </Suspense>
-          <Analytics />
         </div>
       </div>
     );
@@ -1542,7 +1503,6 @@ function App() {
             <span>made by 우주</span>
           </footer>
           <KakaoAdFitFixedBanner enabled={shouldShowKakaoAdFit} />
-          <Analytics />
         </div>
       </div>
     );
@@ -1712,7 +1672,6 @@ function App() {
           enabled={shouldShowKakaoAdFit}
           showSide={toolView !== "skillQuiz"}
         />
-        <Analytics />
       </div>
     </div>
   );

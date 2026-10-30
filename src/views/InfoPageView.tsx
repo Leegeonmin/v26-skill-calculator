@@ -1561,8 +1561,8 @@ const INFO_PAGES: Record<InfoPageKey, InfoPage> = {
         title: "제3자 서비스",
         body: (
           <p>
-            이 사이트는 로그인과 데이터 저장에 Supabase를, 익명 방문 통계 확인에 Vercel Analytics,
-            Cloudflare Web Analytics 또는 Google Analytics를 사용할 수 있습니다. Kakao AdFit 등 광고
+            이 사이트는 로그인과 데이터 저장에 Supabase를, 익명 방문 통계 확인에 Cloudflare Web Analytics
+            또는 Google Analytics를 사용할 수 있습니다. Kakao AdFit 등 광고
             서비스가 적용되면 광고 제공과 부정 사용 방지를 위해 쿠키 또는 유사 기술이 사용될 수 있습니다.
           </p>
         ),
