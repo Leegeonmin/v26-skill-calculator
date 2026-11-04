@@ -14295,11 +14295,6 @@ input {
   color: var(--text);
 }
 
-.site-nav-dropdown button.site-nav-dropdown-new {
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .site-nav-dropdown button:hover {
   background: var(--accent-soft-bg);
 }

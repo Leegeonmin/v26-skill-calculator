@@ -1076,7 +1076,6 @@ function triggerMLBExit() {
   lastMlbResult = buildMlbResultSnapshot();
   renderMlbResultCard(lastMlbResult);
   loadMlbResultRank(lastMlbResult);
-  syncIdleGameResult(lastMlbResult);
   const modal = document.getElementById('exit-modal');
   modal.classList.remove('hidden');
   saveGame();
@@ -1163,207 +1162,6 @@ function placeConsoleBesideRedistribute() {
   leftPanel.insertAdjacentElement('afterend', consolePanel);
 }
 
-async function loadPublicGameStats() {
-  try {
-    const response = await fetch('/api/idle-dev-game/stats', {
-      headers: { Accept: 'application/json' }
-    });
-    if (!response.ok) return;
-
-    const stats = await response.json();
-    const mlbSuccessCount = Number(stats.mlbSuccessCount ?? stats.mlb_success_count ?? 0);
-    if (!Number.isFinite(mlbSuccessCount) || mlbSuccessCount < 0) return;
-
-    state.globalExitCount = Math.floor(mlbSuccessCount);
-    document.getElementById('global-exit-count').textContent = state.globalExitCount.toLocaleString();
-  } catch (error) {
-    console.warn('Public game stats load failed:', error);
-  }
-}
-
-function getOrCreateAnonId() {
-  const key = 'cpbv_idle_anon_id';
-  let anonId = localStorage.getItem(key);
-  if (!anonId) {
-    anonId = crypto?.randomUUID ? crypto.randomUUID() : `anon-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    localStorage.setItem(key, anonId);
-  }
-  return anonId;
-}
-
-function getSupabaseAccessTokenFromStorage() {
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith('sb-') || !key.endsWith('-auth-token')) continue;
-      const value = JSON.parse(localStorage.getItem(key) || '{}');
-      const token = value?.access_token || value?.currentSession?.access_token;
-      if (token) return token;
-    }
-  } catch (error) {
-    console.warn('Auth token read failed:', error);
-  }
-  return null;
-}
-
-async function postIdleGameApi(path, payload) {
-  const token = getSupabaseAccessTokenFromStorage();
-  if (!token) return null;
-
-  const headers = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-    'X-CPBV-Anon-ID': getOrCreateAnonId()
-  };
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  const response = await fetch(path, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) throw new Error(`${path} failed: ${response.status}`);
-  return response.json();
-}
-
-async function getIdleGameApi(path) {
-  const token = getSupabaseAccessTokenFromStorage();
-  if (!token) return null;
-
-  const headers = {
-    Accept: 'application/json',
-    'X-CPBV-Anon-ID': getOrCreateAnonId(),
-    Authorization: `Bearer ${token}`
-  };
-
-  const url = `${path}?anonId=${encodeURIComponent(getOrCreateAnonId())}`;
-  const response = await fetch(url, { method: 'GET', headers });
-  if (!response.ok) throw new Error(`${path} failed: ${response.status}`);
-  return response.json();
-}
-
-async function ensureIdleGameEnabled() {
-  try {
-    const response = await fetch('/api/idle-dev-game/config', {
-      headers: { Accept: 'application/json' }
-    });
-    if (!response.ok) return true;
-
-    const payload = await response.json();
-    if (payload?.ready === true && payload?.enabled === false) {
-      document.body.innerHTML = `
-        <main style="min-height:100vh;display:grid;place-items:center;background:#07111f;color:#e5edf8;font-family:Arial,sans-serif;padding:24px;text-align:center;">
-          <section style="max-width:420px;border:1px solid rgba(56,189,248,.35);border-radius:18px;padding:28px;background:rgba(15,23,42,.88);">
-            <h1 style="margin:0 0 12px;font-size:24px;">타자 키우기 점검 중</h1>
-            <p style="margin:0 0 20px;color:#9fb0c7;line-height:1.6;">현재 운영자가 기능을 비활성화했습니다.</p>
-            <a href="/" style="display:inline-flex;padding:11px 16px;border-radius:12px;background:#0ea5e9;color:white;text-decoration:none;font-weight:800;">홈으로 이동</a>
-          </section>
-        </main>
-      `;
-      return false;
-    }
-  } catch {
-    return true;
-  }
-
-  return true;
-}
-
-function buildProgressPayload(extra = {}) {
-  return {
-    anonId: getOrCreateAnonId(),
-    displayName: state.player.name,
-    state: {
-      player: state.player,
-      stats: state.stats,
-      baseStats: state.baseStats,
-      skills: state.skills,
-      synergyCount: state.synergyCount,
-      mlbSuccessCount: state.mlbSuccessCount || 0
-    },
-    progress: {
-      currentTier: state.player.tier,
-      totalTraining: Math.floor(state.tp),
-      swingCount: state.swingCount || 0,
-      homerunCount: state.homerunCount || 0,
-      mlbSuccessCount: state.mlbSuccessCount || 0,
-      bestSwingTraining: state.bestSwingTraining || 0,
-      bestHomerunTraining: state.bestHomerunTraining || 0,
-      bestTotalLevel: getTrainingLevel(),
-      firstMlbSeconds: state.firstMlbSeconds || null
-    },
-    ...extra
-  };
-}
-
-async function syncIdleGameSession() {
-  try {
-    const payload = await postIdleGameApi('/api/idle-dev-game/session', buildProgressPayload());
-    if (payload?.playerId) {
-      state.remotePlayerId = payload.playerId;
-      saveGame();
-    }
-  } catch (error) {
-    console.warn('Idle game session sync failed:', error);
-  }
-}
-
-async function loadRemoteGameForSignedInUser() {
-  try {
-    const payload = await getIdleGameApi('/api/idle-dev-game/session');
-    const remoteState = payload?.player?.last_state;
-    if (!remoteState || typeof remoteState !== 'object') return false;
-
-    const localScore = getStateProgressScore(state);
-    const previousState = state;
-    restoreSavedState(remoteState);
-    state.remotePlayerId = payload.playerId || payload.player?.id || state.remotePlayerId;
-    const remoteScore = getStateProgressScore(state);
-
-    if (remoteScore + 0.0001 < localScore) {
-      state = previousState;
-      syncIdleGameSession();
-      return false;
-    }
-
-    saveGame();
-    addLog('[로그인 복구] 이전에 저장한 플레이 기록을 불러왔습니다.', 'special');
-    return true;
-  } catch (error) {
-    console.warn('Idle game remote load failed:', error);
-    return false;
-  }
-}
-
-async function syncIdleGameResult(result) {
-  try {
-    const payload = await postIdleGameApi('/api/idle-dev-game/result', buildProgressPayload({
-      result
-    }));
-    if (payload?.official === false) {
-      result.rankLabel = '로그인 시 공식 집계';
-      document.getElementById('modal-mlb-rank').textContent = result.rankLabel;
-      renderMlbResultCard(result);
-      saveGame();
-      return;
-    }
-    if (payload?.playerId) state.remotePlayerId = payload.playerId;
-    if (Number.isFinite(Number(payload?.elapsedSeconds)) && Number(payload.elapsedSeconds) > 0) {
-      result.elapsedSeconds = Number(payload.elapsedSeconds);
-      state.firstMlbSeconds = Number(payload.elapsedSeconds);
-    }
-    if (payload?.rank) {
-      result.rankLabel = `${Number(payload.rank).toLocaleString()}등`;
-      document.getElementById('modal-mlb-rank').textContent = result.rankLabel;
-      renderMlbResultCard(result);
-    }
-    saveGame();
-  } catch (error) {
-    console.warn('Idle game result sync failed:', error);
-  }
-}
-
 function buildMlbResultSnapshot() {
   const combinedStats = combineStats();
   const skillSummary = state.skills
@@ -1389,19 +1187,11 @@ function buildMlbResultSnapshot() {
   };
 }
 
-async function loadMlbResultRank(result) {
+function loadMlbResultRank(result) {
   const rankEl = document.getElementById('modal-mlb-rank');
   if (!rankEl) return;
 
-  const token = getSupabaseAccessTokenFromStorage();
-  if (!token) {
-    result.rankLabel = '로그인 시 공식 집계';
-    rankEl.textContent = result.rankLabel;
-    renderMlbResultCard(result);
-    return;
-  }
-
-  result.rankLabel = '공식 집계 중';
+  result.rankLabel = '단독 플레이 · 공식 랭킹 미집계';
   rankEl.textContent = result.rankLabel;
   renderMlbResultCard(result);
 }
@@ -1560,21 +1350,6 @@ function savePlayerNameFromModal() {
   state.player.name = state.player.name || createDefaultPlayerName();
   saveGame();
   updateUI();
-  return;
-  const modal = document.getElementById('player-name-modal');
-  const input = document.getElementById('player-name-input');
-  const nextName = normalizePlayerName(input?.value);
-  if (!nextName) {
-    alert('선수 이름은 한글/영문/숫자 2~8자로 입력해주세요. 욕설, URL, 운영자 사칭 문구는 사용할 수 없습니다.');
-    return;
-  }
-
-  state.player.name = nextName;
-  localStorage.setItem('cpbv_hitter_name_set', '1');
-  modal?.classList.add('hidden');
-  saveGame();
-  updateUI();
-  syncIdleGameSession();
 }
 
 // 13. UI 드로잉 및 갱신 (Rendering)
@@ -2216,51 +1991,6 @@ function saveGame() {
   localStorage.setItem('cpbv_hitter_save', JSON.stringify(state));
 }
 
-function restoreSavedState(parsed) {
-  const restoredStats = { ...createFreshStats(), ...(parsed.stats || {}) };
-  const restoredBaseStats = { ...createFreshStats(), ...(parsed.baseStats || {}) };
-  if ((parsed.saveVersion || 0) < 3 && STAT_KEYS.every(key => restoredStats[key] >= 1)) {
-    STAT_KEYS.forEach(key => {
-      restoredStats[key] = Math.max(0, restoredStats[key] - 1);
-    });
-  }
-
-  state = {
-    ...state,
-    ...parsed,
-    saveVersion: 4,
-    tp: Math.max(Number(parsed.tp) || 0, 0),
-    player: { ...state.player, ...(parsed.player || {}) },
-    stats: restoredStats,
-    baseStats: restoredBaseStats,
-    upgrades: {
-      active: { ...(parsed.upgrades?.active || {}) },
-      passive: { ...(parsed.upgrades?.passive || {}) }
-    },
-    skills: Array.isArray(parsed.skills)
-      ? parsed.skills.map(skill => skill ? {
-        ...skill,
-        desc: createSkillDescription(skill.name, skill.rank),
-        effect: createSkillEffect(skill.name, skill.rank)
-      } : null)
-      : state.skills
-  };
-  if ((parsed.saveVersion || 0) < 4) {
-    state.player.name = createDefaultPlayerName();
-    localStorage.removeItem('cpbv_hitter_name_set');
-  }
-}
-
-function getStateProgressScore(targetState = state) {
-  const tierScore = { LIVE: 1, IMPACT: 2, SIGNATURE: 3, 'GOLDEN GLOVE': 4, MLB: 5 }[targetState.player?.tier] || 0;
-  return (
-    (Number(targetState.mlbSuccessCount) || 0) * 1_000_000_000_000 +
-    tierScore * 1_000_000_000 +
-    (Number(targetState.tp) || 0) +
-    (Number(targetState.swingCount) || 0) * 0.001
-  );
-}
-
 function loadGame() {
   const saved = localStorage.getItem('cpbv_hitter_save');
   if (saved) {
@@ -2458,13 +2188,10 @@ function initEventListeners() {
 }
 
 // 17. 앱 시작 진입점
-async function initApp() {
-  if (!(await ensureIdleGameEnabled())) return;
+function initApp() {
   loadGame();
-  await loadRemoteGameForSignedInUser();
   placeConsoleBesideRedistribute();
   initEventListeners();
-  syncIdleGameSession();
   
   // 게임 루프: 100ms마다 초당 자동 훈련량 정밀 연산 및 업데이트
   setInterval(() => {
@@ -2480,13 +2207,8 @@ async function initApp() {
     saveGame();
   }, 5000);
 
-  setInterval(() => {
-    syncIdleGameSession();
-  }, 30000);
-
   startChanceBallSpawner();
   startLogTicker();
-  loadPublicGameStats();
   openPlayerNameModal(false);
   
   updateUI();

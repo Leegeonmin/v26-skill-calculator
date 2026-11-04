@@ -53,22 +53,6 @@ export async function onRequest(context) {
     const player = completion?.player || null;
     const score = Number(completion?.elapsedSeconds || 0);
 
-    await callRpc(context, request, "idle_dev_game_log_event", {
-      p_player_id: player?.id || null,
-      p_anon_id: anonId,
-      p_event_type: "mlb_success",
-      p_tier: progress.currentTier || result.tier || null,
-      p_training_delta: null,
-      p_total_training: progress.totalTraining || result.totalTraining || null,
-      p_swing_count: progress.swingCount || null,
-      p_homerun_count: progress.homerunCount || null,
-      p_metadata: {
-        ...result,
-        serverElapsedSeconds: score,
-        officialRunId: completion?.runId || null,
-      },
-    });
-
     return json({
       playerId: player?.id || null,
       rank: score > 0 ? await getRank(context, "fastest_mlb_seconds", score) : null,

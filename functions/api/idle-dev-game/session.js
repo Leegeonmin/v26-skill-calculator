@@ -74,18 +74,6 @@ export async function onRequest(context) {
           })
         : null;
 
-    await callRpc(context, request, "idle_dev_game_log_event", {
-      p_player_id: player?.id || null,
-      p_anon_id: anonId,
-      p_event_type: "session_start",
-      p_tier: body.progress?.currentTier || null,
-      p_training_delta: null,
-      p_total_training: body.progress?.totalTraining || null,
-      p_swing_count: body.progress?.swingCount || null,
-      p_homerun_count: body.progress?.homerunCount || null,
-      p_metadata: { displayName: body.displayName || null },
-    });
-
     return json({
       playerId: player?.id || null,
       player: player || null,

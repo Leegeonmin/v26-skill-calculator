@@ -65,11 +65,7 @@ import {
 import { simulateAdvancedSkillChange } from "./utils/simulateAdvancedSkillChange";
 import { simulateImpactSkillChangeUntilDoubleMajor } from "./utils/simulateImpactSkillChange";
 import type { SkillMarbleMode } from "./utils/skillMarbleOdds";
-import { getOrCreateRevenueSessionId, logRevenueEvent } from "./lib/revenueAnalytics";
-import {
-  getHomeChangeMessage,
-  getIdleDevGameSetting,
-} from "./lib/siteSettings";
+import { getHomeChangeMessage } from "./lib/siteSettings";
 import HomeView from "./views/HomeView";
 import InfoPageView, { type InfoPageKey } from "./views/InfoPageView";
 
@@ -360,7 +356,6 @@ function App() {
     return Boolean(window.sessionStorage.getItem(ADMIN_SESSION_KEY));
   });
   const [homeChangeMessage, setHomeChangeMessage] = useState("");
-  const [idleDevGameEnabled, setIdleDevGameEnabled] = useState(false);
   const [lineupUploads, setlineupUploads] = useState<LineupSkillSavedUpload[]>([]);
   const [lineupUploadsLoading, setlineupUploadsLoading] = useState(false);
   const [lineupUploadsError, setlineupUploadsError] = useState<string | null>(null);
@@ -374,7 +369,6 @@ function App() {
   const [lineupDraftPublicUploadId, setlineupDraftPublicUploadId] = useState<string | null>(null);
   const [lineupSaving, setlineupSaving] = useState(false);
   const [lineupSavedUpload, setlineupSavedUpload] = useState<LineupSkillSavedUpload | null>(null);
-  const [revenueSessionId] = useState(() => getOrCreateRevenueSessionId());
   const lastProfileSyncKeyRef = useRef<string | null>(null);
   const applyingPopStateRef = useRef(false);
 
@@ -530,18 +524,6 @@ function App() {
   }, [supabaseReady]);
 
   useEffect(() => {
-    if (!supabaseReady) {
-      setIdleDevGameEnabled(false);
-      return;
-    }
-
-    void (async () => {
-      const setting = await getIdleDevGameSetting();
-      setIdleDevGameEnabled(setting.enabled);
-    })();
-  }, [supabaseReady]);
-
-  useEffect(() => {
     if (!isAdminRoute) {
       return;
     }
@@ -670,22 +652,6 @@ function App() {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     });
   }, [infoPageKey, isAdminRoute, toolView]);
-
-  useEffect(() => {
-    if (isAdminRoute || infoPageKey) {
-      return;
-    }
-
-    void logRevenueEvent({
-      eventType: "page_view",
-      sessionId: revenueSessionId,
-      pagePath: window.location.pathname,
-      pageView: toolView,
-      metadata: {
-        search: window.location.search,
-      },
-    }).catch(() => {});
-  }, [infoPageKey, isAdminRoute, revenueSessionId, toolView]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -1028,6 +994,7 @@ function App() {
   };
 
   const handleGoogleLogin = async (nextView: ToolView = toolView) => {
+    setAuthError(null);
     try {
       const redirectUrl =
         typeof window === "undefined"
@@ -1484,7 +1451,6 @@ function App() {
             onGoogleLogout={() => void handleGoogleLogout()}
             onSelectView={handleToolViewChange}
             supabaseReady={supabaseReady}
-            idleDevGameEnabled={idleDevGameEnabled}
             themeAction={themeToggle}
           />
           <AppChrome>
@@ -1519,7 +1485,6 @@ function App() {
           onGoogleLogout={() => void handleGoogleLogout()}
           onSelectView={handleToolViewChange}
           supabaseReady={supabaseReady}
-          idleDevGameEnabled={idleDevGameEnabled}
           themeAction={themeToggle}
         />
         <AppChrome>

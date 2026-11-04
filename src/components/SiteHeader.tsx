@@ -10,7 +10,6 @@ type SiteHeaderProps = {
   onGoogleLogout: () => void;
   onSelectView: (view: ToolView) => void;
   supabaseReady: boolean;
-  idleDevGameEnabled: boolean;
   themeAction?: ReactNode;
 };
 
@@ -110,7 +109,6 @@ export default function SiteHeader({
   onGoogleLogout,
   onSelectView,
   supabaseReady,
-  idleDevGameEnabled,
   themeAction,
 }: SiteHeaderProps) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -151,13 +149,10 @@ export default function SiteHeader({
             <img src="/brand/v26-lab-app-icon.svg" alt="" aria-hidden="true" className="site-brand-icon" />
             <span>v26-lab</span>
           </button>
-          {idleDevGameEnabled && (
-            <a className="site-mobile-header-game-link" href="/idle-dev-game/index.html">
-              <HeaderIcon name="bat" />
-              <span>타자 키우기</span>
-              <em>BETA</em>
-            </a>
-          )}
+          <a className="site-mobile-header-game-link" href="/idle-dev-game/index.html">
+            <HeaderIcon name="bat" />
+            <span>타자 키우기</span>
+          </a>
         </div>
         <nav className="site-primary-nav" aria-label="주요 기능">
           <button type="button" className="site-nav-link" onClick={() => onSelectView("calculator")}>
@@ -168,7 +163,6 @@ export default function SiteHeader({
             <button type="button" className="site-nav-link" onClick={() => onSelectView("simulator")}>
               <HeaderIcon name="chart" />
               <span>시뮬레이터</span>
-              <em className="site-nav-new-badge">NEW</em>
             </button>
             <div className="site-nav-dropdown">
               <button type="button" onClick={() => onSelectView("simulator")}>
@@ -177,13 +171,11 @@ export default function SiteHeader({
               <button type="button" onClick={() => onSelectView("impactChange")}>
                 임팩트 변경 시뮬
               </button>
-              <button type="button" className="site-nav-dropdown-new" onClick={() => onSelectView("skillMarble")}>
+              <button type="button" onClick={() => onSelectView("skillMarble")}>
                 <span>임팩트 스킬 마블</span>
-                <em className="site-nav-new-badge">NEW</em>
               </button>
-              <button type="button" className="site-nav-dropdown-new" onClick={() => onSelectView("majorSkillMarble")}>
+              <button type="button" onClick={() => onSelectView("majorSkillMarble")}>
                 <span>메이저 스킬 마블</span>
-                <em className="site-nav-new-badge">NEW</em>
               </button>
             </div>
           </div>
@@ -208,19 +200,15 @@ export default function SiteHeader({
           <button type="button" className="site-nav-link" onClick={() => onSelectView("skillQuiz")}>
             <HeaderIcon name="quiz" />
             <span>스잘알</span>
-            <em className="site-nav-new-badge">NEW</em>
           </button>
           <button type="button" className="site-nav-link" onClick={() => onSelectView("trainingRedistribution")}>
             <HeaderIcon name="guide" />
             <span>훈재분 확률</span>
           </button>
-          {idleDevGameEnabled && (
-            <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
-              <HeaderIcon name="bat" />
-              <span>타자 키우기</span>
-              <em>BETA</em>
-            </a>
-          )}
+          <a className="site-nav-link site-nav-link-game" href="/idle-dev-game/index.html">
+            <HeaderIcon name="bat" />
+            <span>타자 키우기</span>
+          </a>
         </nav>
         <div className="site-header-actions">
           {themeAction}
@@ -292,11 +280,9 @@ export default function SiteHeader({
         </button>
         <button type="button" className={currentView === "skillMarble" ? "is-active" : undefined} onClick={() => onSelectView("skillMarble")}>
           임팩트 마블
-          <em className="site-mobile-nav-new">NEW</em>
         </button>
         <button type="button" className={currentView === "majorSkillMarble" ? "is-active" : undefined} onClick={() => onSelectView("majorSkillMarble")}>
           메이저 마블
-          <em className="site-mobile-nav-new">NEW</em>
         </button>
         <button type="button" className={currentView === "lineupSkill" ? "is-active" : undefined} onClick={() => onSelectView("lineupSkill")}>
           라인업 스킬
@@ -309,7 +295,6 @@ export default function SiteHeader({
         </button>
         <button type="button" className={currentView === "skillQuiz" ? "is-active" : undefined} onClick={() => onSelectView("skillQuiz")}>
           스잘알
-          <em className="site-mobile-nav-new">NEW</em>
         </button>
         <button type="button" className={currentView === "trainingRedistribution" ? "is-active" : undefined} onClick={() => onSelectView("trainingRedistribution")}>
           훈재분 확률

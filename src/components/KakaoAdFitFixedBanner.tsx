@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { getOrCreateRevenueSessionId, logRevenueEvent } from "../lib/revenueAnalytics";
+import { useEffect } from "react";
 
 const KAKAO_ADFIT_SCRIPT_SRC = "https://t1.kakaocdn.net/kas/static/ba.min.js";
 const KAKAO_ADFIT_BOTTOM_UNIT = "DAN-liZUYElBnSJmrdve";
@@ -54,51 +53,9 @@ function useKakaoAdFitScript(enabled: boolean) {
   }, [enabled]);
 }
 
-function KakaoAdFitIns({ adUnit, width, height, slot }: Omit<KakaoAdFitSlotProps, "className">) {
-  const adRef = useRef<HTMLModElement | null>(null);
-
-  useEffect(() => {
-    const sessionId = getOrCreateRevenueSessionId();
-    const element = adRef.current;
-    if (!element || typeof IntersectionObserver === "undefined") {
-      return;
-    }
-
-    let didLogViewable = false;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const isViewable = entries.some(
-          (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5
-        );
-
-        if (!isViewable || didLogViewable) {
-          return;
-        }
-
-        didLogViewable = true;
-        void logRevenueEvent({
-          eventType: "ad_viewable",
-          sessionId,
-          adSlot: slot,
-          adUnit,
-          adWidth: width,
-          adHeight: height,
-        }).catch(() => {});
-        observer.disconnect();
-      },
-      { threshold: [0.5] }
-    );
-
-    observer.observe(element);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [adUnit, height, slot, width]);
-
+function KakaoAdFitIns({ adUnit, width, height }: Omit<KakaoAdFitSlotProps, "className">) {
   return (
     <ins
-      ref={adRef}
       className="kakao_ad_area"
       style={{ display: "none" }}
       data-ad-unit={adUnit}

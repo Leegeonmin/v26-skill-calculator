@@ -28,7 +28,10 @@ export async function signInWithGoogle(redirectTo?: string) {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: redirectTo ?? window.location.origin,
+      // Supabase sends the browser back here after Google OAuth. Keep the
+      // callback on the current host (including preview deployments) and
+      // preserve the current route as query parameters.
+      redirectTo: redirectTo ?? `${window.location.origin}${window.location.pathname}${window.location.search}`,
     },
   });
 
