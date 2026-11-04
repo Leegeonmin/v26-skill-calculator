@@ -61,8 +61,8 @@ type QuizRecord = {
 
 const QUESTION_COUNT = 10;
 const QUESTION_SECONDS = 8;
-const MIN_SCORE_DIFF = 0.5;
-const MAX_SCORE_DIFF = 3;
+const MIN_SCORE_DIFF = 3;
+const MAX_SCORE_DIFF = 5;
 const REVIEW_DELAY_MS = 850;
 const SEASON_RECORD_KEY_PREFIX = "v26-skill-quiz-season-record:";
 const ALL_TIME_RECORD_KEY = "v26-skill-quiz-all-time-record";
