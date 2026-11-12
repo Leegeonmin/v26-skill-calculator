@@ -270,6 +270,12 @@ export const SKILLS: SkillMeta[] = [
     availableCardTypes: ALL_CARD_TYPES,
   },
   {
+    id: "hitter_back_to_back_home_run",
+    name: "백투백 홈런",
+    grade: "major",
+    availableCardTypes: ALL_CARD_TYPES,
+  },
+  {
     id: "hitter_early_start",
     name: "얼리스타트",
     grade: "major",

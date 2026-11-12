@@ -158,6 +158,11 @@ function getHomeRankSkillItems(row: RankingRow) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const NOTICE_ITEMS = [
   {
+    date: "2026.11.12",
+    title: "타자 스킬 백투백 홈런 추가",
+    body: "랭킹 챌린지 기준 점수를 적용해 타자 스킬 백투백 홈런을 추가했습니다. 5~10레벨 점수는 각각 5.93, 8.33, 8.33, 10.92, 10.92, 13.32이며 스킬 점수 계산기와 관련 도구에서 확인할 수 있습니다.",
+  },
+  {
     date: "2026.10.22",
     title: "제구이론 반영 스킬점수 업데이트",
     body: "제구이론을 반영한 최신 스킬 점수표를 적용했습니다. 타자와 선발·불펜(중계·마무리) 점수를 이미지 기준으로 갱신하고, 불펜 국가대표 전용 스킬 위기탈출·타순공략을 추가했습니다. 마무리 전용 소방수 점수도 최신 기준으로 반영했습니다.",
