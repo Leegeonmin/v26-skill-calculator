@@ -4695,6 +4695,245 @@ select {
   background: #eef6ff;
 }
 
+/* Keep the lineup's custom light palette from leaking into dark mode. */
+.app-bg[data-theme="dark"]:has(.lineup-view) {
+  --lineup-background: #080d18;
+  --lineup-foreground: #eef4ff;
+  --lineup-card: rgba(17, 24, 39, 0.9);
+  --lineup-primary: #e5f0ff;
+  --lineup-primary-soft: rgba(96, 165, 250, 0.12);
+  --lineup-muted: #9aa8be;
+  --lineup-border: rgba(148, 163, 184, 0.24);
+  background: #080d18;
+}
+
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-view {
+  color: var(--lineup-foreground);
+}
+
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-auth-card,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-upload-panel,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-history-panel,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-summary-card,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-player-row,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-saved-row,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-history-row,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-auth,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-header,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-quota,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-panel,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-player-card,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-player-row {
+  border-color: var(--lineup-border);
+  background: var(--lineup-card);
+  color: var(--lineup-foreground);
+}
+
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-header {
+  border-bottom-color: var(--lineup-border);
+  background: rgba(8, 13, 24, 0.94);
+}
+
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-player-controls select,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-skill-edit-row select,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-player-name-input {
+  border-color: var(--lineup-border);
+  background: #0b1220;
+  color: var(--lineup-foreground);
+}
+
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-row-link,
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-table-link {
+  border-color: var(--lineup-border);
+  background: rgba(15, 23, 42, 0.84);
+  color: var(--lineup-foreground);
+}
+
+/* Shared dark surfaces for controls that previously kept their light palette. */
+.app-bg[data-theme="dark"] .kakao-adfit-pc-fixed-banner,
+.app-bg[data-theme="dark"] .kakao-adfit-side-banner {
+  background: #080d18;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.36);
+}
+
+.app-bg[data-theme="dark"] .calculator-page .skill-slot-badge {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(96, 165, 250, 0.14);
+  color: #dbeafe;
+}
+
+.app-bg[data-theme="dark"] .calculator-page .skill-search-wrap input {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(2, 6, 23, 0.72);
+  color: #f8fbff;
+}
+
+.app-bg[data-theme="dark"] .calculator-page .skill-option {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.app-bg[data-theme="dark"] .calculator-page .skill-option:hover,
+.app-bg[data-theme="dark"] .calculator-page .skill-option.selected {
+  border-color: color-mix(in srgb, var(--skill-option-dark-color, #93c5fd) 72%, #f8fbff);
+  background: color-mix(in srgb, var(--skill-option-dark-color, #93c5fd) 12%, rgba(15, 23, 42, 0.7));
+}
+
+.app-bg[data-theme="dark"] .simulator-page .primary-btn,
+.app-bg[data-theme="dark"] .simulator-page .roll-btn,
+.app-bg[data-theme="dark"] .impact-page .roll-btn,
+.app-bg[data-theme="dark"] .skill-quiz-page .primary-btn,
+.app-bg[data-theme="dark"] .skill-quiz-result-actions .primary-btn {
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #f8fbff;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .result-odds-card,
+.app-bg[data-theme="dark"] .simulator-page .result-odds-grid div {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(2, 6, 23, 0.48);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .result-odds-head span,
+.app-bg[data-theme="dark"] .simulator-page .result-odds-grid span {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .simulator-page .result-odds-grid strong {
+  color: #f8fbff;
+}
+
+.app-bg[data-theme="dark"] .public-lineup-view .public-lineup-copy-icon {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.84);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"]:has(.lineup-view) .lineup-review-head-actions .ghost-btn,
+.app-bg[data-theme="dark"]:has(.lineup-view) .public-lineup-detail-action-btn.ghost-btn {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.84);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-row select,
+.app-bg[data-theme="dark"] .skill-compare-search-select input,
+.app-bg[data-theme="dark"] .skill-compare-search-list {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: #0f172a;
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-list button,
+.app-bg[data-theme="dark"] .skill-compare-search-list > span {
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-search-list button:hover,
+.app-bg[data-theme="dark"] .skill-compare-search-list button[aria-selected="true"] {
+  background: rgba(96, 165, 250, 0.16);
+}
+
+.app-bg[data-theme="dark"] .modal-backdrop {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.app-bg[data-theme="dark"] .modal-card {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.98);
+  color: #e5f0ff;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.52);
+}
+
+.app-bg[data-theme="dark"] .modal-eyebrow {
+  color: #a8b3c7;
+}
+
+.app-bg[data-theme="dark"] .skill-quiz-result-actions .ghost-btn {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.84);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .skill-quiz-result-actions .ghost-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.app-bg[data-theme="dark"] .app-header-badge,
+.app-bg[data-theme="dark"] .ghost-btn,
+.app-bg[data-theme="dark"] .modal-choice-btn,
+.app-bg[data-theme="dark"] .ranking-page .ranking-cta-card,
+.app-bg[data-theme="dark"] .ranking-page .ranking-action-bar,
+.app-bg[data-theme="dark"] .ranking-page .ranking-form input,
+.app-bg[data-theme="dark"] .ranking-page .ranking-form select,
+.app-bg[data-theme="dark"] .ranking-page .ranking-form textarea {
+  border-color: rgba(148, 163, 184, 0.28);
+  background-color: rgba(15, 23, 42, 0.82);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .calculator-page .ghost-btn,
+.app-bg[data-theme="dark"] .simulator-page .ghost-btn,
+.app-bg[data-theme="dark"] .impact-page .ghost-btn,
+.app-bg[data-theme="dark"] .skill-compare-page .ghost-btn,
+.app-bg[data-theme="dark"] .toolbox-stage .ghost-btn {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.84);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .calculator-page .ghost-btn:hover,
+.app-bg[data-theme="dark"] .simulator-page .ghost-btn:hover,
+.app-bg[data-theme="dark"] .impact-page .ghost-btn:hover,
+.app-bg[data-theme="dark"] .skill-compare-page .ghost-btn:hover,
+.app-bg[data-theme="dark"] .toolbox-stage .ghost-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.app-bg[data-theme="dark"] .calculator-page .tool-note-strong,
+.app-bg[data-theme="dark"] .simulator-page .tool-note-strong,
+.app-bg[data-theme="dark"] .impact-page .tool-note-strong,
+.app-bg[data-theme="dark"] .calculator-page .skill-grid,
+.app-bg[data-theme="dark"] .simulator-page .skill-grid,
+.app-bg[data-theme="dark"] .impact-page .skill-grid {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .mobile-current-skill-remove,
+.app-bg[data-theme="dark"] .mobile-pending-skill-reset,
+.app-bg[data-theme="dark"] .mobile-current-skill-item,
+.app-bg[data-theme="dark"] .mobile-pending-skill-card,
+.app-bg[data-theme="dark"] .mobile-skill-search-option {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.82);
+  color: #e5f0ff;
+}
+
+.app-bg[data-theme="dark"] .mobile-current-skill-remove:hover,
+.app-bg[data-theme="dark"] .mobile-pending-skill-reset:hover,
+.app-bg[data-theme="dark"] .mobile-skill-search-option:hover,
+.app-bg[data-theme="dark"] .mobile-skill-search-option.selected {
+  background: rgba(30, 41, 59, 0.96);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-row:hover {
+  background: rgba(30, 41, 59, 0.56);
+}
+
+.app-bg[data-theme="dark"] .skill-compare-row select,
+.app-bg[data-theme="dark"] .skill-compare-search-select input {
+  color-scheme: dark;
+}
+
+.app-bg[data-theme="dark"] .skill-compare-row select option {
+  background: #0f172a;
+  color: #e5f0ff;
+}
+
 .lineup-view {
   width: min(100%, 760px);
   min-height: 100vh;
