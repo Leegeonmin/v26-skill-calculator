@@ -166,7 +166,7 @@ export async function getMobileHomeTopRankings(
 
   if (!error) {
     const rankings = (Array.isArray(data) ? data : []) as RankingRow[];
-    setSessionCache(cacheKey, rankings, 60_000);
+    setSessionCache(cacheKey, rankings, 5 * 60_000);
     return rankings;
   }
 
