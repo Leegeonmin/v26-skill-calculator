@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
-import { KakaoAdFitMobileMidBanner } from "../components/KakaoAdFitFixedBanner";
+import {
+  KakaoAdFitMobileMidBanner,
+  KakaoAdFitSkillScoreBanner,
+} from "../components/KakaoAdFitFixedBanner";
 import type {
   CalculatorMode,
   CardType,
@@ -548,6 +551,7 @@ export default function MajorSkillMarbleCalculatorView({
           </>
         )}
       </section>
+      <KakaoAdFitSkillScoreBanner enabled />
       <KakaoAdFitMobileMidBanner enabled />
 
       <section className="major-marble-skill-panel">

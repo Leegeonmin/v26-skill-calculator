@@ -16333,11 +16333,13 @@ input {
   justify-content: center;
   width: 100%;
   min-height: 90px;
+  margin: 0;
   overflow: hidden;
 }
 
 .kakao-adfit-skill-score-banner .kakao_ad_area {
-  width: 728px;
+  display: block;
+  width: min(100%, 728px);
   height: 90px;
   max-width: 100%;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import SimulatorSkillCard from "../components/SimulatorSkillCard";
+import { KakaoAdFitSkillScoreBanner } from "../components/KakaoAdFitFixedBanner";
 import { getSkillLevelOptions } from "../lib/toolboxHelpers";
 import type { CardType, SkillLevel, SkillMeta } from "../types";
 import type { ResultGrade } from "../utils/judge";
@@ -377,6 +378,7 @@ export default function AdvancedSimulatorView({
         </div>
       )}
 
+      <KakaoAdFitSkillScoreBanner enabled />
       <div className="skill-grid">
         <div className="skill-col">
           <SimulatorSkillCard

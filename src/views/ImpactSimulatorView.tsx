@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import SkillSelect from "../components/SkillSelect";
 import SimulatorSkillCard from "../components/SimulatorSkillCard";
+import { KakaoAdFitSkillScoreBanner } from "../components/KakaoAdFitFixedBanner";
 import type { SkillLevel, SkillMeta } from "../types";
 
 type SelectedSkillMetaMap = {
@@ -277,6 +278,7 @@ export default function ImpactSimulatorView({
           </div>
         </div>
 
+        <KakaoAdFitSkillScoreBanner enabled />
         <div className="skill-grid">
           <div className="skill-col">
             <SimulatorSkillCard

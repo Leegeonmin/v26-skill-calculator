@@ -4,6 +4,7 @@ import {
   KakaoAdFitMobileMidBanner,
   KakaoAdFitMobileResultBanner,
   KakaoAdFitPcTopTripleBanner,
+  KakaoAdFitSkillScoreBanner,
 } from "../components/KakaoAdFitFixedBanner";
 import CalculatorView from "./CalculatorView";
 import AdvancedSimulatorView from "./AdvancedSimulatorView";
@@ -556,6 +557,7 @@ export default function ToolboxStage({
                   setLevel3={setLevel3}
                   getSkillScoreLabel={getSkillScoreLabel}
                   mobileMidAd={<KakaoAdFitMobileMidBanner enabled />}
+                  pcInlineAd={<KakaoAdFitSkillScoreBanner enabled />}
                 />
               )}
             </>

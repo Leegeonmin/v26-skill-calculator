@@ -50,6 +50,7 @@ interface CalculatorViewProps {
   setLevel3: (level: SkillLevel) => void;
   getSkillScoreLabel: (score: number | undefined) => string;
   mobileMidAd?: ReactNode;
+  pcInlineAd?: ReactNode;
 }
 
 function getMobileDefaultLevel(cardType: CardType, selectedCount: number): SkillLevel {
@@ -89,6 +90,7 @@ export default function CalculatorView({
   setLevel3,
   getSkillScoreLabel,
   mobileMidAd,
+  pcInlineAd,
 }: CalculatorViewProps) {
   const skillLevelOptions = useMemo(() => getSkillLevelOptions(activeCardType), [activeCardType]);
   const currentSkills = useMemo(
@@ -423,6 +425,8 @@ export default function CalculatorView({
           </div>
         </div>
       )}
+
+      {pcInlineAd}
 
       <div className="skill-grid">
         <div className="skill-col">
