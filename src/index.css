@@ -16328,6 +16328,26 @@ input {
   gap: 14px;
 }
 
+.kakao-adfit-skill-score-banner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 90px;
+  overflow: hidden;
+}
+
+.kakao-adfit-skill-score-banner .kakao_ad_area {
+  width: 728px;
+  height: 90px;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .kakao-adfit-skill-score-banner {
+    display: none;
+  }
+}
+
 .skill-marble-hero-card,
 .skill-marble-result-panel,
 .skill-marble-setup-panel,
